@@ -17,6 +17,7 @@
     "test:wall-report": "npx tsx scripts/test-wall-report.ts",
     "test:wallpilotpro-p1": "npx tsx scripts/test-wallpilotpro-p1.ts",
     "test:phases-2-4": "npx tsx scripts/test-phases-2-4.ts",
+    "test:phases-5": "npx tsx scripts/test-phases-5.ts",
     "reflect:decisions": "npx tsx scripts/run-reflection.ts",
     "test:stock-search": "npx tsx scripts/test-stock-search.ts",
     "test:matrix-columns": "npx tsx scripts/test-matrix-columns.ts",

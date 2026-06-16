@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getSupabaseAdmin } from "@/lib/db/supabase.server";
+import {
+  sendAccountApprovedEmail,
+  sendAccountSuspendedEmail,
+} from "@/lib/email/email.server";
 import type { AccountStatus, AdminUserRow, SubscriptionPlan, UserRole } from "@/lib/types/auth";
 
 async function logAdminAction(
@@ -86,6 +90,20 @@ export async function setUserAccountStatus(
 
   const { error } = await admin.from("profiles").update(patch).eq("id", targetUserId);
   if (error) return { ok: false, message: error.message };
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("email, display_name")
+    .eq("id", targetUserId)
+    .maybeSingle();
+
+  if (profile?.email) {
+    if (status === "active") {
+      void sendAccountApprovedEmail(profile.email, profile.display_name);
+    } else if (status === "suspended") {
+      void sendAccountSuspendedEmail(profile.email, profile.display_name);
+    }
+  }
 
   if (status === "active") {
     const { data: sub } = await admin

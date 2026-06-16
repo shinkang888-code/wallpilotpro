@@ -1,6 +1,11 @@
 import { getServerConfig } from "@/lib/config.server";
 import { getSupabaseAdmin } from "@/lib/db/supabase.server";
 import { planFromStripePriceId } from "@/lib/billing/plans";
+import { verifyStripeWebhookSignature } from "@/lib/billing/stripe-verify.server";
+import {
+  sendSubscriptionActivatedEmail,
+  sendSubscriptionCanceledEmail,
+} from "@/lib/email/email.server";
 import type { SubscriptionPlan } from "@/lib/types/auth";
 
 const STRIPE_API = "https://api.stripe.com/v1";
@@ -9,6 +14,13 @@ function stripeHeaders() {
   const { stripeSecretKey } = getServerConfig();
   if (!stripeSecretKey) throw new Error("stripe_not_configured");
   return { Authorization: `Bearer ${stripeSecretKey}` };
+}
+
+async function profileEmail(userId: string): Promise<string | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  const { data } = await admin.from("profiles").select("email").eq("id", userId).maybeSingle();
+  return data?.email ?? null;
 }
 
 async function syncSubscriptionFromStripe(subscriptionId: string, userIdHint?: string): Promise<void> {
@@ -43,12 +55,18 @@ async function syncSubscriptionFromStripe(subscriptionId: string, userIdHint?: s
   if (!userId) {
     const { data: row } = await admin
       .from("subscriptions")
-      .select("user_id")
+      .select("user_id, plan")
       .eq("stripe_customer_id", sub.customer)
       .maybeSingle();
     userId = row?.user_id;
   }
   if (!userId) return;
+
+  const { data: prev } = await admin
+    .from("subscriptions")
+    .select("plan, status")
+    .eq("user_id", userId)
+    .maybeSingle();
 
   const statusMap: Record<string, string> = {
     active: "active",
@@ -58,22 +76,44 @@ async function syncSubscriptionFromStripe(subscriptionId: string, userIdHint?: s
     unpaid: "past_due",
   };
 
+  const newStatus = statusMap[sub.status] ?? "inactive";
+  const newPlan: SubscriptionPlan = sub.status === "canceled" ? "free" : plan;
+
   await admin.from("subscriptions").upsert({
     user_id: userId,
-    plan: sub.status === "canceled" ? "free" : plan,
-    status: statusMap[sub.status] ?? "inactive",
+    plan: newPlan,
+    status: newStatus,
+    payment_provider: "stripe",
     stripe_subscription_id: subscriptionId,
     stripe_customer_id: sub.customer,
     current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   });
+
+  const email = await profileEmail(userId);
+  if (!email) return;
+
+  if (
+    (newStatus === "active" || newStatus === "trialing") &&
+    prev?.status !== "active" &&
+    prev?.status !== "trialing" &&
+    newPlan !== "free"
+  ) {
+    void sendSubscriptionActivatedEmail(email, newPlan, "stripe");
+  }
+  if (sub.status === "canceled" && prev?.plan && prev.plan !== "free") {
+    void sendSubscriptionCanceledEmail(email, prev.plan as SubscriptionPlan);
+  }
 }
 
 export async function handleStripeWebhook(rawBody: string, signature: string): Promise<{ ok: boolean }> {
   const { stripeWebhookSecret } = getServerConfig();
   if (!stripeWebhookSecret) return { ok: false };
 
-  // Stripe signature verification via API (simplified — production should use stripe SDK)
+  if (!verifyStripeWebhookSignature(rawBody, signature, stripeWebhookSecret)) {
+    return { ok: false };
+  }
+
   const event = JSON.parse(rawBody) as {
     type: string;
     data: { object: Record<string, unknown> };
@@ -110,6 +150,7 @@ export async function upgradePlanFromWebhook(userId: string, plan: SubscriptionP
     user_id: userId,
     plan,
     status: "active",
+    payment_provider: "stripe",
     updated_at: new Date().toISOString(),
   });
 }

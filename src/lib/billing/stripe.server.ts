@@ -77,6 +77,7 @@ export async function createStripeCheckout(
     await admin.from("subscriptions").upsert({
       user_id: userId,
       stripe_customer_id: customerId,
+      payment_provider: "stripe",
       updated_at: new Date().toISOString(),
     });
   }
@@ -145,10 +146,39 @@ export async function syncCheckoutSession(sessionId: string, userId: string): Pr
     user_id: userId,
     plan,
     status: sub.status === "active" || sub.status === "trialing" ? sub.status : "active",
+    payment_provider: "stripe",
     stripe_subscription_id: subscriptionId,
     current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
     updated_at: new Date().toISOString(),
   });
 
   return { ok: true };
+}
+
+export async function createStripePortalSession(userId: string): Promise<{ url: string }> {
+  const admin = getSupabaseAdmin();
+  if (!admin) throw new Error("supabase_not_configured");
+
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("stripe_customer_id, payment_provider")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const customerId = sub?.stripe_customer_id as string | undefined;
+  if (!customerId || sub?.payment_provider === "danal") {
+    throw new Error("portal_not_available");
+  }
+
+  const session = await stripePost(
+    "/billing_portal/sessions",
+    new URLSearchParams({
+      customer: customerId,
+      return_url: `${siteUrl()}/pricing`,
+    }),
+  );
+
+  const url = session.url as string | null;
+  if (!url) throw new Error("stripe_no_portal_url");
+  return { url };
 }

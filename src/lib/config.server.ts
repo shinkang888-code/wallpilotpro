@@ -52,6 +52,8 @@ export function getServerConfig() {
     stripePriceElite: process.env.STRIPE_PRICE_ELITE ?? "",
     danalClientId: process.env.DANAL_CLIENT_ID ?? "",
     danalClientSecret: process.env.DANAL_CLIENT_SECRET ?? "",
+    danalMerchantId: process.env.DANAL_MERCHANT_ID ?? process.env.DANAL_CLIENT_ID ?? "",
+    danalClientKey: process.env.DANAL_CLIENT_KEY ?? "",
     resendApiKey: process.env.RESEND_API_KEY ?? "",
     aitServiceUrl: process.env.AIT_SERVICE_URL ?? process.env.AI4TRADE_API_BASE ?? "",
     trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",

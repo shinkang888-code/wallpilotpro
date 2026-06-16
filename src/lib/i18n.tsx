@@ -543,6 +543,16 @@ const dict: Dict = {
   pricing_cta: { en: "Subscribe", ko: "구독하기" },
   pricing_success: { en: "Subscription activated!", ko: "구독이 활성화되었습니다!" },
   pricing_canceled: { en: "Checkout canceled.", ko: "결제가 취소되었습니다." },
+  pricing_pay_stripe: { en: "Card (Stripe)", ko: "카드 (Stripe)" },
+  pricing_pay_danal: { en: "KR card (Danal)", ko: "국내 카드 (다날)" },
+  pricing_manage: { en: "Manage subscription", ko: "구독 관리" },
+  pricing_danal_hint: {
+    en: "Danal is not configured — set DANAL_CLIENT_ID, DANAL_CLIENT_SECRET, DANAL_CLIENT_KEY on Vercel.",
+    ko: "다날 결제가 설정되지 않았습니다 — Vercel에 DANAL_CLIENT_ID, DANAL_CLIENT_SECRET, DANAL_CLIENT_KEY를 설정하세요.",
+  },
+  pricing_danal_cta: { en: "Pay with Danal", ko: "다날로 결제" },
+  pricing_danal_simulate: { en: "Simulate Danal (dev)", ko: "다날 시뮬레이션 (개발)" },
+  pricing_danal_canceled: { en: "Danal checkout canceled.", ko: "다날 결제가 취소되었습니다." },
   admin_title: { en: "User management", ko: "사용자 관리" },
   admin_subtitle: {
     en: "Approve members, assign roles (user/admin), and override subscription plans.",
