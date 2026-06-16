@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { AuthNoticeBanner } from "@/components/auth-notice-banner";
 import { Header } from "@/components/header";
+import { SignalHubPanel } from "@/components/modules/signal-hub-panel";
 import { MenuGate } from "@/components/menu-gate";
 import { useI18n } from "@/lib/i18n";
 
@@ -14,15 +16,14 @@ function SignalHubPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header walletBalance={null} />
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <MenuGate menuId="signal_hub" action="view">
-          <div className="rounded-2xl border border-hairline bg-white p-8">
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
-              Phase 3 · ait.*
-            </span>
-            <h1 className="mt-4 font-display text-2xl font-bold">{t("module_signal_hub_title")}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{t("module_signal_hub_body")}</p>
-          </div>
+          <AuthNoticeBanner feature="signals_read" className="mb-6" />
+          <section className="mb-8">
+            <h1 className="font-display text-[32px] font-bold tracking-tight">{t("module_signal_hub_title")}</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("module_signal_hub_body")}</p>
+          </section>
+          <SignalHubPanel />
         </MenuGate>
       </main>
     </div>

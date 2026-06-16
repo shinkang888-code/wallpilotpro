@@ -1,62 +1,62 @@
 /**
- * Phase 2–4 smoke tests — run: npm run test:phases-2-4
+ * WallPilot Pro Phase 2–4 module verification.
  */
-import { runMiniDebate } from "../src/lib/agents/debate.server.ts";
-import { buildDeepAgentReport } from "../src/lib/agents/deep-report.server.ts";
-import { riskGateBeforeOrder } from "../src/lib/agents/risk-gate.server.ts";
-import { fetchMarketSnapshot } from "../src/lib/api/market-data.server.ts";
-import { fetchNewsHeadlines } from "../src/lib/api/news-data.server.ts";
-import { isSupabaseConfigured } from "../src/lib/db/supabase.server.ts";
-import { runDecisionReflection } from "../src/lib/db/reflection.server.ts";
-import { toStockRow } from "../src/lib/quant/classify.server.ts";
-import { calculateValuation } from "../src/lib/quant/valuation.server.ts";
-import { isPortfolioRating } from "../src/lib/types/rating.ts";
+import assert from "node:assert/strict";
 
-function assert(cond: boolean, msg: string) {
-  if (!cond) throw new Error(msg);
+import { listRlPresets } from "../src/lib/modules/tm/rl-lab.server";
+import { canAccessMenu } from "../src/lib/membership/menu-access";
+import { APP_MENUS } from "../src/lib/membership/menus";
+import { canAccess } from "../src/lib/auth/entitlements.server";
+import type { AuthSession } from "../src/lib/types/auth";
+
+function mockSession(plan: AuthSession["subscription"]["plan"]): AuthSession {
+  return {
+    user: { id: "u1", email: "test@example.com" },
+    profile: {
+      id: "u1",
+      email: "test@example.com",
+      displayName: "Test",
+      avatarUrl: null,
+      accountStatus: "active",
+      role: "user",
+      createdAt: new Date().toISOString(),
+      approvedAt: new Date().toISOString(),
+    },
+    subscription: { plan, status: "active", currentPeriodEnd: null },
+    accessToken: "token",
+  };
 }
 
-async function main() {
-  console.log("=== Phase 2–4 tests ===\n");
+console.log("WallPilot Pro P2–P4 tests\n");
 
-  const snapshot = await fetchMarketSnapshot({ ticker: "NVDA", market: "US", name: "NVIDIA" });
-  assert(snapshot != null, "NVDA snapshot");
-  const valuation = calculateValuation(snapshot!);
-  const news = await fetchNewsHeadlines(snapshot!.ticker, snapshot!.market, 3);
+// Extension menus registered with namespaces
+const ext = APP_MENUS.filter((m) => m.namespace);
+assert.equal(ext.length, 3);
+assert.deepEqual(
+  ext.map((m) => m.namespace),
+  ["ta", "ait", "tm"],
+);
 
-  const debate = await runMiniDebate({
-    snapshot: snapshot!,
-    valuation,
-    news,
-    initialRating: "Hold",
-  });
-  assert(debate.bullCase.length > 10, "bull case");
-  assert(isPortfolioRating(debate.rating), `debate rating ${debate.rating}`);
-  console.log(`Debate rating: ${debate.rating}`);
+// Phase 2 — Agent Desk (premium+)
+assert.equal(canAccessMenu("agent_desk", "day_trading", "execute"), false);
+assert.equal(canAccessMenu("agent_desk", "premium", "execute"), true);
+assert.equal(canAccess(mockSession("premium"), "agent_desk"), true);
+assert.equal(canAccess(mockSession("pro"), "agent_desk"), false);
 
-  const row = toStockRow({
-    snapshot: snapshot!,
-    valuation,
-    catalysts: ["test"],
-    rating: debate.rating,
-    debate,
-  });
-  const risk = await riskGateBeforeOrder(row, { krw: 10_000_000, usd: 5000 });
-  assert(typeof risk.approved === "boolean", "risk approved boolean");
-  console.log(`Risk gate: approved=${risk.approved}`);
+// Phase 3 — Signal Hub read (free) / write (pro+)
+assert.equal(canAccessMenu("signal_hub", "free", "view"), true);
+assert.equal(canAccess(mockSession("free"), "signals_read"), true);
+assert.equal(canAccess(mockSession("free"), "signals_write"), false);
+assert.equal(canAccess(mockSession("pro"), "signals_write"), true);
 
-  const deep = await buildDeepAgentReport("AAPL");
-  assert(deep.debate && deep.riskGate && deep.markdown.length > 50, "deep report");
-  console.log(`Deep report source: ${deep.source}`);
+// Phase 4 — RL Lab (elite)
+assert.equal(canAccessMenu("rl_lab", "elite", "execute"), true);
+assert.equal(canAccess(mockSession("elite"), "rl_lab"), true);
+assert.equal(canAccess(mockSession("premium"), "rl_lab"), false);
 
-  console.log(`Supabase configured: ${isSupabaseConfigured()}`);
-  const reflection = await runDecisionReflection(1);
-  console.log(`Reflection batch: scanned=${reflection.scanned} updated=${reflection.updated}`);
+// RL presets
+const presets = listRlPresets();
+assert.ok(presets.tasks.length >= 2);
+assert.ok(presets.agents.length >= 2);
 
-  console.log("\nPASS: Phase 2–4 modules OK");
-}
-
-main().catch((e) => {
-  console.error("FAIL:", e);
-  process.exit(1);
-});
+console.log("✓ All Phase 2–4 checks passed");

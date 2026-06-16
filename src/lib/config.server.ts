@@ -53,5 +53,7 @@ export function getServerConfig() {
     danalClientId: process.env.DANAL_CLIENT_ID ?? "",
     danalClientSecret: process.env.DANAL_CLIENT_SECRET ?? "",
     resendApiKey: process.env.RESEND_API_KEY ?? "",
+    aitServiceUrl: process.env.AIT_SERVICE_URL ?? process.env.AI4TRADE_API_BASE ?? "",
+    trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",
   };
 }

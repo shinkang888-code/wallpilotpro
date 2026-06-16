@@ -12,6 +12,9 @@ export function formatFeatureError(message: string, t: (key: string) => string):
     const feature = message.split(":")[1] ?? "";
     if (feature === "scan") return t("auth_err_need_basic");
     if (feature === "wall_report") return t("auth_err_need_pro");
+    if (feature === "agent_desk" || feature === "ai_pilot" || feature === "pdf_export")
+      return t("auth_err_need_premium");
+    if (feature === "rl_lab" || feature === "toss_execute") return t("auth_notice_upgrade");
     return t("auth_notice_upgrade");
   }
   return message;
