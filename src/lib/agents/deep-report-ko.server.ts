@@ -91,7 +91,7 @@ Return markdown only, no code fences.`;
 
   return callGeminiText(prompt, fallback, {
     temperature: 0.4,
-    timeoutMs: 50_000,
+    timeoutMs: 20_000,
     apiKey: input.geminiApiKey,
   });
 }

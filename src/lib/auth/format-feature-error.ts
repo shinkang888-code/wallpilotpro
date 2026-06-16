@@ -17,5 +17,9 @@ export function formatFeatureError(message: string, t: (key: string) => string):
     if (feature === "rl_lab" || feature === "toss_execute") return t("auth_notice_upgrade");
     return t("auth_notice_upgrade");
   }
+  if (message === "agent_desk_failed" || message.includes("timeout") || message.includes("timed out")) {
+    return t("agent_desk_timeout");
+  }
+  if (message === "Market data unavailable") return t("agent_desk_failed");
   return message;
 }

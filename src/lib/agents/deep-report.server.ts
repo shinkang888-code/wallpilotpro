@@ -1,43 +1,10 @@
-import type { DebateVerdict } from "@/lib/agents/debate.server";
-import { runMiniDebate } from "@/lib/agents/debate.server";
-import type { RiskGateResult } from "@/lib/agents/risk-gate.server";
-import { riskGateBeforeOrder } from "@/lib/agents/risk-gate.server";
-import { getServerConfig } from "@/lib/config.server";
-import { toStockRow, type AnalyzedRow } from "@/lib/quant/classify.server";
-import { buildWallStreetReportContext } from "@/lib/quant/wall-street-report.server";
 import { generateDeepReportKorean } from "@/lib/agents/deep-report-ko.server";
-import type { DeepAgentReport, WallStreetReport } from "@/lib/types/stock";
+import { runTradingAgentsPipeline } from "@/lib/agents/tradingagents-pipeline.server";
+import { getServerConfig } from "@/lib/config.server";
+import { buildWallStreetReportContext } from "@/lib/quant/wall-street-report.server";
+import type { DeepAgentReport } from "@/lib/types/stock";
 
-function renderMarkdown(
-  report: WallStreetReport,
-  debate: DebateVerdict,
-  risk: RiskGateResult,
-): string {
-  return `# ${report.name} (${report.ticker}) — Deep Agent Report
-
-**Rating:** ${debate.rating} · **Combined:** ${report.combined.recommendation}
-**Price:** ${report.price} · **Fair Value:** ${report.combined.fairValue}
-**Technical:** ${report.technicalLabel}
-
-## Bull Case
-${debate.bullCase}
-
-## Bear Case
-${debate.bearCase}
-
-## Research Manager Verdict
-${debate.verdict}
-
-## Risk Gate
-- **Approved:** ${risk.approved ? "Yes" : "No"}
-- **Aggressive:** ${risk.aggressiveView}
-- **Conservative:** ${risk.conservativeView}
-- **Reason:** ${risk.reason}
-
-## Catalysts
-${report.catalysts.map((c) => `- ${c}`).join("\n")}
-`;
-}
+const EXTERNAL_TIMEOUT_MS = 12_000;
 
 async function fetchExternalTradingAgentsReport(
   ticker: string,
@@ -51,47 +18,38 @@ async function fetchExternalTradingAgentsReport(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticker, date: date ?? new Date().toISOString().slice(0, 10) }),
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(EXTERNAL_TIMEOUT_MS),
     });
     if (!res.ok) return null;
-    const json = (await res.json()) as { markdown?: string; rating?: string };
-    if (!json.markdown) return null;
-    return { markdown: json.markdown, rating: json.rating };
+    const json = (await res.json()) as { markdown?: string; rating?: string; error?: string };
+    if (json.error || !json.markdown?.trim()) return null;
+    return { markdown: json.markdown.trim(), rating: json.rating };
   } catch {
     return null;
   }
 }
 
-/** Phase 3 — single-ticker deep pipeline (internal TS or external TradingAgents MS). */
+/** Phase 2 — TradingAgents pipeline (Python sidecar optional, TS primary). */
 export async function buildDeepAgentReport(
   tickerInput: string,
   geminiApiKey?: string | null,
 ): Promise<DeepAgentReport> {
-  const external = await fetchExternalTradingAgentsReport(tickerInput);
-  const ctx = await buildWallStreetReportContext(tickerInput, undefined, { geminiApiKey });
-  const { snapshot, valuation, news, gemini, report } = ctx;
+  const [ctx, external] = await Promise.all([
+    buildWallStreetReportContext(tickerInput, undefined, { geminiApiKey }),
+    fetchExternalTradingAgentsReport(tickerInput),
+  ]);
 
-  const debate = await runMiniDebate({
-    snapshot,
-    valuation,
-    news,
-    initialRating: gemini.rating,
-    geminiApiKey,
-  });
+  const pipeline = await runTradingAgentsPipeline(ctx, geminiApiKey);
+  const { report } = ctx;
+  const { debate, riskGate, portfolio, markdown: pipelineMarkdown } = pipeline;
 
-  const analyzed: AnalyzedRow = {
-    snapshot,
-    valuation,
-    catalysts: report.catalysts,
-    rating: debate.rating,
-    debate,
-  };
-  const stockRow = toStockRow(analyzed);
-  const riskGate = await riskGateBeforeOrder(stockRow, null);
+  const markdown = external?.markdown ?? pipelineMarkdown;
+  const rating = external?.rating
+    ? (external.rating as DeepAgentReport["rating"])
+    : portfolio.rating;
 
-  const markdown = external?.markdown ?? renderMarkdown(report, debate, riskGate);
   const markdownKo = await generateDeepReportKorean({
-    report,
+    report: { ...report, rating },
     debate,
     riskGate,
     markdownEn: markdown,
@@ -100,7 +58,7 @@ export async function buildDeepAgentReport(
 
   return {
     ...report,
-    rating: debate.rating,
+    rating,
     debate,
     riskGate,
     markdown,

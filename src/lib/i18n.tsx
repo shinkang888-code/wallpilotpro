@@ -653,6 +653,14 @@ const dict: Dict = {
     ko: "Analyst → Research → Trader → Risk → PM 파이프라인. TRADINGAGENTS_SERVICE_URL 설정 시 Python 사이드카 사용.",
   },
   ta_run_analysis: { en: "Run agent analysis", ko: "에이전트 분석 실행" },
+  agent_desk_failed: {
+    en: "Agent analysis failed. Try again or check your connection.",
+    ko: "에이전트 분석에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+  },
+  agent_desk_timeout: {
+    en: "Analysis timed out — retry or ensure GEMINI_API_KEY is set on Vercel.",
+    ko: "분석 시간이 초과되었습니다. 잠시 후 다시 시도하거나 서버 Gemini 키를 확인하세요.",
+  },
   ait_tab_all: { en: "All", ko: "전체" },
   ait_tab_operation: { en: "Operations", ko: "운영" },
   ait_tab_strategy: { en: "Strategies", ko: "전략" },
