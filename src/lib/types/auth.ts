@@ -44,6 +44,7 @@ export type EntitlementFeature =
   | "signals_read"
   | "signals_write"
   | "rl_lab"
+  | "dart_lab"
   | "pdf_export";
 
 export type ActivityEventType =

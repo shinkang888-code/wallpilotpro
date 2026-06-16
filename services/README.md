@@ -21,6 +21,16 @@ Deploy `c:\cursor\wallpilot\_repo-analysis\TradeMaster\deploy\backend_service.py
 
 Set: `TRADEMASTER_SERVICE_URL=https://your-worker`
 
+## DartLab Sidecar (DARTLAB menu)
+
+```bash
+cd services/dartlab-api
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8200
+```
+
+Set: `DARTLAB_SERVICE_URL=https://your-service` and `OPENDART_API_KEY` for live OpenDART fetch.
+
 ## AI-Trader Federation (Phase 3)
 
 Set: `AIT_SERVICE_URL=https://ai4trade.ai` (or self-hosted AI-Trader FastAPI)

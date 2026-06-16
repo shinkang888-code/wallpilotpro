@@ -31,10 +31,10 @@ console.log("WallPilot Pro P2–P4 tests\n");
 
 // Extension menus registered with namespaces
 const ext = APP_MENUS.filter((m) => m.namespace);
-assert.equal(ext.length, 3);
+assert.equal(ext.length, 4);
 assert.deepEqual(
   ext.map((m) => m.namespace),
-  ["ta", "ait", "tm"],
+  ["dart", "ta", "ait", "tm"],
 );
 
 // Phase 2 — Agent Desk (premium+)

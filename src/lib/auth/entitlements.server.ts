@@ -24,6 +24,7 @@ const FEATURE_MIN_PLAN: Record<EntitlementFeature, SubscriptionPlan> = {
   agent_desk: "premium",
   pdf_export: "premium",
   rl_lab: "elite",
+  dart_lab: "pro",
   toss_execute: "elite",
 };
 
@@ -36,6 +37,7 @@ const FEATURE_MENU: Partial<Record<EntitlementFeature, AppMenuId>> = {
   signals_read: "signal_hub",
   signals_write: "signal_hub",
   rl_lab: "rl_lab",
+  dart_lab: "dart_lab",
 };
 
 export function isAuthEnforced(): boolean {
@@ -94,6 +96,7 @@ export function entitlementsFor(session: AuthSession): Record<EntitlementFeature
     signals_read: canAccess(session, "signals_read"),
     signals_write: canAccess(session, "signals_write"),
     rl_lab: canAccess(session, "rl_lab"),
+    dart_lab: canAccess(session, "dart_lab"),
     pdf_export: canAccess(session, "pdf_export"),
   };
 }

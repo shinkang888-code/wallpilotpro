@@ -56,6 +56,7 @@ export function getServerConfig() {
     danalClientKey: process.env.DANAL_CLIENT_KEY ?? "",
     resendApiKey: process.env.RESEND_API_KEY ?? "",
     aitServiceUrl: process.env.AIT_SERVICE_URL ?? process.env.AI4TRADE_API_BASE ?? "",
-    trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",
+    opendartApiKey: process.env.OPENDART_API_KEY ?? "",
+    dartlabServiceUrl: process.env.DARTLAB_SERVICE_URL ?? "",
   };
 }
