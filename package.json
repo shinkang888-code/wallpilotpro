@@ -22,6 +22,7 @@
     "test:matrix-columns": "npx tsx scripts/test-matrix-columns.ts",
     "diagnose:auth": "npx tsx scripts/diagnose-auth.ts",
     "verify:supabase": "npx tsx scripts/verify-supabase-connection.ts",
+    "setup:stripe-prices": "node scripts/setup-stripe-prices.mjs",
     "test:my-api-access": "npx tsx scripts/test-my-api-access.ts",
     "setup:credentials": "node scripts/setup-credentials.mjs",
     "env:pull": "npx tsx scripts/pull-vercel-env.ts",

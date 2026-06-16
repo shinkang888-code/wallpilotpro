@@ -21,7 +21,9 @@ export function getSupabaseBrowser(): SupabaseClient | null {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      // Callback route calls exchangeCodeForSession explicitly; avoid double-handling.
+      detectSessionInUrl: false,
+      flowType: "pkce",
     },
   });
   clientKey = cacheKey;

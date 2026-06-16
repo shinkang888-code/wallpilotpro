@@ -21,6 +21,18 @@ function AuthCallbackPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const callbackUrl = window.location.href;
+      const callbackParams = new URL(callbackUrl);
+      const authCode = callbackParams.searchParams.get("code");
+      const authError =
+        callbackParams.searchParams.get("error_description") ??
+        callbackParams.searchParams.get("error");
+
+      if (authError) {
+        setError(authError);
+        return;
+      }
+
       const configured = await ensureClientSupabaseConfig();
       if (!configured) {
         setError("supabase_not_configured");
@@ -33,13 +45,19 @@ function AuthCallbackPage() {
         return;
       }
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-        window.location.href,
-      );
-      if (cancelled) return;
-      if (exchangeError) {
-        setError(exchangeError.message);
-        return;
+      const { data: existingSession } = await supabase.auth.getSession();
+      if (!existingSession.session) {
+        if (!authCode) {
+          setError("missing_oauth_code");
+          return;
+        }
+
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
+        if (cancelled) return;
+        if (exchangeError) {
+          setError(exchangeError.message);
+          return;
+        }
       }
 
       const { data: sessionData } = await supabase.auth.getSession();
@@ -84,7 +102,9 @@ function AuthCallbackPage() {
                   ? t("auth_err_missing_anon_key")
                   : error === "supabase_not_configured"
                     ? t("auth_err_client_config")
-                    : error}
+                    : error === "missing_oauth_code"
+                      ? t("auth_err_missing_oauth_code")
+                      : error}
             </p>
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
               {t("auth_callback_error_hint")}
