@@ -1,0 +1,127 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* WallPilot — Apple × Toss minimalist wealth tooling */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-toss: var(--toss);
+  --color-toss-foreground: var(--toss-foreground);
+  --color-danger: var(--danger);
+  --color-positive: var(--positive);
+  --color-surface: var(--surface);
+  --color-hairline: var(--hairline);
+
+  --font-display: "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 1rem;
+
+  --background: oklch(1 0 0);                       /* #FFFFFF */
+  --foreground: oklch(0.21 0.034 264);              /* #111827 */
+
+  --surface: oklch(0.985 0.002 264);                /* #F9FAFB */
+  --hairline: oklch(0.93 0.004 264);                /* gray-100 */
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.63 0.18 254);                  /* Toss Blue #3182F6 */
+  --primary-foreground: oklch(1 0 0);
+  --toss: var(--primary);
+  --toss-foreground: var(--primary-foreground);
+
+  --secondary: oklch(0.97 0.003 264);
+  --secondary-foreground: oklch(0.32 0.03 264);     /* slate #4B5563 */
+
+  --muted: oklch(0.97 0.003 264);
+  --muted-foreground: oklch(0.55 0.02 264);
+
+  --accent: oklch(0.96 0.01 254);
+  --accent-foreground: var(--primary);
+
+  --destructive: oklch(0.62 0.22 22);               /* #ED4B4B */
+  --destructive-foreground: oklch(1 0 0);
+  --danger: var(--destructive);
+
+  --positive: oklch(0.7 0.16 162);                  /* mint #00B57A */
+
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--primary);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.96 0.003 264) 0%,
+    oklch(0.99 0.002 264) 50%,
+    oklch(0.96 0.003 264) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* PWA standalone — notch / home-indicator safe area */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

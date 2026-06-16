@@ -1,0 +1,18 @@
+/** Map server auth/entitlement errors to user-facing copy. */
+export function formatFeatureError(message: string, t: (key: string) => string): string {
+  if (message === "unauthorized") return t("auth_sign_in_first");
+  if (message === "auth_not_configured") return t("auth_err_not_configured");
+  if (message === "missing_service_role") return t("auth_err_missing_service_role");
+  if (message === "missing_anon_key") return t("auth_err_missing_anon_key");
+  if (message === "account_pending") return t("auth_notice_pending");
+  if (message === "account_suspended") return t("auth_err_suspended");
+  if (message === "account_deleted") return t("auth_err_deleted");
+  if (message === "account_blocked") return t("auth_err_blocked");
+  if (message.startsWith("entitlement_required:")) {
+    const feature = message.split(":")[1] ?? "";
+    if (feature === "scan") return t("auth_err_need_basic");
+    if (feature === "wall_report") return t("auth_err_need_pro");
+    return t("auth_notice_upgrade");
+  }
+  return message;
+}

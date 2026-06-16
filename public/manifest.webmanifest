@@ -1,0 +1,27 @@
+{
+  "name": "WallPilot",
+  "short_name": "WallPilot",
+  "description": "Reverse-Quant Trading for KR & US Markets",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fafafa",
+  "theme_color": "#0a0a0a",
+  "lang": "ko",
+  "categories": ["finance", "business"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
