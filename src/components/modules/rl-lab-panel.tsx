@@ -1,31 +1,38 @@
-import { useEffect, useState } from "react";
-import { FlaskConical, Loader2, Play } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { FlaskConical, Loader2, Play, Zap, Cpu } from "lucide-react";
 
-import { fetchRlJobHistory, getRlLabPresets, runRlBacktest } from "@/lib/api/tm.functions";
+import { RlLabJobCard } from "@/components/modules/rl-lab-job-card";
+import {
+  fetchRlJobHistory,
+  getRlLabPresets,
+  pollRlJob,
+  runRlBacktest,
+} from "@/lib/api/tm.functions";
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
 import { useI18n } from "@/lib/i18n";
+import type { TmLabPresets, TmRlJob, TmRunMode } from "@/lib/modules/tm/types";
 import { useAuth } from "@/lib/use-auth";
-import type { TmRlJob } from "@/lib/modules/tm/types";
 import { cn } from "@/lib/utils";
+
+const POLL_MS = 1_200;
 
 export function RlLabPanel() {
   const { t } = useI18n();
   const { accessToken, entitlements, enforced, isActive } = useAuth();
-  const [presets, setPresets] = useState<{
-    tasks: { id: string; label: string }[];
-    datasets: { id: string; label: string }[];
-    agents: { id: string; label: string }[];
-  } | null>(null);
+  const [presets, setPresets] = useState<TmLabPresets | null>(null);
   const [task, setTask] = useState("portfolio_management");
   const [dataset, setDataset] = useState("dj30");
   const [agent, setAgent] = useState("ppo");
   const [tickers, setTickers] = useState("NVDA,AAPL,MSFT");
+  const [runMode, setRunMode] = useState<TmRunMode>("quick");
   const [job, setJob] = useState<TmRlJob | null>(null);
   const [history, setHistory] = useState<TmRlJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canRun = !enforced || (isActive && Boolean(entitlements?.rl_lab));
+  const workerOnline = presets?.worker.online ?? false;
 
   useEffect(() => {
     void getRlLabPresets({ data: {} }).then(setPresets);
@@ -33,14 +40,43 @@ export function RlLabPanel() {
 
   useEffect(() => {
     if (!canRun || !accessToken) return;
-    void fetchRlJobHistory({ data: { accessToken, limit: 5 } }).then(setHistory);
+    void fetchRlJobHistory({ data: { accessToken, limit: 8 } }).then(setHistory);
   }, [accessToken, canRun]);
+
+  const stopPoll = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const startPoll = useCallback(
+    (jobId: string) => {
+      stopPoll();
+      if (!accessToken) return;
+      pollRef.current = setInterval(() => {
+        void pollRlJob({ data: { accessToken, jobId } }).then((next) => {
+          if (!next) return;
+          setJob(next);
+          if (next.status !== "running") {
+            stopPoll();
+            setHistory((prev) => [next, ...prev.filter((j) => j.id !== next.id)].slice(0, 8));
+          }
+        });
+      }, POLL_MS);
+    },
+    [accessToken, stopPoll],
+  );
+
+  useEffect(() => () => stopPoll(), [stopPoll]);
 
   const handleRun = async () => {
     if (!canRun) return;
     setLoading(true);
     setError(null);
+    stopPoll();
     try {
+      const effectiveMode: TmRunMode = runMode === "full" && !workerOnline ? "quick" : runMode;
       const result = await runRlBacktest({
         data: {
           accessToken,
@@ -49,10 +85,15 @@ export function RlLabPanel() {
           agent,
           tickers: tickers.split(",").map((s) => s.trim()).filter(Boolean),
           mode: "backtest",
+          runMode: effectiveMode,
         },
       });
       setJob(result);
-      setHistory((prev) => [result, ...prev.filter((j) => j.id !== result.id)].slice(0, 5));
+      if (result.status === "running") {
+        startPoll(result.id);
+      } else {
+        setHistory((prev) => [result, ...prev.filter((j) => j.id !== result.id)].slice(0, 8));
+      }
     } catch (e) {
       setError(formatFeatureError(e instanceof Error ? e.message : "rl_failed", t));
     } finally {
@@ -60,65 +101,63 @@ export function RlLabPanel() {
     }
   };
 
-  const maxEquity = job?.equityCurve.length
-    ? Math.max(...job.equityCurve.map((p) => p.value))
-    : 0;
-  const minEquity = job?.equityCurve.length
-    ? Math.min(...job.equityCurve.map((p) => p.value))
-    : 0;
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <section className="rounded-2xl border border-hairline bg-surface p-5 sm:p-6">
-        <div className="mb-4 flex items-center gap-2 text-primary">
-          <FlaskConical className="h-5 w-5" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">tm.* · TradeMaster</span>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-primary">
+            <FlaskConical className="h-5 w-5" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">tm.* · TradeMaster</span>
+          </div>
+          <WorkerBadge
+            configured={presets?.worker.configured ?? false}
+            online={workerOnline}
+            latencyMs={presets?.worker.latencyMs ?? null}
+          />
         </div>
+
         <p className="mb-4 text-sm text-muted-foreground">{t("tm_lab_intro")}</p>
 
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:max-w-md">
+          <ModeButton
+            active={runMode === "quick"}
+            icon={<Zap className="h-4 w-4" />}
+            label={t("tm_mode_quick")}
+            hint={t("tm_mode_quick_hint")}
+            onClick={() => setRunMode("quick")}
+          />
+          <ModeButton
+            active={runMode === "full"}
+            icon={<Cpu className="h-4 w-4" />}
+            label={t("tm_mode_full")}
+            hint={workerOnline ? t("tm_mode_full_hint") : t("tm_mode_full_offline")}
+            disabled={!workerOnline}
+            onClick={() => workerOnline && setRunMode("full")}
+          />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-3">
-          <label className="text-sm">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground">{t("tm_task")}</span>
-            <select
-              value={task}
-              onChange={(e) => setTask(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2"
-            >
-              {(presets?.tasks ?? []).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground">{t("tm_dataset")}</span>
-            <select
-              value={dataset}
-              onChange={(e) => setDataset(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2"
-            >
-              {(presets?.datasets ?? []).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground">{t("tm_agent")}</span>
-            <select
-              value={agent}
-              onChange={(e) => setAgent(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2"
-            >
-              {(presets?.agents ?? []).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectField label={t("tm_task")} value={task} onChange={setTask}>
+            {(presets?.tasks ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label={t("tm_dataset")} value={dataset} onChange={setDataset}>
+            {(presets?.datasets ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label={t("tm_agent")} value={agent} onChange={setAgent}>
+            {(presets?.agents ?? []).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </SelectField>
         </div>
 
         <label className="mt-4 block text-sm">
@@ -126,84 +165,145 @@ export function RlLabPanel() {
           <input
             value={tickers}
             onChange={(e) => setTickers(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-hairline px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2 text-sm"
           />
         </label>
 
         <button
           type="button"
           onClick={() => void handleRun()}
-          disabled={loading || !canRun}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          disabled={loading || !canRun || (job?.status === "running")}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-          {t("tm_run_backtest")}
+          {loading || job?.status === "running" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          {runMode === "quick" ? t("tm_run_quick") : t("tm_run_backtest")}
         </button>
 
         {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
       </section>
 
-      {job ? (
-        <section className="rounded-2xl border border-hairline bg-white p-5 sm:p-6 space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                job.source === "trademaster" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800",
-              )}
-            >
-              {job.source}
-            </span>
-            <span className="text-xs text-muted-foreground">{job.status}</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { label: "Sharpe", value: job.metrics.sharpe },
-              { label: "Return %", value: job.metrics.totalReturnPct },
-              { label: "MDD %", value: job.metrics.maxDrawdownPct },
-              { label: "Win %", value: job.metrics.winRatePct },
-            ].map((m) => (
-              <div key={m.label} className="rounded-xl bg-muted/50 p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">{m.label}</p>
-                <p className="text-lg font-bold">{m.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {job.chartNote ? <p className="text-xs text-muted-foreground">{job.chartNote}</p> : null}
-
-          {job.equityCurve.length > 0 ? (
-            <div className="flex h-32 items-end gap-0.5 rounded-xl border border-hairline bg-muted/20 p-2">
-              {job.equityCurve.map((point) => {
-                const range = maxEquity - minEquity || 1;
-                const h = ((point.value - minEquity) / range) * 100;
-                return (
-                  <div
-                    key={point.date}
-                    title={`${point.date}: ${point.value}`}
-                    className="flex-1 rounded-t bg-primary/70"
-                    style={{ height: `${Math.max(h, 4)}%` }}
-                  />
-                );
-              })}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+      {job ? <RlLabJobCard job={job} /> : null}
 
       {history.length > 0 ? (
         <section>
           <h3 className="mb-3 text-sm font-semibold">{t("tm_history")}</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="space-y-2">
             {history.map((h) => (
-              <li key={h.id} className="rounded-lg border border-hairline px-3 py-2">
-                {h.task}/{h.dataset}/{h.agent} · {h.metrics.totalReturnPct}% · {h.source}
+              <li key={h.id}>
+                <button
+                  type="button"
+                  onClick={() => setJob(h)}
+                  className="w-full rounded-xl border border-hairline bg-white px-4 py-3 text-left text-sm transition-colors hover:bg-surface"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium text-foreground">
+                      {h.task}/{h.agent} · {h.metrics.totalReturnPct}%
+                    </span>
+                    <span className="text-[10px] uppercase text-muted-foreground">
+                      {h.source} · {h.runMode}
+                    </span>
+                  </div>
+                </button>
               </li>
             ))}
           </ul>
         </section>
       ) : null}
     </div>
+  );
+}
+
+function WorkerBadge({
+  configured,
+  online,
+  latencyMs,
+}: {
+  configured: boolean;
+  online: boolean;
+  latencyMs: number | null;
+}) {
+  const { t } = useI18n();
+  if (!configured) {
+    return (
+      <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold text-muted-foreground">
+        {t("tm_worker_local")}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "rounded-full px-3 py-1 text-[10px] font-semibold",
+        online ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800",
+      )}
+    >
+      {online
+        ? `${t("tm_worker_online")}${latencyMs != null ? ` · ${latencyMs}ms` : ""}`
+        : t("tm_worker_offline")}
+    </span>
+  );
+}
+
+function ModeButton({
+  active,
+  icon,
+  label,
+  hint,
+  disabled,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  hint: string;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "rounded-xl border p-3 text-left transition-all",
+        active ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-hairline bg-white hover:bg-surface",
+        disabled && "cursor-not-allowed opacity-50",
+      )}
+    >
+      <div className="flex items-center gap-2 font-semibold text-sm">
+        {icon}
+        {label}
+      </div>
+      <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{hint}</p>
+    </button>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="text-sm">
+      <span className="text-[10px] font-bold uppercase text-muted-foreground">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-lg border border-hairline bg-white px-3 py-2"
+      >
+        {children}
+      </select>
+    </label>
   );
 }

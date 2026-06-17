@@ -1,124 +1,49 @@
 import { getServerConfig } from "@/lib/config.server";
 import { getSupabaseAdmin } from "@/lib/db/supabase.server";
-import type { TmEquityPoint, TmRlJob, TmRlMetrics } from "@/lib/modules/tm/types";
+import { runQuickBacktest } from "@/lib/modules/tm/fast-backtest.server";
+import {
+  checkTradeMasterWorker,
+  pollTradeMasterTest,
+  pollTradeMasterTrain,
+  startTradeMasterTest,
+  startTradeMasterTrain,
+} from "@/lib/modules/tm/trademaster-client.server";
+import type {
+  TmEquityPoint,
+  TmLabPresets,
+  TmRlJob,
+  TmRlMetrics,
+  TmRunMode,
+  TmWorkerStatus,
+} from "@/lib/modules/tm/types";
 
 const DEFAULT_TICKERS = ["NVDA", "AAPL", "MSFT", "005930", "000660"];
 
-function simulateMomentumBacktest(tickers: string[]): {
-  metrics: TmRlMetrics;
-  equityCurve: TmEquityPoint[];
-  chartNote: string;
-} {
-  const startValue = 100_000;
-  let value = startValue;
-  const curve: TmEquityPoint[] = [];
-  const today = new Date();
-  let wins = 0;
-  let trades = tickers.length;
-
-  for (let i = 30; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const drift = 1 + (Math.sin(i / 5) * 0.004 + 0.0012);
-    value *= drift;
-    if (drift > 1.002) wins += 1;
-    curve.push({ date: d.toISOString().slice(0, 10), value: Math.round(value) });
-  }
-
-  const totalReturnPct = ((value - startValue) / startValue) * 100;
-  const peak = Math.max(...curve.map((p) => p.value));
-  const trough = Math.min(...curve.map((p) => p.value));
-  const maxDrawdownPct = peak > 0 ? ((peak - trough) / peak) * 100 : 0;
-  const dailyReturns = curve.slice(1).map((p, idx) => (p.value - curve[idx].value) / curve[idx].value);
-  const avg = dailyReturns.reduce((a, b) => a + b, 0) / Math.max(dailyReturns.length, 1);
-  const variance =
-    dailyReturns.reduce((a, b) => a + (b - avg) ** 2, 0) / Math.max(dailyReturns.length, 1);
-  const sharpe = variance > 0 ? (avg / Math.sqrt(variance)) * Math.sqrt(252) : 0;
-
-  return {
-    metrics: {
-      sharpe: Number(sharpe.toFixed(2)),
-      totalReturnPct: Number(totalReturnPct.toFixed(2)),
-      maxDrawdownPct: Number(maxDrawdownPct.toFixed(2)),
-      winRatePct: Number(((wins / Math.max(trades, 1)) * 100).toFixed(1)),
-      trades,
-    },
-    equityCurve: curve,
-    chartNote: `Momentum-weighted portfolio simulation (${tickers.join(", ")}) — TradeMaster worker unavailable, using WallPilot fallback.`,
-  };
-}
-
-async function fetchExternalBacktest(input: {
-  task: string;
-  dataset: string;
-  agent: string;
-  tickers: string[];
-}): Promise<{ metrics: TmRlMetrics; equityCurve: TmEquityPoint[]; chartNote: string } | null> {
-  const { trademasterServiceUrl } = getServerConfig();
-  if (!trademasterServiceUrl) return null;
-
-  try {
-    const base = trademasterServiceUrl.replace(/\/$/, "");
-    const trainRes = await fetch(`${base}/api/TradeMaster/test`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        task_name: input.task,
-        dataset_name: `${input.task}:${input.dataset}`,
-        agent_name: `${input.task}:${input.agent}`,
-      }),
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!trainRes.ok) return null;
-    const { session_id: sessionId } = (await trainRes.json()) as { session_id?: string };
-    if (!sessionId) return null;
-
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 2000));
-      const statusRes = await fetch(`${base}/api/TradeMaster/test_status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
-      });
-      if (!statusRes.ok) continue;
-      const status = (await statusRes.json()) as {
-        test_end?: boolean;
-        sharpe_ratio?: number;
-        tr?: number;
-        mdd?: number;
-      };
-      if (status.test_end) {
-        return {
-          metrics: {
-            sharpe: Number(status.sharpe_ratio ?? 0),
-            totalReturnPct: Number((status.tr ?? 0) * 100),
-            maxDrawdownPct: Number((status.mdd ?? 0) * 100),
-            winRatePct: 0,
-            trades: input.tickers.length,
-          },
-          equityCurve: [],
-          chartNote: "TradeMaster worker backtest completed.",
-        };
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+const EMPTY_METRICS: TmRlMetrics = {
+  sharpe: 0,
+  totalReturnPct: 0,
+  maxDrawdownPct: 0,
+  winRatePct: 0,
+  trades: 0,
+};
 
 function mapJob(row: Record<string, unknown>): TmRlJob {
   return {
     id: row.id as string,
     userId: row.user_id as string,
     mode: row.mode as TmRlJob["mode"],
+    runMode: (row.run_mode as TmRunMode) ?? "quick",
     task: row.task as string,
     dataset: row.dataset as string,
     agent: row.agent as string,
     tickers: (row.tickers as string[]) ?? [],
     status: row.status as TmRlJob["status"],
     source: row.source as TmRlJob["source"],
-    metrics: row.metrics as TmRlMetrics,
+    phase: (row.phase as TmRlJob["phase"]) ?? "done",
+    progressPct: (row.progress_pct as number) ?? 100,
+    progressMessage: (row.progress_message as string) ?? null,
+    trademasterSessionId: (row.trademaster_session_id as string) ?? null,
+    metrics: (row.metrics as TmRlMetrics) ?? EMPTY_METRICS,
     equityCurve: (row.equity_curve as TmEquityPoint[]) ?? [],
     chartNote: (row.chart_note as string) ?? null,
     errorMessage: (row.error_message as string) ?? null,
@@ -127,9 +52,51 @@ function mapJob(row: Record<string, unknown>): TmRlJob {
   };
 }
 
+async function updateJob(jobId: string, patch: Record<string, unknown>): Promise<TmRlJob | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  const { data, error } = await admin
+    .from("tm_rl_jobs")
+    .update(patch)
+    .eq("id", jobId)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return mapJob(data as Record<string, unknown>);
+}
+
+function completeQuickJob(
+  tickers: string[],
+  runMode: TmRunMode,
+  worker: TmWorkerStatus,
+): {
+  status: TmRlJob["status"];
+  source: TmRlJob["source"];
+  metrics: TmRlMetrics;
+  equityCurve: TmEquityPoint[];
+  chartNote: string;
+} {
+  const sim = runQuickBacktest(tickers);
+  const degraded = runMode === "full" && worker.configured && !worker.online;
+  return {
+    status: degraded ? "degraded" : "completed",
+    source: "fallback",
+    metrics: sim.metrics,
+    equityCurve: sim.equityCurve,
+    chartNote: degraded
+      ? `${sim.chartNote} · Worker offline — showing instant estimate`
+      : sim.chartNote,
+  };
+}
+
+export async function getWorkerStatus(): Promise<TmWorkerStatus> {
+  return checkTradeMasterWorker();
+}
+
 export async function createRlJob(input: {
   userId: string;
   mode: TmRlJob["mode"];
+  runMode?: TmRunMode;
   task: string;
   dataset: string;
   agent: string;
@@ -138,69 +105,164 @@ export async function createRlJob(input: {
   const admin = getSupabaseAdmin();
   if (!admin) throw new Error("supabase_not_configured");
 
+  const runMode = input.runMode ?? "quick";
   const tickers = (input.tickers?.length ? input.tickers : DEFAULT_TICKERS).slice(0, 10);
+  const worker = await getWorkerStatus();
 
   const { data: inserted, error } = await admin
     .from("tm_rl_jobs")
     .insert({
       user_id: input.userId,
       mode: input.mode,
+      run_mode: runMode,
       task: input.task,
       dataset: input.dataset,
       agent: input.agent,
       tickers,
       status: "running",
+      phase: runMode === "full" && worker.online ? "idle" : "done",
+      progress_pct: runMode === "full" && worker.online ? 5 : 90,
+      progress_message: runMode === "full" && worker.online ? "Connecting to TradeMaster worker…" : "Running quick scan…",
+      metrics: EMPTY_METRICS,
+      equity_curve: [],
+      source: "fallback",
     })
     .select("*")
     .single();
 
   if (error) throw new Error(error.message);
+  const jobId = (inserted as Record<string, unknown>).id as string;
 
-  let source: TmRlJob["source"] = "fallback";
-  let status: TmRlJob["status"] = "completed";
-  let metrics: TmRlMetrics;
-  let equityCurve: TmEquityPoint[];
-  let chartNote: string;
-  let errorMessage: string | null = null;
+  if (runMode === "quick" || !worker.online) {
+    const result = completeQuickJob(tickers, runMode, worker);
+    return (
+      (await updateJob(jobId, {
+        status: result.status,
+        source: result.source,
+        phase: "done",
+        progress_pct: 100,
+        progress_message: null,
+        metrics: result.metrics,
+        equity_curve: result.equityCurve,
+        chart_note: result.chartNote,
+        completed_at: new Date().toISOString(),
+      })) ?? mapJob(inserted as Record<string, unknown>)
+    );
+  }
 
-  const external = await fetchExternalBacktest({
+  const train = await startTradeMasterTrain({
     task: input.task,
     dataset: input.dataset,
     agent: input.agent,
-    tickers,
   });
 
-  if (external) {
-    source = "trademaster";
-    metrics = external.metrics;
-    equityCurve = external.equityCurve;
-    chartNote = external.chartNote;
-  } else {
-    const sim = simulateMomentumBacktest(tickers);
-    metrics = sim.metrics;
-    equityCurve = sim.equityCurve;
-    chartNote = sim.chartNote;
-    status = "degraded";
+  if (!train?.sessionId) {
+    const result = completeQuickJob(tickers, runMode, worker);
+    return (
+      (await updateJob(jobId, {
+        status: "degraded",
+        source: "fallback",
+        phase: "done",
+        progress_pct: 100,
+        progress_message: null,
+        metrics: result.metrics,
+        equity_curve: result.equityCurve,
+        chart_note: `${result.chartNote} · Train start failed`,
+        error_message: train?.error ?? "worker_train_failed",
+        completed_at: new Date().toISOString(),
+      })) ?? mapJob(inserted as Record<string, unknown>)
+    );
   }
 
-  const completedAt = new Date().toISOString();
-  const { data: updated, error: updateErr } = await admin
-    .from("tm_rl_jobs")
-    .update({
-      status,
-      source,
+  return (
+    (await updateJob(jobId, {
+      trademaster_session_id: train.sessionId,
+      phase: "train",
+      progress_pct: 15,
+      progress_message: "Training RL agent on worker…",
+      source: "trademaster",
+    })) ?? mapJob(inserted as Record<string, unknown>)
+  );
+}
+
+/** Advance one step of an async TradeMaster job (call from client poll). */
+export async function advanceRlJob(userId: string, jobId: string): Promise<TmRlJob | null> {
+  const job = await getRlJob(userId, jobId);
+  if (!job || job.status !== "running") return job;
+
+  const sessionId = job.trademasterSessionId;
+  if (!sessionId) {
+    return updateJob(jobId, {
+      status: "failed",
+      phase: "done",
+      progress_pct: 100,
+      error_message: "missing_session",
+      completed_at: new Date().toISOString(),
+    });
+  }
+
+  if (job.phase === "train") {
+    const train = await pollTradeMasterTrain(sessionId);
+    if (!train) {
+      return updateJob(jobId, {
+        progress_message: "Waiting for worker response…",
+      });
+    }
+    if (!train.trainEnd) {
+      return updateJob(jobId, {
+        progress_pct: train.progressPct,
+        progress_message: train.message,
+      });
+    }
+    const testStarted = await startTradeMasterTest(sessionId);
+    if (!testStarted) {
+      const fallback = runQuickBacktest(job.tickers);
+      return updateJob(jobId, {
+        status: "degraded",
+        phase: "done",
+        progress_pct: 100,
+        progress_message: null,
+        metrics: fallback.metrics,
+        equity_curve: fallback.equityCurve,
+        chart_note: `${fallback.chartNote} · Test start failed on worker`,
+        error_message: "worker_test_failed",
+        completed_at: new Date().toISOString(),
+      });
+    }
+    return updateJob(jobId, {
+      phase: "test",
+      progress_pct: 55,
+      progress_message: "Running backtest on worker…",
+    });
+  }
+
+  if (job.phase === "test") {
+    const test = await pollTradeMasterTest(sessionId, job.tickers);
+    if (!test) {
+      return updateJob(jobId, { progress_message: "Waiting for backtest…" });
+    }
+    if (!test.testEnd) {
+      return updateJob(jobId, {
+        progress_pct: test.progressPct,
+        progress_message: test.message,
+      });
+    }
+    const metrics = test.metrics ?? EMPTY_METRICS;
+    const equityCurve =
+      test.equityCurve.length > 0 ? test.equityCurve : runQuickBacktest(job.tickers).equityCurve;
+    return updateJob(jobId, {
+      status: "completed",
+      phase: "done",
+      progress_pct: 100,
+      progress_message: null,
       metrics,
       equity_curve: equityCurve,
-      chart_note: chartNote,
-      error_message: errorMessage,
-      completed_at: completedAt,
-    })
-    .eq("id", (inserted as Record<string, unknown>).id as string)
-    .select("*")
-    .single();
+      chart_note: "TradeMaster worker · train → test pipeline complete",
+      completed_at: new Date().toISOString(),
+    });
+  }
 
-  if (updateErr) throw new Error(updateErr.message);
-  return mapJob(updated as Record<string, unknown>);
+  return job;
 }
 
 export async function getRlJob(userId: string, jobId: string): Promise<TmRlJob | null> {
@@ -234,7 +296,8 @@ export async function listRlJobs(userId: string, limit = 10): Promise<TmRlJob[]>
   return (data ?? []).map((row) => mapJob(row as Record<string, unknown>));
 }
 
-export function listRlPresets() {
+export async function listRlPresets(): Promise<TmLabPresets> {
+  const worker = await getWorkerStatus();
   return {
     tasks: [
       { id: "portfolio_management", label: "Portfolio Management" },
@@ -242,13 +305,15 @@ export function listRlPresets() {
     ],
     datasets: [
       { id: "dj30", label: "DJ30" },
+      { id: "exchange", label: "Exchange" },
       { id: "BTC", label: "BTC" },
-      { id: "005930", label: "Samsung (KR)" },
     ],
     agents: [
       { id: "ppo", label: "PPO" },
       { id: "eiie", label: "EIIE" },
+      { id: "sarl", label: "SARL" },
       { id: "deepscalper", label: "DeepScalper" },
     ],
+    worker,
   };
 }

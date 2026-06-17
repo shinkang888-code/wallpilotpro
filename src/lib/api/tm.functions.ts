@@ -3,10 +3,19 @@ import { z } from "zod";
 
 import { guardFeature } from "@/lib/auth/guard-auth.server";
 import { logUserActivity } from "@/lib/db/activity-log.server";
-import { createRlJob, getRlJob, listRlJobs, listRlPresets } from "@/lib/modules/tm/rl-lab.server";
+import {
+  advanceRlJob,
+  createRlJob,
+  getRlJob,
+  getWorkerStatus,
+  listRlJobs,
+  listRlPresets,
+} from "@/lib/modules/tm/rl-lab.server";
 import type { TmRlJob } from "@/lib/modules/tm/types";
 
 export const getRlLabPresets = createServerFn({ method: "POST" }).handler(async () => listRlPresets());
+
+export const getRlLabWorkerStatus = createServerFn({ method: "POST" }).handler(async () => getWorkerStatus());
 
 export const runRlBacktest = createServerFn({ method: "POST" })
   .inputValidator(
@@ -17,6 +26,7 @@ export const runRlBacktest = createServerFn({ method: "POST" })
       agent: z.string().min(1),
       tickers: z.array(z.string()).optional(),
       mode: z.enum(["backtest", "train", "regime_label", "regime_test"]).optional(),
+      runMode: z.enum(["quick", "full"]).optional(),
     }),
   )
   .handler(async ({ data }): Promise<TmRlJob> => {
@@ -24,6 +34,7 @@ export const runRlBacktest = createServerFn({ method: "POST" })
     const job = await createRlJob({
       userId: session.user.id,
       mode: data.mode ?? "backtest",
+      runMode: data.runMode ?? "quick",
       task: data.task,
       dataset: data.dataset,
       agent: data.agent,
@@ -34,10 +45,22 @@ export const runRlBacktest = createServerFn({ method: "POST" })
       userId: session.user.id,
       eventType: "feature_execute",
       menuId: "rl_lab",
-      detail: { jobId: job.id, source: job.source, task: data.task },
+      detail: { jobId: job.id, source: job.source, runMode: job.runMode, task: data.task },
     });
 
     return job;
+  });
+
+export const pollRlJob = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      accessToken: z.string().nullable().optional(),
+      jobId: z.string().uuid(),
+    }),
+  )
+  .handler(async ({ data }): Promise<TmRlJob | null> => {
+    const session = await guardFeature(data.accessToken, "rl_lab");
+    return advanceRlJob(session.user.id, data.jobId);
   });
 
 export const fetchRlJob = createServerFn({ method: "POST" })

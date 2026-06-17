@@ -58,5 +58,6 @@ export function getServerConfig() {
     aitServiceUrl: process.env.AIT_SERVICE_URL ?? process.env.AI4TRADE_API_BASE ?? "",
     opendartApiKey: process.env.OPENDART_API_KEY ?? "",
     dartlabServiceUrl: process.env.DARTLAB_SERVICE_URL ?? "",
+    trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",
   };
 }
