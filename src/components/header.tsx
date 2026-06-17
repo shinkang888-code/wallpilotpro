@@ -51,7 +51,7 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
                 locked={!canAccessMenu(menu.id, auth.membershipTier, "view", [], auth.isAdmin)}
               />
             ))}
-            {auth.isAdmin && (
+            {auth.isStaff && (
               <NavLink to="/admin" active={pathname.startsWith("/admin")} label={t("nav_admin")} />
             )}
           </nav>
@@ -76,7 +76,7 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
             locked={!canAccessMenu(menu.id, auth.membershipTier, "view", [], auth.isAdmin)}
           />
         ))}
-        {auth.isAdmin && (
+        {auth.isStaff && (
           <NavLink to="/admin" active={pathname.startsWith("/admin")} label={t("nav_admin")} mobile />
         )}
         <TossExternalLink mobile />

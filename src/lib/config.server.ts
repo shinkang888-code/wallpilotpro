@@ -38,8 +38,8 @@ export function getServerConfig() {
     googleAuthRedirectUri: process.env.GOOGLE_AUTH_REDIRECT_URI ?? "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? "",
     authEnforce: process.env.AUTH_ENFORCE ?? "true",
-    /** When true, new/pending Google sign-ins are auto-activated with Pro (beta onboarding). */
-    authAutoApprove: process.env.AUTH_AUTO_APPROVE ?? "true",
+    /** When true, pending Google sign-ins are auto-activated (plan stays Free unless paid). */
+    authAutoApprove: process.env.AUTH_AUTO_APPROVE ?? "false",
     authSiteUrl:
       process.env.AUTH_SITE_URL ??
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:8080"),

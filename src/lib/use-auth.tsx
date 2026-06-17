@@ -33,6 +33,8 @@ type AuthState = {
   entitlements: Record<EntitlementFeature, boolean> | null;
   membershipTier: MembershipTier;
   isAdmin: boolean;
+  isSubAdmin: boolean;
+  isStaff: boolean;
   isPending: boolean;
   isActive: boolean;
   refresh: () => Promise<void>;
@@ -150,6 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       entitlements,
       membershipTier,
       isAdmin: profile?.role === "admin",
+      isSubAdmin: profile?.role === "sub_admin",
+      isStaff: profile?.role === "admin" || profile?.role === "sub_admin",
       isPending: profile?.accountStatus === "pending",
       isActive: profile?.accountStatus === "active",
       refresh,

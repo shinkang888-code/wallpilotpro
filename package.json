@@ -20,6 +20,8 @@
     "test:phases-5": "npx tsx scripts/test-phases-5.ts",
     "test:agent-desk": "npx tsx scripts/test-agent-desk.ts",
     "test:dartlab": "npx tsx scripts/test-dartlab.ts",
+    "test:subscription-system": "npx tsx scripts/test-subscription-system.ts",
+    "test:auth-entitlements": "npx tsx scripts/test-auth-entitlements.ts",
     "reflect:decisions": "npx tsx scripts/run-reflection.ts",
     "test:stock-search": "npx tsx scripts/test-stock-search.ts",
     "test:matrix-columns": "npx tsx scripts/test-matrix-columns.ts",

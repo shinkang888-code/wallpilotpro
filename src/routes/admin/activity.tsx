@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin/activity")({
 function AdminActivityPage() {
   const { t } = useI18n();
   const auth = useAuth();
-  const showPanel = auth.isAdmin && auth.accessToken;
+  const showPanel = auth.isStaff && auth.accessToken;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,5 +1,5 @@
 export type AccountStatus = "pending" | "active" | "suspended" | "deleted";
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "admin" | "sub_admin";
 export type SubscriptionPlan = "free" | "basic" | "pro" | "premium" | "elite";
 export type SubscriptionStatus = "inactive" | "trialing" | "active" | "past_due" | "canceled";
 

@@ -23,7 +23,7 @@ export function AdminGate() {
     );
   }
 
-  if (!auth.isAdmin) {
+  if (!auth.isStaff) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
         <h2 className="font-display text-lg font-semibold text-amber-950">{t("admin_gate_forbidden")}</h2>

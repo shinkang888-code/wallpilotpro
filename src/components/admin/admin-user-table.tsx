@@ -17,15 +17,18 @@ export function AdminUserTable({
   users,
   accessToken,
   currentUserId,
+  actorRole,
   onChanged,
 }: {
   users: AdminUserRow[];
   accessToken: string;
   currentUserId: string;
+  actorRole: UserRole;
   onChanged: () => void;
 }) {
   const { t } = useI18n();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const isFullAdmin = actorRole === "admin";
 
   const run = async (userId: string, fn: () => Promise<{ ok: boolean; message: string }>) => {
     setBusyId(userId);
@@ -40,7 +43,9 @@ export function AdminUserTable({
             ? t("admin_err_last_admin")
             : res.message === "cannot_demote_self"
               ? t("admin_err_demote_self")
-              : res.message;
+              : res.message === "forbidden"
+                ? t("admin_err_forbidden")
+                : res.message;
         toast.error(msg);
       }
     } catch {
@@ -100,7 +105,7 @@ export function AdminUserTable({
                 <select
                   className="rounded-lg border border-hairline bg-surface px-2 py-1 text-xs capitalize"
                   value={u.role}
-                  disabled={busyId === u.id}
+                  disabled={busyId === u.id || (!isFullAdmin && u.role === "admin")}
                   onChange={(e) =>
                     void run(u.id, () =>
                       adminSetUserRole({
@@ -114,7 +119,8 @@ export function AdminUserTable({
                   }
                 >
                   <option value="user">{t("admin_role_user")}</option>
-                  <option value="admin">{t("admin_role_admin")}</option>
+                  <option value="sub_admin">{t("admin_role_sub_admin")}</option>
+                  {isFullAdmin && <option value="admin">{t("admin_role_admin")}</option>}
                 </select>
                 {u.id === currentUserId && (
                   <span className="mt-1 block text-[9px] text-muted-foreground">{t("admin_you")}</span>
@@ -157,16 +163,18 @@ export function AdminUserTable({
                       }
                     />
                   )}
-                  <ActionBtn
-                    label={t("admin_delete")}
-                    variant="danger"
-                    loading={busyId === u.id}
-                    onClick={() =>
-                      run(u.id, () =>
-                        adminDeleteUser({ data: { accessToken, userId: u.id } }),
-                      )
-                    }
-                  />
+                  {isFullAdmin && (
+                    <ActionBtn
+                      label={t("admin_delete")}
+                      variant="danger"
+                      loading={busyId === u.id}
+                      onClick={() =>
+                        run(u.id, () =>
+                          adminDeleteUser({ data: { accessToken, userId: u.id } }),
+                        )
+                      }
+                    />
+                  )}
                 </div>
               </td>
             </tr>

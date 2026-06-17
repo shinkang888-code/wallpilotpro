@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 import {
-  autoApprovePendingUser,
+  activatePendingUserOnLogin,
   fetchProfileBundle,
   ensureProfileForUser,
 } from "@/lib/auth/profiles.server";
+import { isFullAdminRole, isStaffRole } from "@/lib/auth/staff-roles.server";
 import { getServerConfig } from "@/lib/config.server";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/db/supabase.server";
 import type { AuthSession } from "@/lib/types/auth";
@@ -53,7 +54,7 @@ export async function resolveAuthSession(accessToken: string | null | undefined)
     avatar: userData.user.user_metadata?.avatar_url,
   });
 
-  await autoApprovePendingUser(admin, userData.user.id);
+  await activatePendingUserOnLogin(admin, userData.user.id, userData.user.email);
 
   const bundle = await fetchProfileBundle(admin, userData.user.id);
   if (!bundle) return null;
@@ -87,8 +88,19 @@ export async function requireActiveSession(accessToken: string | null | undefine
   return session;
 }
 
-export async function requireAdminSession(accessToken: string | null | undefined): Promise<AuthSession> {
+export async function requireStaffSession(accessToken: string | null | undefined): Promise<AuthSession> {
   const session = await requireAuthSession(accessToken);
-  if (session.profile.role !== "admin") throw new Error("forbidden");
+  if (!isStaffRole(session.profile.role)) throw new Error("forbidden");
   return session;
+}
+
+export async function requireFullAdminSession(accessToken: string | null | undefined): Promise<AuthSession> {
+  const session = await requireAuthSession(accessToken);
+  if (!isFullAdminRole(session.profile.role)) throw new Error("forbidden");
+  return session;
+}
+
+/** @deprecated Use requireStaffSession or requireFullAdminSession */
+export async function requireAdminSession(accessToken: string | null | undefined): Promise<AuthSession> {
+  return requireStaffSession(accessToken);
 }

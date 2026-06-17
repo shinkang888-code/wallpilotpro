@@ -3,26 +3,26 @@ import { z } from "zod";
 
 import { runSecurityAudit, listSecurityAudits } from "@/lib/security/audit.server";
 import { ensureStripeWebhookSecret } from "@/lib/billing/stripe-webhook-setup.server";
-import { requireAdminSession } from "@/lib/auth/session.server";
+import { requireFullAdminSession, requireStaffSession } from "@/lib/auth/session.server";
 
 export const adminRunSecurityAudit = createServerFn({ method: "POST" })
   .inputValidator(z.object({ accessToken: z.string().min(20) }))
   .handler(async ({ data }) => {
-    const session = await requireAdminSession(data.accessToken);
+    const session = await requireStaffSession(data.accessToken);
     return runSecurityAudit(session.user.id);
   });
 
 export const adminEnsureStripeWebhook = createServerFn({ method: "POST" })
   .inputValidator(z.object({ accessToken: z.string().min(20) }))
   .handler(async ({ data }) => {
-    await requireAdminSession(data.accessToken);
+    await requireFullAdminSession(data.accessToken);
     return ensureStripeWebhookSecret();
   });
 
 export const adminListSecurityAudits = createServerFn({ method: "POST" })
   .inputValidator(z.object({ accessToken: z.string().min(20) }))
   .handler(async ({ data }) => {
-    await requireAdminSession(data.accessToken);
+    await requireStaffSession(data.accessToken);
     return listSecurityAudits();
   });
 

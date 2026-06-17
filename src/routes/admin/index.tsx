@@ -9,7 +9,7 @@ import { AdminUserTable } from "@/components/admin/admin-user-table";
 import { Header } from "@/components/header";
 import { adminGetStats, adminListUsers } from "@/lib/api/admin.functions";
 import { useI18n } from "@/lib/i18n";
-import type { AdminUserRow } from "@/lib/types/auth";
+import type { AdminUserRow, UserRole } from "@/lib/types/auth";
 import type { AdminStats } from "@/lib/admin/users.server";
 import { useAuth } from "@/lib/use-auth";
 
@@ -22,12 +22,12 @@ function AdminPage() {
   const auth = useAuth();
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [filter, setFilter] = useState<"pending" | "active" | "suspended" | "all">("pending");
+  const [filter, setFilter] = useState<"pending" | "active" | "suspended" | "all">("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!auth.accessToken || !auth.isAdmin) return;
+    if (!auth.accessToken || !auth.isStaff) return;
     setLoading(true);
     setError(null);
     try {
@@ -47,13 +47,13 @@ function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [auth.accessToken, auth.isAdmin, filter]);
+  }, [auth.accessToken, auth.isStaff, filter]);
 
   useEffect(() => {
-    if (auth.isAdmin && auth.accessToken) void load();
-  }, [auth.isAdmin, auth.accessToken, load]);
+    if (auth.isStaff && auth.accessToken) void load();
+  }, [auth.isStaff, auth.accessToken, load]);
 
-  const showPanel = auth.isAdmin && auth.accessToken;
+  const showPanel = auth.isStaff && auth.accessToken;
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,6 +123,7 @@ function AdminPage() {
                 users={users}
                 accessToken={auth.accessToken!}
                 currentUserId={auth.user!.id}
+                actorRole={(auth.profile?.role ?? "user") as UserRole}
                 onChanged={load}
               />
             )}

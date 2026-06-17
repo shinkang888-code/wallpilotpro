@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin/security")({
 function AdminSecurityPage() {
   const { t } = useI18n();
   const auth = useAuth();
-  const showPanel = auth.isAdmin && auth.accessToken;
+  const showPanel = auth.isStaff && auth.accessToken;
 
   return (
     <div className="min-h-screen bg-background">
