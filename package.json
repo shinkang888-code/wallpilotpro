@@ -22,6 +22,7 @@
     "test:dartlab": "npx tsx scripts/test-dartlab.ts",
     "test:subscription-system": "npx tsx scripts/test-subscription-system.ts",
     "test:trademaster": "npx tsx scripts/test-trademaster.ts",
+    "test:trademaster-worker": "npx tsx scripts/test-trademaster-worker.ts",
     "test:auth-entitlements": "npx tsx scripts/test-auth-entitlements.ts",
     "test:i18n-global": "npx tsx scripts/test-i18n-global.ts",
     "i18n:extract": "node scripts/extract-i18n-packs.mjs",
