@@ -23,6 +23,7 @@ export function formatFeatureError(message: string, t: (key: string) => string):
   }
   if (message === "opendart_not_configured") return t("dart_opendart_hint");
   if (message === "dart_corp_not_found") return t("dart_invalid_code");
+  if (message === "dart_kr_only") return t("dart_kr_only");
   if (message === "dart_failed" || message === "dart_invalid_stock_code") return t("dart_invalid_code");
   if (message === "Market data unavailable") return t("agent_desk_failed");
   return message;

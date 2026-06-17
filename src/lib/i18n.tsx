@@ -676,6 +676,15 @@ const dict: Dict = {
     ko: "Vercel에 OPENDART_API_KEY를 설정하세요 (opendart.fss.or.kr에서 무료 발급).",
   },
   dart_stock_label: { en: "KR stock code", ko: "국내 종목코드" },
+  dart_search_placeholder: { en: "6-digit code or company name (e.g. 005930, Samsung)", ko: "6자리 코드 또는 회사명 (예: 005930, 삼성전자)" },
+  dart_search_hint: {
+    en: "Type a company name — it converts to a 6-digit KR code on blur or Enter.",
+    ko: "회사명을 입력하면 blur/Enter 시 6자리 종목코드로 자동 변환됩니다.",
+  },
+  dart_resolved_hint: {
+    en: "Resolved: {name} → {code}",
+    ko: "변환됨: {name} → {code}",
+  },
   dart_run_analysis: { en: "Analyze DART", ko: "DART 분석 실행" },
   dart_analysis_done: { en: "DART analysis complete", ko: "DART 분석이 완료되었습니다" },
   dart_invalid_code: { en: "Enter a valid 6-digit KR stock code.", ko: "6자리 국내 종목코드를 입력하세요." },

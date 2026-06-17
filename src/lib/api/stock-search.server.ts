@@ -64,6 +64,15 @@ async function fmpSearchStocks(query: string, limit: number): Promise<StockSearc
   }
 }
 
+/** KR listed stocks only — for DARTLAB / OpenDART. */
+export async function resolveKrStockInput(input: string): Promise<StockSearchResult> {
+  const resolved = await resolveStockInput(input);
+  if (resolved.market !== "KR") {
+    throw new Error("dart_kr_only");
+  }
+  return resolved;
+}
+
 /** 종목코드·티커·회사명 → canonical ticker + Yahoo symbol. */
 export async function resolveStockInput(input: string): Promise<ResolvedStock> {
   const raw = input.trim();
