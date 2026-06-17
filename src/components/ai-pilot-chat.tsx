@@ -9,7 +9,7 @@ import { AiPilotScanResults } from "@/components/ai-pilot-scan-results";
 import { AiPilotLiveQuotes, AiPilotLiveChartPanel } from "@/components/ai-pilot-live-panel";
 import { chatAiPilot } from "@/lib/api/ai-pilot.functions";
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, toAiPilotLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import { GeminiKeySourceBadge } from "@/components/gemini-key-source-badge";
 import { GeminiSyncStatusBanner } from "@/components/gemini-sync-status-banner";
@@ -345,7 +345,7 @@ export function AiPilotChat({
             accessToken,
             geminiApiKey: geminiApiKey ?? undefined,
             messages: apiMessages,
-            lang,
+            lang: toAiPilotLang(lang),
             scanContext: scanContext ?? null,
           },
         });

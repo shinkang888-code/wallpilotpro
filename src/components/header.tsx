@@ -2,6 +2,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { ExternalLink, Lock } from "lucide-react";
 
 import { AuthButton } from "@/components/auth-button";
+import { LanguageScrollSelector } from "@/components/language-scroll-selector";
+import { pickLocaleString } from "@/components/language-scroll-selector";
 import { useI18n } from "@/lib/i18n";
 import { APP_MENUS } from "@/lib/membership/menus";
 import { canAccessMenu } from "@/lib/membership/menu-access";
@@ -13,12 +15,12 @@ import { cn } from "@/lib/utils";
 const TOSS_INVEST_URL = "https://www.tossinvest.com/";
 
 export function Header({ walletBalance }: { walletBalance: { krw: number; usd: number } | null }) {
-  const { t, lang, setLang } = useI18n();
+  const { t, lang } = useI18n();
   const { isConnected } = useTossApiKey();
   const auth = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const tierBadge = tierDefinition(auth.membershipTier).name[lang];
+  const tierBadge = pickLocaleString(tierDefinition(auth.membershipTier).name, lang);
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-hairline bg-background/75 backdrop-blur-xl">
@@ -61,7 +63,7 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
           <BalanceWidget balance={walletBalance} />
           <TossExternalLink />
           <AuthButton />
-          <LangToggle value={lang} onChange={setLang} />
+          <LanguageScrollSelector />
         </div>
       </div>
 
@@ -160,25 +162,3 @@ function BalanceWidget({ balance }: { balance: { krw: number; usd: number } | nu
   );
 }
 
-function LangToggle({ value, onChange }: { value: "en" | "ko"; onChange: (l: "en" | "ko") => void }) {
-  const { setLang } = useI18n();
-  return (
-    <div className="inline-flex rounded-full border border-hairline bg-surface p-0.5 text-xs font-semibold">
-      {(["en", "ko"] as const).map((l) => (
-        <button
-          key={l}
-          onClick={() => {
-            setLang(l);
-            onChange(l);
-          }}
-          className={cn(
-            "rounded-full px-2.5 py-1 transition-all duration-200 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-            value === l ? "bg-foreground text-background" : "text-muted-foreground",
-          )}
-        >
-          {l.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  );
-}

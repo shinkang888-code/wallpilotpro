@@ -143,3 +143,11 @@ html.translated-rtl font {
   all: unset;
   display: contents;
 }
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

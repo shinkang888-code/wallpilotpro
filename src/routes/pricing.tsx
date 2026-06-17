@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { DanalCheckoutButton } from "@/components/billing/danal-checkout-button";
 import { Header } from "@/components/header";
+import { pickLocaleString } from "@/components/language-scroll-selector";
 import {
   confirmCheckoutSession,
   getBillingStatus,
@@ -15,6 +16,7 @@ import {
 import {
   MEMBERSHIP_TIERS,
   stripePlanForTier,
+  tierFeatures,
   tierRank,
   type MembershipTier,
 } from "@/lib/membership/tiers";
@@ -132,7 +134,7 @@ function PricingPage() {
         {auth.user && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <p className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              {t("membership_current")}: {MEMBERSHIP_TIERS.find((x) => x.id === currentTier)?.name[lang]}
+              {t("membership_current")}: {pickLocaleString(MEMBERSHIP_TIERS.find((x) => x.id === currentTier)!.name, lang)}
             </p>
             {canManagePortal && (
               <button
@@ -218,10 +220,10 @@ function PricingPage() {
                     Elite
                   </span>
                 )}
-                <h2 className="font-display text-lg font-semibold">{tier.name[lang]}</h2>
-                <p className="mt-1 text-2xl font-bold tabular-nums">{tier.priceLabel[lang]}</p>
+                <h2 className="font-display text-lg font-semibold">{pickLocaleString(tier.name, lang)}</h2>
+                <p className="mt-1 text-2xl font-bold tabular-nums">{pickLocaleString(tier.priceLabel, lang)}</p>
                 <ul className="mt-4 flex-1 space-y-2 text-xs text-muted-foreground">
-                  {tier.features[lang].map((f) => (
+                  {tierFeatures(tier.id, lang).map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-positive" />
                       <span>{f}</span>

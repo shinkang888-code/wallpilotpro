@@ -2,7 +2,8 @@ import { Loader2, Radar } from "lucide-react";
 
 import { RatingBadge } from "@/components/rating-badge";
 import { buildStockReasons, mergeScanPicks } from "@/lib/scan/stock-reason";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, toAiPilotLang } from "@/lib/i18n";
+import type { AppLocale } from "@/lib/i18n/constants";
 import type { StockRow } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
 
@@ -75,10 +76,10 @@ function ScanPickCard({
 }: {
   row: StockRow;
   columns: ("short_squeeze" | "high_cash")[];
-  lang: "ko" | "en";
+  lang: AppLocale;
   t: (key: string) => string;
 }) {
-  const reasons = buildStockReasons(row, columns, lang);
+  const reasons = buildStockReasons(row, columns, toAiPilotLang(lang));
 
   return (
     <li className="rounded-2xl border border-hairline bg-white p-4 shadow-sm">

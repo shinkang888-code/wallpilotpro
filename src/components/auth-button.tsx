@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
+import { pickLocaleString } from "@/components/language-scroll-selector";
 import { useI18n } from "@/lib/i18n";
 import { tierDefinition } from "@/lib/membership/tiers";
 import { useAuth } from "@/lib/use-auth";
@@ -69,7 +70,7 @@ export function AuthButton() {
                   : "bg-surface text-muted-foreground",
           )}
         >
-          {tierDefinition(auth.membershipTier).name[lang]}
+          {pickLocaleString(tierDefinition(auth.membershipTier).name, lang)}
         </span>
       )}
       <div className="flex items-center gap-1.5">
