@@ -1,0 +1,14 @@
+node_modules
+.output
+.git
+.env*
+!.env.example
+dist
+.vercel
+*.md
+!README.md
+.prettierignore
+.eslintrc*
+coverage
+tmp
+.tmp-*

@@ -4,6 +4,20 @@
 
 services:
   - type: web
+    name: wallpilot
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: NITRO_PRESET
+        value: node-server
+
+  - type: web
     name: wallpilot-trademaster-worker
     runtime: docker
     rootDir: services/trademaster-worker
