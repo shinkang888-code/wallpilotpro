@@ -12,38 +12,74 @@ WallPilot Pro **Full RL**은 `TRADEMASTER_SERVICE_URL`이 가리키는 worker의
 
 ---
 
-## A. 빠른 배포 (Railway · CPU)
+## A. Render (영구 URL · 권장)
 
-WallPilot 호환 경량 worker: `services/trademaster-worker/`
+**Render CLI v2.20** 설치됨: `%USERPROFILE%\.local\bin\render.exe`
+
+**1) 로그인 (1회)**
+
+```powershell
+render login
+# 브라우저에서 Authorize CLI
+```
+
+**2) Blueprint 또는 CLI 배포**
+
+루트 `render.yaml` — GitHub `shinkang888-code/wallpilotpro` 연결 후:
+
+```powershell
+cd c:\cursor\wallpilot\wallpilotpro
+.\scripts\deploy-trademaster-render.ps1
+```
+
+수동 CLI:
+
+```powershell
+render services create `
+  --name wallpilot-trademaster-worker `
+  --type web_service `
+  --runtime docker `
+  --root-directory services/trademaster-worker `
+  --repo https://github.com/shinkang888-code/wallpilotpro `
+  --branch main `
+  --plan free `
+  --region oregon `
+  --health-check-path /api/TradeMaster/healthcheck `
+  --env-var TM_TRAIN_SECONDS=18 `
+  --env-var TM_TEST_SECONDS=12 `
+  --confirm -o json
+```
+
+**3) Vercel 연동**
+
+```
+TRADEMASTER_SERVICE_URL=https://wallpilot-trademaster-worker.onrender.com
+```
+
+Free tier: cold start 시 첫 요청 30~60초 지연 가능.
+
+---
+
+## B. Railway (CPU)
 
 ```bash
 cd services/trademaster-worker
 railway login
-railway init          # 새 프로젝트
-railway up            # Docker 빌드 + 배포
-railway domain        # 공개 URL 확인 → https://xxx.up.railway.app
+railway init
+railway up
+railway domain
 ```
 
 Vercel:
 
 ```bash
-cd ../..
 vercel env add TRADEMASTER_SERVICE_URL production
-# 값: https://xxx.up.railway.app  (끝에 / 없음)
 npm run vercel:deploy
 ```
 
-환경 변수 (worker):
-
-| Key | Default | 설명 |
-|-----|---------|------|
-| `TM_TRAIN_SECONDS` | 18 | 학습 시뮬레이션 시간 |
-| `TM_TEST_SECONDS` | 12 | 백테스트 시뮬레이션 시간 |
-| `PORT` | 8080 | Railway가 자동 주입 |
-
 ---
 
-## B. 공식 TradeMaster GPU worker (conda VM)
+## C. 공식 TradeMaster GPU worker (conda VM)
 
 소스: `_repo-analysis/TradeMaster/deploy/backend_service.py`
 

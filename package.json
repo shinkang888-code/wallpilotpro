@@ -23,6 +23,7 @@
     "test:subscription-system": "npx tsx scripts/test-subscription-system.ts",
     "test:trademaster": "npx tsx scripts/test-trademaster.ts",
     "test:trademaster-worker": "npx tsx scripts/test-trademaster-worker.ts",
+    "deploy:trademaster-render": "powershell -ExecutionPolicy Bypass -File scripts/deploy-trademaster-render.ps1",
     "test:auth-entitlements": "npx tsx scripts/test-auth-entitlements.ts",
     "test:i18n-global": "npx tsx scripts/test-i18n-global.ts",
     "i18n:extract": "node scripts/extract-i18n-packs.mjs",

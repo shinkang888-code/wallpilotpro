@@ -1,0 +1,17 @@
+# Render Blueprint — WallPilot TradeMaster Worker
+# Deploy: render blueprint validate render.yaml && connect repo in Render Dashboard
+# Or: render services create (see docs/TRADEMASTER_WORKER_DEPLOY.md)
+
+services:
+  - type: web
+    name: wallpilot-trademaster-worker
+    runtime: docker
+    rootDir: services/trademaster-worker
+    plan: free
+    region: oregon
+    healthCheckPath: /api/TradeMaster/healthcheck
+    envVars:
+      - key: TM_TRAIN_SECONDS
+        value: "18"
+      - key: TM_TEST_SECONDS
+        value: "12"
