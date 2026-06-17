@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { resolveStaffRoleForEmail } from "@/lib/auth/staff-roles.server";
+import { getServerConfig } from "@/lib/config.server";
 import type {
   AccountStatus,
   SubscriptionPlan,
@@ -57,48 +57,42 @@ export async function ensureProfileForUser(
   const { data: existing } = await admin.from("profiles").select("id").eq("id", userId).maybeSingle();
   if (existing) return;
 
-  const staffRole = resolveStaffRoleForEmail(email);
-  const isAdmin = staffRole === "admin";
+  const { bootstrapAdminEmail } = getServerConfig();
+  const isBootstrap = Boolean(bootstrapAdminEmail && email === bootstrapAdminEmail);
 
   await admin.from("profiles").insert({
     id: userId,
     email,
     display_name: meta?.name ?? null,
     avatar_url: meta?.avatar ?? null,
-    account_status: "active",
-    role: staffRole ?? "user",
-    approved_at: new Date().toISOString(),
+    account_status: isBootstrap ? "active" : "pending",
+    role: isBootstrap ? "admin" : "user",
+    approved_at: isBootstrap ? new Date().toISOString() : null,
   });
   await admin.from("subscriptions").insert({
     user_id: userId,
-    plan: isAdmin ? "elite" : "free",
-    status: isAdmin ? "active" : "inactive",
+    plan: isBootstrap ? "elite" : "free",
+    status: isBootstrap ? "active" : "inactive",
   });
 }
 
-/** Legacy pending users: activate on login without changing subscription tier. */
-export async function activatePendingUserOnLogin(admin: SupabaseClient, userId: string, email: string): Promise<void> {
+/** Beta onboarding: activate pending users and grant Pro when AUTH_AUTO_APPROVE is enabled. */
+export async function autoApprovePendingUser(admin: SupabaseClient, userId: string): Promise<void> {
+  const { authAutoApprove } = getServerConfig();
+  if (authAutoApprove === "false") return;
+
   const now = new Date().toISOString();
-  const staffRole = resolveStaffRoleForEmail(email);
-
-  if (staffRole) {
-    await admin
-      .from("profiles")
-      .update({ role: staffRole, account_status: "active", approved_at: now, updated_at: now })
-      .eq("id", userId);
-    if (staffRole === "admin") {
-      await admin
-        .from("subscriptions")
-        .update({ plan: "elite", status: "active", updated_at: now })
-        .eq("user_id", userId);
-    }
-  }
-
   await admin
     .from("profiles")
     .update({ account_status: "active", approved_at: now, updated_at: now })
     .eq("id", userId)
-    .eq("account_status", "pending");
+    .in("account_status", ["pending"]);
+
+  // Beta: ensure every signed-in user has active Pro entitlements.
+  await admin
+    .from("subscriptions")
+    .update({ plan: "pro", status: "active", updated_at: now })
+    .eq("user_id", userId);
 }
 
 export async function fetchProfileBundle(

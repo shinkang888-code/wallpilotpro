@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 
 import { useI18n } from "@/lib/i18n";
 import type { EntitlementFeature } from "@/lib/types/auth";
@@ -39,7 +40,8 @@ export function AuthNoticeBanner({
           type="button"
           onClick={() => {
             void auth.signInWithGoogle().then((err) => {
-              if (err) return;
+              if (err === "supabase_not_configured") toast.error(t("auth_err_client_config"));
+              else if (err) toast.error(err);
             });
           }}
           className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"

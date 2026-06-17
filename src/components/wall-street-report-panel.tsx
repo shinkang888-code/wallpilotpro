@@ -86,9 +86,12 @@ export function WallStreetReportPanel() {
       sessionStorage.removeItem("wallpilot-ws-ticker");
       setQuery(fromPilot);
       void runReport(fromPilot);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot deep link from AI Pilot
-  }, []);
+    if (authLoading || !canRunReport || report) return;
+    void runReport(query.trim());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial default ticker only
+  }, [authLoading, canRunReport]);
 
   const runDeepReport = async (symbol: string) => {
     if (!guardReport()) return;

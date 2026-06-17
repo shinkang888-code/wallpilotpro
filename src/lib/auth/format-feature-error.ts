@@ -10,21 +10,9 @@ export function formatFeatureError(message: string, t: (key: string) => string):
   if (message === "account_blocked") return t("auth_err_blocked");
   if (message.startsWith("entitlement_required:")) {
     const feature = message.split(":")[1] ?? "";
-    if (feature === "scan") return t("auth_err_need_basic");
+    if (feature === "scan") return t("auth_err_need_pro");
     if (feature === "wall_report") return t("auth_err_need_pro");
-    if (feature === "dart_lab") return t("auth_err_need_pro");
-    if (feature === "agent_desk" || feature === "ai_pilot" || feature === "pdf_export")
-      return t("auth_err_need_premium");
-    if (feature === "rl_lab" || feature === "toss_execute") return t("auth_notice_upgrade");
     return t("auth_notice_upgrade");
   }
-  if (message === "agent_desk_failed" || message.includes("timeout") || message.includes("timed out")) {
-    return t("agent_desk_timeout");
-  }
-  if (message === "opendart_not_configured") return t("dart_opendart_hint");
-  if (message === "dart_corp_not_found") return t("dart_invalid_code");
-  if (message === "dart_kr_only") return t("dart_kr_only");
-  if (message === "dart_failed" || message === "dart_invalid_stock_code") return t("dart_invalid_code");
-  if (message === "Market data unavailable") return t("agent_desk_failed");
   return message;
 }

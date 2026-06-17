@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AuthNoticeBanner } from "@/components/auth-notice-banner";
@@ -50,6 +50,13 @@ function Dashboard() {
   const canScan =
     !auth.enforced ||
     (Boolean(auth.accessToken) && auth.isActive && Boolean(auth.entitlements?.scan));
+
+  const didAutoScan = useRef(false);
+  useEffect(() => {
+    if (auth.loading || didAutoScan.current || !canScan) return;
+    didAutoScan.current = true;
+    void scan(toggles);
+  }, [auth.loading, canScan, scan, toggles]);
 
   const handleScan = () => {
     if (auth.loading) return;
