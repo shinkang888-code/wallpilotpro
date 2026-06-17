@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { runSecurityAudit, listSecurityAudits } from "@/lib/security/audit.server";
+import { ensureStripeWebhookSecret } from "@/lib/billing/stripe-webhook-setup.server";
 import { requireAdminSession } from "@/lib/auth/session.server";
 
 export const adminRunSecurityAudit = createServerFn({ method: "POST" })
@@ -9,6 +10,13 @@ export const adminRunSecurityAudit = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await requireAdminSession(data.accessToken);
     return runSecurityAudit(session.user.id);
+  });
+
+export const adminEnsureStripeWebhook = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ accessToken: z.string().min(20) }))
+  .handler(async ({ data }) => {
+    await requireAdminSession(data.accessToken);
+    return ensureStripeWebhookSecret();
   });
 
 export const adminListSecurityAudits = createServerFn({ method: "POST" })

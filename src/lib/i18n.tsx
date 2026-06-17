@@ -633,6 +633,8 @@ const dict: Dict = {
   admin_security_run: { en: "Run audit", ko: "감사 실행" },
   admin_security_result: { en: "Result", ko: "결과" },
   admin_security_clean: { en: "No issues detected.", ko: "문제가 발견되지 않았습니다." },
+  admin_security_fixes: { en: "Auto-fix applied", ko: "자동 수정 적용" },
+  admin_security_fix_stripe: { en: "Fix Stripe webhook", ko: "Stripe webhook 수정" },
   admin_security_history: { en: "Recent audits", ko: "최근 감사 기록" },
   module_agent_desk_title: { en: "Agent Desk (TradingAgents)", ko: "에이전트 분석 (TradingAgents)" },
   module_agent_desk_body: {

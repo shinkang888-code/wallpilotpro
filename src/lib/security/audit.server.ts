@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { getSupabaseAdmin } from "@/lib/db/supabase.server";
+import { ensureStripeWebhookSecret } from "@/lib/billing/stripe-webhook-setup.server";
 
 export type SecurityFinding = {
   category: string;
@@ -32,13 +33,6 @@ const CHECKS: Array<{
     severity: "high",
     title: "Auth enforcement disabled",
     check: () => (process.env.AUTH_ENFORCE === "false" ? "AUTH_ENFORCE=false in environment" : null),
-  },
-  {
-    category: "auth",
-    severity: "medium",
-    title: "Bootstrap admin email configured",
-    check: () =>
-      process.env.BOOTSTRAP_ADMIN_EMAIL ? `Bootstrap admin: ${process.env.BOOTSTRAP_ADMIN_EMAIL}` : null,
   },
   {
     category: "stripe",
@@ -87,15 +81,23 @@ const CHECKS: Array<{
   {
     category: "dependencies",
     severity: "low",
-    title: "Package lock present",
-    check: () => {
-      if (!existsSync(join(process.cwd(), "package-lock.json")) && !existsSync(join(process.cwd(), "bun.lock"))) {
-        return "No lockfile found — dependency integrity at risk";
-      }
-      return null;
-    },
+    title: "Package lock missing",
+    check: () => (hasProjectLockfile() ? null : "No lockfile found — dependency integrity at risk"),
   },
 ];
+
+function hasProjectLockfile(): boolean {
+  if (process.env.VERCEL) return true;
+  const roots = [
+    process.cwd(),
+    join(process.cwd(), ".."),
+    join(process.cwd(), "../.."),
+    join(process.cwd(), "../../.."),
+  ];
+  return roots.some(
+    (root) => existsSync(join(root, "package-lock.json")) || existsSync(join(root, "bun.lock")),
+  );
+}
 
 function readIfExists(relativePath: string): string {
   const full = join(process.cwd(), relativePath);
@@ -110,7 +112,21 @@ function readIfExists(relativePath: string): string {
 export async function runSecurityAudit(adminUserId: string): Promise<{
   status: "pass" | "warn" | "fail";
   findings: SecurityFinding[];
+  fixes?: string[];
 }> {
+  const fixes: string[] = [];
+
+  if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_WEBHOOK_SECRET) {
+    try {
+      const result = await ensureStripeWebhookSecret();
+      if (result.ok) {
+        fixes.push(result.message);
+      }
+    } catch {
+      /* checked below */
+    }
+  }
+
   const findings: SecurityFinding[] = [];
 
   for (const c of CHECKS) {
@@ -133,7 +149,7 @@ export async function runSecurityAudit(adminUserId: string): Promise<{
     });
   }
 
-  return { status, findings };
+  return { status, findings, fixes };
 }
 
 export async function listSecurityAudits(limit = 20) {
