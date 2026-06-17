@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 
-import { resolveKrStockCode, searchStockSymbols } from "@/lib/api/stock-search.functions";
+import { resolveKrStockCode, searchKrStockSymbols } from "@/lib/api/stock-search.functions";
 import type { StockSearchResult } from "@/lib/types/search";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -44,9 +44,9 @@ export function DartStockSearchCombobox({
     const seq = ++seqRef.current;
     setLoading(true);
     try {
-      const rows = await searchStockSymbols({ data: { query, limit: 12 } });
+      const rows = await searchKrStockSymbols({ data: { query, limit: 12 } });
       if (seq === seqRef.current) {
-        setResults(rows.filter((r) => r.market === "KR"));
+        setResults(rows);
       }
     } catch {
       if (seq === seqRef.current) setResults([]);

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 type Lang = "en" | "ko";
 
@@ -668,8 +668,8 @@ const dict: Dict = {
     ko: "DART 전자공시를 가져와 K-IFRS 지표를 자동 계산하고, 회계사 관점 AI 해설을 제공합니다.",
   },
   dart_intro: {
-    en: "Enter a 6-digit KR stock code. Data via OpenDART API; optional DartLab sidecar for richer filings.",
-    ko: "6자리 국내 종목코드를 입력하세요. OpenDART API로 공시·재무를 조회하고 AI가 쉽게 설명합니다.",
+    en: "Enter a 6-digit KR code or company name (e.g. Samsung, 한국정보공학). OpenDART + Gemini CPA brief.",
+    ko: "6자리 종목코드 또는 회사명(예: 삼성전자, 한국정보공학)을 입력하세요. OpenDART + Gemini CPA 해설.",
   },
   dart_opendart_hint: {
     en: "Set OPENDART_API_KEY on Vercel (free key from opendart.fss.or.kr).",
@@ -776,6 +776,15 @@ const I18nCtx = createContext<Ctx | null>(null);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
   const t = (k: keyof typeof dict) => dict[k]?.[lang] ?? String(k);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.classList.add("notranslate");
+    document.documentElement.setAttribute("translate", "no");
+    document.body?.classList.add("notranslate");
+    document.body?.setAttribute("translate", "no");
+  }, [lang]);
+
   return <I18nCtx.Provider value={{ lang, setLang, t }}>{children}</I18nCtx.Provider>;
 }
 

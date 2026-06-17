@@ -88,6 +88,53 @@ async function loadCorpMap(apiKey: string): Promise<Map<string, { corpCode: stri
   return corpMapLoading;
 }
 
+export function normalizeCorpName(name: string): string {
+  return name
+    .replace(/\(주\)|（주）|㈜|주식회사|\(유\)|\(유한\)|\s+/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+export async function searchKrStocksByCorpName(
+  query: string,
+  apiKey: string,
+  limit = 12,
+): Promise<Array<{ stockCode: string; corpName: string; corpCode: string }>> {
+  const q = normalizeCorpName(query);
+  if (!q || !apiKey) return [];
+
+  const map = await loadCorpMap(apiKey);
+  const matches: Array<{ stockCode: string; corpName: string; corpCode: string; score: number }> = [];
+
+  for (const [stockCode, entry] of map.entries()) {
+    if (!entry.corpName) continue;
+    const n = normalizeCorpName(entry.corpName);
+    if (!n) continue;
+    let score = 0;
+    if (n === q) score = 100;
+    else if (n.startsWith(q) || q.startsWith(n)) score = 80;
+    else if (n.includes(q) || q.includes(n)) score = 60;
+    if (score > 0) {
+      matches.push({ stockCode, corpName: entry.corpName, corpCode: entry.corpCode, score });
+    }
+  }
+
+  matches.sort((a, b) => b.score - a.score || a.corpName.length - b.corpName.length);
+  return matches.slice(0, limit).map(({ stockCode, corpName, corpCode }) => ({
+    stockCode,
+    corpName,
+    corpCode,
+  }));
+}
+
+export async function lookupKrStockByCorpName(
+  query: string,
+  apiKey: string,
+): Promise<{ stockCode: string; corpName: string; corpCode: string } | null> {
+  const hits = await searchKrStocksByCorpName(query, apiKey, 1);
+  return hits[0] ?? null;
+}
+
 export async function resolveCorpCode(
   stockCodeInput: string,
   apiKey: string,

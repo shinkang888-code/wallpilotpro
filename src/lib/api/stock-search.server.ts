@@ -1,4 +1,5 @@
 import { getServerConfig } from "@/lib/config.server";
+import { lookupKrStockByCorpName, searchKrStocksByCorpName } from "@/lib/modules/dart/corp-code.server";
 import type { Market } from "@/lib/types/stock";
 import type { StockSearchResult } from "@/lib/types/search";
 
@@ -65,12 +66,75 @@ async function fmpSearchStocks(query: string, limit: number): Promise<StockSearc
 }
 
 /** KR listed stocks only — for DARTLAB / OpenDART. */
+export async function searchKrStocks(query: string, limit = 12): Promise<StockSearchResult[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const yahoo = (await searchStocks(q, limit)).filter((row) => row.market === "KR");
+  if (yahoo.length > 0) return yahoo.slice(0, limit);
+
+  const { opendartApiKey } = getServerConfig();
+  const byName = await searchKrStocksByCorpName(q, opendartApiKey, limit);
+  return Promise.all(byName.map((hit) => buildKrStockResult(hit.stockCode, hit.corpName)));
+}
+
+/** KR listed stocks only — for DARTLAB / OpenDART. */
 export async function resolveKrStockInput(input: string): Promise<StockSearchResult> {
-  const resolved = await resolveStockInput(input);
-  if (resolved.market !== "KR") {
-    throw new Error("dart_kr_only");
+  const raw = input.trim();
+  if (!raw) throw new Error("dart_invalid_code");
+
+  const direct = parseDirectTicker(raw);
+  if (direct?.market === "KR") {
+    const verified = await verifyYahooSymbol(direct.yahooSymbol, "KR");
+    if (verified) {
+      return {
+        ...direct,
+        name: verified.name ?? direct.name,
+        yahooSymbol: verified.yahooSymbol,
+      };
+    }
   }
-  return resolved;
+
+  const { opendartApiKey } = getServerConfig();
+  const hasHangul = /[\uAC00-\uD7A3]/.test(raw);
+  if (hasHangul || !/^\d+$/.test(raw)) {
+    const byName = await lookupKrStockByCorpName(raw, opendartApiKey);
+    if (byName) return buildKrStockResult(byName.stockCode, byName.corpName);
+  }
+
+  try {
+    const resolved = await resolveStockInput(raw);
+    if (resolved.market !== "KR") throw new Error("dart_kr_only");
+    return resolved;
+  } catch (e) {
+    const byName = await lookupKrStockByCorpName(raw, opendartApiKey);
+    if (byName) return buildKrStockResult(byName.stockCode, byName.corpName);
+    if (e instanceof Error && e.message === "dart_kr_only") throw e;
+    throw new Error("dart_invalid_code");
+  }
+}
+
+async function buildKrStockResult(stockCode: string, corpName: string): Promise<StockSearchResult> {
+  for (const suffix of [".KS", ".KQ"] as const) {
+    const sym = `${stockCode}${suffix}`;
+    const verified = await verifyYahooSymbol(sym, "KR");
+    if (verified) {
+      return {
+        ticker: stockCode,
+        name: corpName || verified.name || stockCode,
+        market: "KR",
+        yahooSymbol: verified.yahooSymbol,
+        exchange: suffix === ".KQ" ? "KOE" : "KSC",
+      };
+    }
+  }
+  return {
+    ticker: stockCode,
+    name: corpName,
+    market: "KR",
+    yahooSymbol: `${stockCode}.KS`,
+    exchange: "KSC",
+  };
 }
 
 /** 종목코드·티커·회사명 → canonical ticker + Yahoo symbol. */

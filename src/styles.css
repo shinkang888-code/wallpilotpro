@@ -125,3 +125,21 @@
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* Chrome auto-translate injects <font> wrappers that break Tailwind layout — discourage + mitigate */
+html.notranslate,
+html.notranslate body {
+  translate: no;
+}
+
+html.translated-ltr body,
+html.translated-rtl body {
+  top: 0 !important;
+  position: static !important;
+}
+
+html.translated-ltr font,
+html.translated-rtl font {
+  all: unset;
+  display: contents;
+}

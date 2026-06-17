@@ -3,7 +3,7 @@
  */
 import assert from "node:assert/strict";
 
-import { resolveCorpCode, resetCorpCodeCacheForTests } from "../src/lib/modules/dart/corp-code.server";
+import { resolveCorpCode, resetCorpCodeCacheForTests, normalizeCorpName } from "../src/lib/modules/dart/corp-code.server";
 import { computeDartMetrics } from "../src/lib/modules/dart/opendart.server";
 import { buildDartContextMarkdown } from "../src/lib/modules/dart/dart-context.server";
 import { gradeDartMetrics } from "../src/lib/modules/dart/dart-metrics-health.server";
@@ -11,6 +11,9 @@ import { canAccessMenu } from "../src/lib/membership/menu-access";
 import { APP_MENUS } from "../src/lib/membership/menus";
 
 console.log("DARTLAB tests\n");
+
+assert.equal(normalizeCorpName("삼성전자(주)"), "삼성전자");
+assert.equal(normalizeCorpName("  한국정보공학 "), "한국정보공학");
 
 resetCorpCodeCacheForTests();
 const corp = await resolveCorpCode("005930", "");
