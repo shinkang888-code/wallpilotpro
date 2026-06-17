@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { resolveCorpCode, resetCorpCodeCacheForTests } from "../src/lib/modules/dart/corp-code.server";
 import { computeDartMetrics } from "../src/lib/modules/dart/opendart.server";
 import { buildDartContextMarkdown } from "../src/lib/modules/dart/dart-context.server";
+import { gradeDartMetrics } from "../src/lib/modules/dart/dart-metrics-health.server";
 import { canAccessMenu } from "../src/lib/membership/menu-access";
 import { APP_MENUS } from "../src/lib/membership/menus";
 
@@ -57,10 +58,17 @@ const md = buildDartContextMarkdown({
   ],
   financials: null,
   metrics,
+  metricHealth: gradeDartMetrics(metrics),
 });
 
 assert.ok(md.includes("삼성전자"));
 assert.ok(md.includes("부채비율"));
+assert.ok(md.includes("CPA 지표 판정"));
+
+const health = gradeDartMetrics(metrics);
+assert.equal(health.debtRatio.grade, "good");
+assert.equal(health.roe.grade, "risk");
+assert.equal(health.operatingMargin.grade, "good");
 
 const dartMenu = APP_MENUS.find((m) => m.id === "dart_lab");
 assert.ok(dartMenu);

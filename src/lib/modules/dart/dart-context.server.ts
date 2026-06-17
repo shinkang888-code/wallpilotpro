@@ -3,7 +3,9 @@ import type {
   DartDisclosure,
   DartFinancialSnapshot,
   DartKeyMetrics,
+  DartMetricHealth,
 } from "@/lib/modules/dart/types";
+import { formatMetricHealthForPrompt } from "@/lib/modules/dart/dart-metrics-health.server";
 
 function fmtMillion(n: number | null): string {
   if (n == null) return "-";
@@ -38,9 +40,10 @@ export function buildDartContextMarkdown(input: {
   disclosures: DartDisclosure[];
   financials: DartFinancialSnapshot | null;
   metrics: DartKeyMetrics;
+  metricHealth?: DartMetricHealth;
   sidecarContext?: string | null;
 }): string {
-  const { profile, disclosures, financials, metrics, sidecarContext } = input;
+  const { profile, disclosures, financials, metrics, metricHealth, sidecarContext } = input;
   const year = financials?.bsnsYear ?? "-";
 
   const disclosureLines = disclosures.slice(0, 8).map(
@@ -75,12 +78,19 @@ export function buildDartContextMarkdown(input: {
     `| ROE | ${fmtPct(metrics.roe)} |`,
     `| 유동비율 | ${fmtPct(metrics.currentRatio)} |`,
     "",
+  ];
+
+  if (metricHealth) {
+    sections.push("## CPA 지표 판정 (자동)", formatMetricHealthForPrompt(metricHealth), "");
+  }
+
+  sections.push(
     "## 재무제표 주요 계정",
     topAccounts(financials),
     "",
     "## 최근 공시 (최대 8건)",
     disclosureLines.length ? disclosureLines.join("\n") : "- 최근 공시 없음",
-  ];
+  );
 
   if (sidecarContext) {
     sections.push("", "## DartLab Sidecar (고급 데이터)", sidecarContext);

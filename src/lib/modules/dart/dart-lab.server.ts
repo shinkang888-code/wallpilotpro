@@ -8,6 +8,7 @@ import {
 } from "@/lib/modules/dart/opendart.server";
 import { buildDartContextMarkdown } from "@/lib/modules/dart/dart-context.server";
 import { explainDartWithAi } from "@/lib/modules/dart/dart-analyze.server";
+import { gradeDartMetrics } from "@/lib/modules/dart/dart-metrics-health.server";
 import type { DartLabAnalysis } from "@/lib/modules/dart/types";
 
 export async function runDartLabAnalysis(
@@ -26,19 +27,17 @@ export async function runDartLabAnalysis(
   ]);
 
   const metrics = computeDartMetrics(financials);
+  const metricHealth = gradeDartMetrics(metrics);
   const contextMarkdown = buildDartContextMarkdown({
     profile,
     disclosures,
     financials,
     metrics,
+    metricHealth,
     sidecarContext,
   });
 
-  const explanationMarkdown = await explainDartWithAi(
-    contextMarkdown,
-    profile.corpName,
-    geminiApiKey,
-  );
+  const ai = await explainDartWithAi(contextMarkdown, profile.corpName, metricHealth, geminiApiKey);
 
   return {
     stockCode,
@@ -47,8 +46,11 @@ export async function runDartLabAnalysis(
     disclosures,
     financials,
     metrics,
+    metricHealth,
     contextMarkdown,
-    explanationMarkdown,
+    explanationMarkdown: ai.markdown,
+    aiMode: ai.aiMode,
+    aiSource: ai.aiSource,
     source: sidecarContext ? "dartlab-ms" : "opendart",
     analyzedAt: new Date().toISOString(),
   };

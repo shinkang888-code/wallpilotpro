@@ -47,6 +47,22 @@ export type DartKeyMetrics = {
   currentRatio: number | null;
 };
 
+export type DartMetricGrade = "good" | "caution" | "risk" | "na";
+
+export type DartMetricHealthItem = {
+  value: number | null;
+  grade: DartMetricGrade;
+};
+
+export type DartMetricHealth = {
+  debtRatio: DartMetricHealthItem;
+  roe: DartMetricHealthItem;
+  operatingMargin: DartMetricHealthItem;
+  currentRatio: DartMetricHealthItem;
+};
+
+export type DartAiMode = "gemini" | "fallback";
+
 export type DartLabAnalysis = {
   stockCode: string;
   corpName: string;
@@ -54,8 +70,11 @@ export type DartLabAnalysis = {
   disclosures: DartDisclosure[];
   financials: DartFinancialSnapshot | null;
   metrics: DartKeyMetrics;
+  metricHealth: DartMetricHealth;
   contextMarkdown: string;
   explanationMarkdown: string;
+  aiMode: DartAiMode;
+  aiSource: "vercel" | "local" | "none";
   source: "opendart" | "dartlab-ms";
   analyzedAt: string;
 };

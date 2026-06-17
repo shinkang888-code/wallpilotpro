@@ -7,15 +7,22 @@ import { logUserActivity } from "@/lib/db/activity-log.server";
 import { runDartLabAnalysis } from "@/lib/modules/dart/dart-lab.server";
 import { isOpenDartConfigured } from "@/lib/modules/dart/opendart.server";
 import { getServerConfig } from "@/lib/config.server";
+import { isGeminiKeyAvailable, resolveGeminiKeySource } from "@/lib/gemini/resolve-gemini-key.server";
 import type { DartLabAnalysis } from "@/lib/modules/dart/types";
 
 export const getDartLabStatus = createServerFn({ method: "POST" })
-  .inputValidator(z.object({}))
-  .handler(async () => {
+  .inputValidator(
+    z.object({
+      ...clientGeminiKeySchema.shape,
+    }),
+  )
+  .handler(async ({ data }) => {
     const { dartlabServiceUrl } = getServerConfig();
     return {
       opendartConfigured: isOpenDartConfigured(),
       dartlabSidecarConfigured: Boolean(dartlabServiceUrl),
+      geminiConfigured: isGeminiKeyAvailable(data.geminiApiKey),
+      geminiSource: resolveGeminiKeySource(data.geminiApiKey),
     };
   });
 

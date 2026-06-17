@@ -16,6 +16,7 @@ import { Route as MyApiRouteImport } from './routes/my-api'
 import { Route as AiPilotRouteImport } from './routes/ai-pilot'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignalsIndexRouteImport } from './routes/signals/index'
+import { Route as DartlabIndexRouteImport } from './routes/dartlab/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as QuantRlLabRouteImport } from './routes/quant/rl-lab'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -57,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const SignalsIndexRoute = SignalsIndexRouteImport.update({
   id: '/signals/',
   path: '/signals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DartlabIndexRoute = DartlabIndexRouteImport.update({
+  id: '/dartlab/',
+  path: '/dartlab/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
+  '/dartlab/': typeof DartlabIndexRoute
   '/signals/': typeof SignalsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin': typeof AdminIndexRoute
+  '/dartlab': typeof DartlabIndexRoute
   '/signals': typeof SignalsIndexRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
+  '/dartlab/': typeof DartlabIndexRoute
   '/signals/': typeof SignalsIndexRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/quant/rl-lab'
     | '/admin/'
+    | '/dartlab/'
     | '/signals/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/quant/rl-lab'
     | '/admin'
+    | '/dartlab'
     | '/signals'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/quant/rl-lab'
     | '/admin/'
+    | '/dartlab/'
     | '/signals/'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   QuantRlLabRoute: typeof QuantRlLabRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  DartlabIndexRoute: typeof DartlabIndexRoute
   SignalsIndexRoute: typeof SignalsIndexRoute
 }
 
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/signals'
       fullPath: '/signals/'
       preLoaderRoute: typeof SignalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dartlab/': {
+      id: '/dartlab/'
+      path: '/dartlab'
+      fullPath: '/dartlab/'
+      preLoaderRoute: typeof DartlabIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   QuantRlLabRoute: QuantRlLabRoute,
   AdminIndexRoute: AdminIndexRoute,
+  DartlabIndexRoute: DartlabIndexRoute,
   SignalsIndexRoute: SignalsIndexRoute,
 }
 export const routeTree = rootRouteImport
