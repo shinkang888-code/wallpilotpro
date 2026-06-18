@@ -1,28 +1,32 @@
 import { inflateRawSync } from "node:zlib";
 
 /** Major KR listed companies — fallback when corpCode.xml unavailable. */
-const SEED_STOCK_TO_CORP: Record<string, string> = {
-  "005930": "00126380",
-  "000660": "00164779",
-  "005380": "00164742",
-  "035420": "00266961",
-  "035720": "00258801",
-  "051910": "00356361",
-  "006400": "00126362",
-  "005490": "00155319",
-  "068270": "00413046",
-  "105560": "00688996",
-  "055550": "00382199",
-  "032830": "00105873",
-  "066570": "00401731",
-  "003550": "00120030",
-  "034730": "00181712",
-  "015760": "00159193",
-  "009150": "00126380",
-  "012330": "00164788",
-  "028260": "00149655",
-  "207940": "00877059",
-};
+const SEED_CORP_ENTRIES: Array<{ stockCode: string; corpCode: string; corpName: string }> = [
+  { stockCode: "005930", corpCode: "00126380", corpName: "삼성전자" },
+  { stockCode: "000660", corpCode: "00164779", corpName: "SK하이닉스" },
+  { stockCode: "005380", corpCode: "00164742", corpName: "현대차" },
+  { stockCode: "035420", corpCode: "00266961", corpName: "NAVER" },
+  { stockCode: "035720", corpCode: "00258801", corpName: "카카오" },
+  { stockCode: "051910", corpCode: "00356361", corpName: "LG화학" },
+  { stockCode: "006400", corpCode: "00126362", corpName: "삼성SDI" },
+  { stockCode: "005490", corpCode: "00155319", corpName: "POSCO홀딩스" },
+  { stockCode: "068270", corpCode: "00413046", corpName: "셀트리온" },
+  { stockCode: "105560", corpCode: "00688996", corpName: "KB금융" },
+  { stockCode: "055550", corpCode: "00382199", corpName: "신한지주" },
+  { stockCode: "032830", corpCode: "00105873", corpName: "삼성생명" },
+  { stockCode: "066570", corpCode: "00401731", corpName: "LG전자" },
+  { stockCode: "003550", corpCode: "00120030", corpName: "LG" },
+  { stockCode: "034730", corpCode: "00181712", corpName: "SK" },
+  { stockCode: "015760", corpCode: "00159193", corpName: "한국전력" },
+  { stockCode: "012330", corpCode: "00164788", corpName: "현대모비스" },
+  { stockCode: "028260", corpCode: "00149655", corpName: "삼성물산" },
+  { stockCode: "207940", corpCode: "00877059", corpName: "삼성바이오로직스" },
+  { stockCode: "039740", corpCode: "00261957", corpName: "한국정보공학" },
+];
+
+const SEED_STOCK_TO_CORP: Record<string, string> = Object.fromEntries(
+  SEED_CORP_ENTRIES.map((e) => [e.stockCode, e.corpCode]),
+);
 
 let corpMapCache: Map<string, { corpCode: string; corpName: string }> | null = null;
 let corpMapLoading: Promise<Map<string, { corpCode: string; corpName: string }>> | null = null;
@@ -58,8 +62,8 @@ async function loadCorpMap(apiKey: string): Promise<Map<string, { corpCode: stri
   corpMapLoading = (async () => {
     const map = new Map<string, { corpCode: string; corpName: string }>();
 
-    for (const [stock, corp] of Object.entries(SEED_STOCK_TO_CORP)) {
-      map.set(stock, { corpCode: corp, corpName: "" });
+    for (const entry of SEED_CORP_ENTRIES) {
+      map.set(entry.stockCode, { corpCode: entry.corpCode, corpName: entry.corpName });
     }
 
     try {
@@ -101,7 +105,7 @@ export async function searchKrStocksByCorpName(
   limit = 12,
 ): Promise<Array<{ stockCode: string; corpName: string; corpCode: string }>> {
   const q = normalizeCorpName(query);
-  if (!q || !apiKey) return [];
+  if (!q) return [];
 
   const map = await loadCorpMap(apiKey);
   const matches: Array<{ stockCode: string; corpName: string; corpCode: string; score: number }> = [];

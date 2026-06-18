@@ -26,7 +26,15 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
     <header className="sticky top-0 z-30 w-full border-b border-hairline bg-background/75 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex min-w-0 items-center gap-6">
-          <Link to="/" className="flex min-w-0 flex-col leading-tight">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5 leading-tight">
+            <img
+              src="/icon.png"
+              alt=""
+              width={40}
+              height={40}
+              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-hairline sm:h-10 sm:w-10"
+            />
+            <span className="flex min-w-0 flex-col">
             <span className="font-display text-lg font-bold tracking-tight text-foreground sm:text-xl">
               WallPilot Pro
             </span>
@@ -40,6 +48,7 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                 {tierBadge}
               </span>
+            </span>
             </span>
           </Link>
 

@@ -14,5 +14,9 @@ export function formatFeatureError(message: string, t: (key: string) => string):
     if (feature === "wall_report") return t("auth_err_need_pro");
     return t("auth_notice_upgrade");
   }
+  if (message === "dart_invalid_code") return t("dart_invalid_code");
+  if (message === "dart_kr_only") return t("dart_kr_only");
+  if (message === "dart_name_not_found") return t("dart_name_not_found");
+  if (message === "dart_failed") return t("dart_failed");
   return message;
 }

@@ -3,7 +3,8 @@
  */
 import assert from "node:assert/strict";
 
-import { resolveCorpCode, resetCorpCodeCacheForTests, normalizeCorpName } from "../src/lib/modules/dart/corp-code.server";
+import { resolveCorpCode, resetCorpCodeCacheForTests, normalizeCorpName, lookupKrStockByCorpName } from "../src/lib/modules/dart/corp-code.server";
+import { resolveKrStockInput, searchKrStocks } from "../src/lib/api/stock-search.server";
 import { computeDartMetrics } from "../src/lib/modules/dart/opendart.server";
 import { buildDartContextMarkdown } from "../src/lib/modules/dart/dart-context.server";
 import { gradeDartMetrics } from "../src/lib/modules/dart/dart-metrics-health.server";
@@ -14,6 +15,18 @@ console.log("DARTLAB tests\n");
 
 assert.equal(normalizeCorpName("삼성전자(주)"), "삼성전자");
 assert.equal(normalizeCorpName("  한국정보공학 "), "한국정보공학");
+
+resetCorpCodeCacheForTests();
+const kies = await lookupKrStockByCorpName("한국정보공학", "");
+assert.ok(kies, "한국정보공학 seed lookup");
+assert.equal(kies!.stockCode, "039740");
+
+const kiesSearch = await searchKrStocks("한국정보공학");
+assert.ok(kiesSearch.some((r) => r.ticker === "039740"), "searchKrStocks 한국정보공학");
+
+const kiesResolved = await resolveKrStockInput("한국정보공학");
+assert.equal(kiesResolved.ticker, "039740");
+assert.ok(kiesResolved.name.includes("한국정보공학") || kiesResolved.ticker === "039740");
 
 resetCorpCodeCacheForTests();
 const corp = await resolveCorpCode("005930", "");

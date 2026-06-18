@@ -70,12 +70,14 @@ export async function searchKrStocks(query: string, limit = 12): Promise<StockSe
   const q = query.trim();
   if (!q) return [];
 
-  const yahoo = (await searchStocks(q, limit)).filter((row) => row.market === "KR");
-  if (yahoo.length > 0) return yahoo.slice(0, limit);
-
   const { opendartApiKey } = getServerConfig();
   const byName = await searchKrStocksByCorpName(q, opendartApiKey, limit);
-  return Promise.all(byName.map((hit) => buildKrStockResult(hit.stockCode, hit.corpName)));
+  if (byName.length > 0) {
+    return Promise.all(byName.map((hit) => buildKrStockResult(hit.stockCode, hit.corpName)));
+  }
+
+  const yahoo = (await searchStocks(q, limit)).filter((row) => row.market === "KR");
+  return yahoo.slice(0, limit);
 }
 
 /** KR listed stocks only — for DARTLAB / OpenDART. */

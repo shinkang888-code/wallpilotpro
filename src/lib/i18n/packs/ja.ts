@@ -448,5 +448,11 @@ export const pack = {
   "dart_gemini_ready": "Gemini準備完了 — 分析時にCPA AIブリーフが実行されます。",
   "tm_lab_intro": "ワーカーオンライン時はインスタントクイックスキャンまたはフルTradeMaster RLでポートフォリオ戦略を検証。",
   "showcase_title": "巨人が取引する銘柄を — 市場が追いつく前に。",
-  "showcase_sub": "機関投資家13F提出、Toss大口投資家フロー、空売り残高シグナル — ひとつの意思決定に凝縮。"
+  "showcase_sub": "機関投資家13F提出、Toss大口投資家フロー、空売り残高シグナル — ひとつの意思決定に凝縮。",
+  "dart_code_label": "Stock code",
+  "dart_code_pending": "Auto-filled",
+  "dart_failed": "DART analysis failed. Try again in a moment.",
+  "dart_name_label": "Company name",
+  "dart_name_not_found": "No listed KR company matched that name.",
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
 } as const;

@@ -448,5 +448,11 @@ export const pack = {
   "dart_gemini_ready": "Gemini तैयार — विश्लेषण पर CPA AI ब्रीफ चलेगा।",
   "tm_lab_intro": "तत्काल त्वरित स्कैन या वर्कर ऑनलाइन होने पर पूर्ण TradeMaster RL से पोर्टफोलियो रणनीतियाँ सत्यापित करें।",
   "showcase_title": "वे ट्रेड करें जो दिग्गज ट्रेड करते हैं — टेप पकड़ने से पहले।",
-  "showcase_sub": "संस्थागत 13F फ़ाइलिंग, Toss हाई-रोलर प्रवाह और शॉर्ट-इंटरेस्ट सिग्नल — एक निर्णय में संघनित।"
+  "showcase_sub": "संस्थागत 13F फ़ाइलिंग, Toss हाई-रोलर प्रवाह और शॉर्ट-इंटरेस्ट सिग्नल — एक निर्णय में संघनित।",
+  "dart_code_label": "Stock code",
+  "dart_code_pending": "Auto-filled",
+  "dart_failed": "DART analysis failed. Try again in a moment.",
+  "dart_name_label": "Company name",
+  "dart_name_not_found": "No listed KR company matched that name.",
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
 } as const;

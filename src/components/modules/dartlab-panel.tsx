@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 
 
-import { DartStockSearchCombobox, normalizeKrStockQuery } from "@/components/modules/dart-stock-search-combobox";
+import { DartStockNameCodeSearch } from "@/components/modules/dart-stock-name-code-search";
 
 import {
 
@@ -96,7 +96,8 @@ export function DartLabPanel() {
 
   const { key: geminiApiKey } = useGeminiApiKey();
 
-  const [query, setQuery] = useState("005930");
+  const [companyName, setCompanyName] = useState("삼성전자");
+  const [stockCode, setStockCode] = useState("005930");
 
   const [tab, setTab] = useState<TabId>("ai");
 
@@ -108,8 +109,6 @@ export function DartLabPanel() {
 
   const [opendartOk, setOpendartOk] = useState(false);
 
-  const [geminiOk, setGeminiOk] = useState(false);
-
   const requestSeq = useRef(0);
 
 
@@ -117,11 +116,7 @@ export function DartLabPanel() {
   useEffect(() => {
 
     void getDartLabStatus({ data: { geminiApiKey: geminiApiKey ?? undefined } }).then((s) => {
-
       setOpendartOk(s.opendartConfigured);
-
-      setGeminiOk(s.geminiConfigured);
-
     });
 
   }, [geminiApiKey]);
@@ -134,15 +129,8 @@ export function DartLabPanel() {
 
 
 
-  const runAnalysis = async (symbol: string) => {
-    let code: string;
-    try {
-      code = await normalizeKrStockQuery(symbol);
-      setQuery(code);
-    } catch (e) {
-      setError(formatFeatureError(e instanceof Error ? e.message : "dart_invalid_code", t));
-      return;
-    }
+  const runAnalysis = async (codeInput?: string) => {
+    const code = (codeInput ?? stockCode).trim();
 
     if (!/^\d{6}$/.test(code)) {
       setError(t("dart_invalid_code"));
@@ -187,7 +175,9 @@ export function DartLabPanel() {
 
       setResult(data);
 
-      setQuery(code);
+      setStockCode(data.stockCode);
+
+      setCompanyName(data.corpName);
 
       toast.success(data.aiMode === "gemini" ? t("dart_analysis_done") : t("dart_gemini_hint"));
 
@@ -242,78 +232,28 @@ export function DartLabPanel() {
 
 
         <div className="mb-4 flex flex-wrap gap-2">
-
           {!opendartOk && (
-
             <p className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-
               {t("dart_opendart_hint")}
-
             </p>
-
           )}
-
-          {opendartOk && geminiOk && (
-
-            <p className="w-full rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs text-violet-900">
-
-              {t("dart_gemini_ready")}
-
-            </p>
-
-          )}
-
-          {opendartOk && !geminiOk && (
-
-            <p className="w-full rounded-xl border border-hairline bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-
-              {t("dart_gemini_hint")}
-
-            </p>
-
-          )}
-
         </div>
 
-
-
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-
-          <label className="flex-1">
-
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-
-              {t("dart_stock_label")}
-
-            </span>
-
-            <DartStockSearchCombobox
-
-              value={query}
-
-              onChange={setQuery}
-
-              onSelect={(item) => {
-
-                setQuery(item.ticker);
-
-                void runAnalysis(item.ticker);
-
-              }}
-
+          <div className="flex-1">
+            <DartStockNameCodeSearch
+              companyName={companyName}
+              stockCode={stockCode}
+              onCompanyNameChange={setCompanyName}
+              onStockCodeChange={setStockCode}
               disabled={loading}
-
             />
-
-          </label>
+          </div>
 
           <button
-
             type="button"
-
-            onClick={() => void runAnalysis(query.trim())}
-
-            disabled={loading || !query.trim() || !canRun || !opendartOk}
+            onClick={() => void runAnalysis()}
+            disabled={loading || !stockCode.trim() || !canRun || !opendartOk}
 
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-6 py-3 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
 
@@ -340,11 +280,9 @@ export function DartLabPanel() {
               type="button"
 
               onClick={() => {
-
-                setQuery(p.ticker);
-
+                setCompanyName(p.name);
+                setStockCode(p.ticker);
                 void runAnalysis(p.ticker);
-
               }}
 
               className="rounded-full border border-hairline px-3 py-1 text-xs text-muted-foreground hover:border-rose-400 hover:text-rose-700"

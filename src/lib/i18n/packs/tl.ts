@@ -448,5 +448,11 @@ export const pack = {
   "dart_gemini_ready": "Handa ang Gemini — tatakbo ang CPA AI brief sa analyze.",
   "tm_lab_intro": "I-validate ang portfolio strategies gamit ang instant quick scan o buong TradeMaster RL kapag online ang worker.",
   "showcase_title": "Mag-trade kung ano ang i-trade ng mga higante — bago habulin ng tape.",
-  "showcase_sub": "Institutional 13F filings, Toss high-roller flows, at short-interest signals — pinagsama sa isang desisyon."
+  "showcase_sub": "Institutional 13F filings, Toss high-roller flows, at short-interest signals — pinagsama sa isang desisyon.",
+  "dart_code_label": "Stock code",
+  "dart_code_pending": "Auto-filled",
+  "dart_failed": "DART analysis failed. Try again in a moment.",
+  "dart_name_label": "Company name",
+  "dart_name_not_found": "No listed KR company matched that name.",
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
 } as const;
