@@ -1,133 +1,97 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ExternalLink, Lock } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { AuthButton } from "@/components/auth-button";
-import { LanguageScrollSelector } from "@/components/language-scroll-selector";
-import { pickLocaleString } from "@/components/language-scroll-selector";
+import { HeaderAppNav } from "@/components/header-app-nav";
+import { LanguageMenu } from "@/components/language-menu";
 import { useI18n } from "@/lib/i18n";
-import { APP_MENUS } from "@/lib/membership/menus";
 import { canAccessMenu } from "@/lib/membership/menu-access";
-import { tierDefinition } from "@/lib/membership/tiers";
+import type { AppMenuId } from "@/lib/membership/menus";
 import { useAuth } from "@/lib/use-auth";
-import { useTossApiKey } from "@/lib/use-toss-api-key";
 import { cn } from "@/lib/utils";
 
 const TOSS_INVEST_URL = "https://www.tossinvest.com/";
 
 export function Header({ walletBalance }: { walletBalance: { krw: number; usd: number } | null }) {
-  const { t, lang } = useI18n();
-  const { isConnected } = useTossApiKey();
+  const { t } = useI18n();
   const auth = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const tierBadge = pickLocaleString(tierDefinition(auth.membershipTier).name, lang);
+  const canViewMenu = (menuId: AppMenuId) =>
+    canAccessMenu(menuId, auth.membershipTier, "view", [], auth.isAdmin);
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-hairline bg-background/75 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex min-w-0 items-center gap-6">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5 leading-tight">
-            <img
-              src="/icon.png"
-              alt=""
-              width={40}
-              height={40}
-              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-hairline sm:h-10 sm:w-10"
-            />
-            <span className="flex min-w-0 flex-col">
-            <span className="font-display text-lg font-bold tracking-tight text-foreground sm:text-xl">
+    <header className="sticky top-0 z-30 w-full border-b border-hairline bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+      {/* Brand + utilities */}
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
+        <Link
+          to="/"
+          className="flex min-w-0 shrink-0 items-center gap-2.5 rounded-xl pr-1 transition-opacity hover:opacity-90"
+        >
+          <img
+            src="/icon.png"
+            alt=""
+            width={36}
+            height={36}
+            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-hairline"
+          />
+          <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+            <span className="font-display text-base font-bold tracking-tight text-foreground">
               WallPilot Pro
             </span>
-            <span className="mt-0.5 flex items-center gap-1.5">
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 shrink-0 rounded-full",
-                  isConnected ? "bg-positive shadow-[0_0_8px_rgba(0,181,122,0.7)]" : "bg-muted-foreground/40",
-                )}
-              />
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                {tierBadge}
-              </span>
+            <span className="text-[10px] font-medium text-muted-foreground">
+              KR · US Trading
             </span>
-            </span>
-          </Link>
+          </span>
+        </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            {APP_MENUS.map((menu) => (
-              <NavLink
-                key={menu.id}
-                to={menu.path}
-                active={menu.path === "/" ? pathname === "/" : pathname.startsWith(menu.path)}
-                label={t(menu.labelKey)}
-                locked={!canAccessMenu(menu.id, auth.membershipTier, "view", [], auth.isAdmin)}
-              />
-            ))}
-            {auth.isStaff && (
-              <NavLink to="/admin" active={pathname.startsWith("/admin")} label={t("nav_admin")} />
-            )}
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <BalanceWidget balance={walletBalance} />
           <TossExternalLink />
+          <div className="hidden h-5 w-px bg-hairline sm:block" aria-hidden />
           <AuthButton />
-          <LanguageScrollSelector />
+          <LanguageMenu />
         </div>
       </div>
 
-      <nav className="flex overflow-x-auto border-t border-hairline px-2 py-2 lg:hidden">
-        {APP_MENUS.map((menu) => (
-          <NavLink
-            key={menu.id}
-            to={menu.path}
-            active={menu.path === "/" ? pathname === "/" : pathname.startsWith(menu.path)}
-            label={t(menu.labelKey)}
-            mobile
-            locked={!canAccessMenu(menu.id, auth.membershipTier, "view", [], auth.isAdmin)}
+      {/* Desktop navigation */}
+      <div className="hidden border-t border-hairline/80 lg:block">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <HeaderAppNav
+            pathname={pathname}
+            canViewMenu={canViewMenu}
+            showAdmin={auth.isStaff}
           />
-        ))}
-        {auth.isStaff && (
-          <NavLink to="/admin" active={pathname.startsWith("/admin")} label={t("nav_admin")} mobile />
-        )}
-        <TossExternalLink mobile />
-      </nav>
+        </div>
+      </div>
+
+      {/* Mobile navigation */}
+      <div className="border-t border-hairline/80 lg:hidden">
+        <div className="mx-auto max-w-7xl px-2 py-1.5 sm:px-4">
+          <HeaderAppNav
+            pathname={pathname}
+            canViewMenu={canViewMenu}
+            showAdmin={auth.isStaff}
+          />
+        </div>
+        <div className="flex justify-center border-t border-hairline/60 px-4 py-1.5 sm:hidden">
+          <a
+            href={TOSS_INVEST_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"
+            aria-label={t("nav_toss_aria")}
+          >
+            {t("nav_toss")}
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+        </div>
+      </div>
     </header>
   );
 }
 
-function NavLink({
-  to,
-  active,
-  label,
-  mobile,
-  locked,
-}: {
-  to: string;
-  active: boolean;
-  label: string;
-  mobile?: boolean;
-  locked?: boolean;
-}) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors",
-        mobile && "shrink-0 px-2",
-        active
-          ? "bg-foreground text-background"
-          : "text-muted-foreground hover:bg-surface hover:text-foreground",
-        locked && !active && "opacity-60",
-      )}
-    >
-      {locked && <Lock className="h-3 w-3" />}
-      {label}
-    </Link>
-  );
-}
-
-function TossExternalLink({ mobile }: { mobile?: boolean }) {
+function TossExternalLink() {
   const { t } = useI18n();
 
   return (
@@ -136,38 +100,41 @@ function TossExternalLink({ mobile }: { mobile?: boolean }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "inline-flex items-center justify-center gap-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5",
-        mobile && "shrink-0",
+        "inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-hairline bg-surface px-2.5 text-xs font-semibold text-foreground transition-colors",
+        "hover:border-primary/30 hover:bg-primary/[0.03]",
       )}
       aria-label={t("nav_toss_aria")}
     >
-      {t("nav_toss")}
-      <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+      <span className="hidden sm:inline">{t("nav_toss")}</span>
+      <span className="sm:hidden">Toss</span>
+      <ExternalLink className="h-3 w-3 shrink-0 opacity-50" />
     </a>
   );
 }
 
 function BalanceWidget({ balance }: { balance: { krw: number; usd: number } | null }) {
   const { t } = useI18n();
+
   if (!balance) {
     return (
-      <div className="hidden sm:flex flex-col items-end">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+      <div className="hidden items-center gap-2 md:flex">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           {t("total_assets")}
         </span>
-        <span className="shimmer mt-1 h-4 w-32 rounded-md" />
+        <span className="shimmer h-4 w-24 rounded-md" />
       </div>
     );
   }
+
   return (
-    <div className="hidden sm:flex flex-col items-end leading-tight">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+    <div className="hidden flex-col items-end leading-tight md:flex">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         {t("total_assets")}
       </span>
-      <span className="font-display text-sm font-semibold text-foreground tabular-nums">
-        ₩{balance.krw.toLocaleString()} · ${balance.usd.toLocaleString()}
+      <span className="font-display text-xs font-semibold tabular-nums text-foreground sm:text-sm">
+        <span className="hidden lg:inline">₩{balance.krw.toLocaleString()} · </span>
+        ${balance.usd.toLocaleString()}
       </span>
     </div>
   );
 }
-

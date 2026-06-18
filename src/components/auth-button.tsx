@@ -60,7 +60,7 @@ export function AuthButton() {
       {auth.user && auth.isActive && (
         <span
           className={cn(
-            "hidden rounded-full px-2 py-0.5 text-[10px] font-bold uppercase sm:inline",
+            "hidden rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide md:inline",
             auth.membershipTier === "elite"
               ? "bg-amber-100 text-amber-900"
               : auth.membershipTier === "premium"
