@@ -1,5 +1,5 @@
 const CACHE = "wallpilot-static-v1";
-const PRECACHE = ["/", "/manifest.webmanifest", "/icon.png"];
+const PRECACHE = ["/", "/manifest.webmanifest", "/icon.png", "/logo.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

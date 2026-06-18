@@ -26,23 +26,15 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
         <Link
           to="/"
-          className="flex min-w-0 shrink-0 items-center gap-2.5 rounded-xl pr-1 transition-opacity hover:opacity-90"
+          className="flex min-w-0 shrink-0 items-center rounded-lg transition-opacity hover:opacity-90"
         >
           <img
-            src="/icon.png"
-            alt=""
-            width={36}
-            height={36}
-            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-hairline"
+            src="/logo.png"
+            alt="WallPilot Pro"
+            width={160}
+            height={40}
+            className="h-8 w-auto max-w-[9.5rem] object-contain object-left sm:h-9 sm:max-w-[11rem]"
           />
-          <span className="hidden min-w-0 flex-col leading-tight sm:flex">
-            <span className="font-display text-base font-bold tracking-tight text-foreground">
-              WallPilot Pro
-            </span>
-            <span className="text-[10px] font-medium text-muted-foreground">
-              KR · US Trading
-            </span>
-          </span>
         </Link>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
