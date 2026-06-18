@@ -449,10 +449,13 @@ export const pack = {
   "tm_lab_intro": "使用即时快速扫描验证投资组合策略，或在 Worker 在线时使用完整 TradeMaster RL。",
   "showcase_title": "在行情反映之前，交易巨鲸的交易。",
   "showcase_sub": "机构 13F 文件、Toss 大户资金流向和空头兴趣信号 — 浓缩为一个决策。",
+  "dart_ai_mode_rules": "CPA rules",
+  "dart_analysis_rules_done": "DART analysis complete (OpenDART CPA brief).",
   "dart_code_label": "Stock code",
   "dart_code_pending": "Auto-filled",
   "dart_failed": "DART analysis failed. Try again in a moment.",
   "dart_name_label": "Company name",
   "dart_name_not_found": "No listed KR company matched that name.",
-  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)",
+  "dart_rules_with_key_hint": "Gemini AI is temporarily unavailable — showing OpenDART metric-based CPA brief. Retry shortly for full AI commentary."
 } as const;

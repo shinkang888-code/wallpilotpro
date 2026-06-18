@@ -57,6 +57,7 @@ export function DartMetricHealthGrid({ result }: { result: DartLabAnalysis }) {
 export function DartCpaReport({ result }: { result: DartLabAnalysis }) {
   const { t } = useI18n();
   const isAi = result.aiMode === "gemini";
+  const isRules = result.aiMode === "rules";
   const aiSourceLabel =
     result.aiSource === "vercel"
       ? t("dart_ai_source_vercel")
@@ -74,11 +75,19 @@ export function DartCpaReport({ result }: { result: DartLabAnalysis }) {
         <span
           className={cn(
             "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-            isAi ? "bg-violet-100 text-violet-800" : "bg-muted text-muted-foreground",
+            isAi
+              ? "bg-violet-100 text-violet-800"
+              : isRules
+                ? "bg-sky-100 text-sky-800"
+                : "bg-muted text-muted-foreground",
           )}
         >
           {isAi ? <Sparkles className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-          {isAi ? t("dart_ai_mode_gemini") : t("dart_ai_mode_fallback")}
+          {isAi
+            ? t("dart_ai_mode_gemini")
+            : isRules
+              ? t("dart_ai_mode_rules")
+              : t("dart_ai_mode_fallback")}
         </span>
         <span className="inline-flex items-center gap-1 rounded-full border border-hairline bg-white px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
           <Bot className="h-3 w-3" />
@@ -86,9 +95,15 @@ export function DartCpaReport({ result }: { result: DartLabAnalysis }) {
         </span>
       </div>
 
-      {!isAi && (
+      {!isAi && !isRules && (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
           {t("dart_gemini_hint")}
+        </p>
+      )}
+
+      {isRules && result.aiSource !== "none" && (
+        <p className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900">
+          {t("dart_rules_with_key_hint")}
         </p>
       )}
 

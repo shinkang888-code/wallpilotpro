@@ -449,10 +449,13 @@ export const pack = {
   "tm_lab_intro": "Xác thực chiến lược danh mục bằng quick scan tức thì hoặc TradeMaster RL đầy đủ khi worker online.",
   "showcase_title": "Giao dịch như những gã khổng lồ — trước khi thị trường kịp phản ứng.",
   "showcase_sub": "Hồ sơ 13F tổ chức, dòng tiền Toss high-roller và tín hiệu short-interest — chưng cất thành một quyết định.",
+  "dart_ai_mode_rules": "CPA rules",
+  "dart_analysis_rules_done": "DART analysis complete (OpenDART CPA brief).",
   "dart_code_label": "Stock code",
   "dart_code_pending": "Auto-filled",
   "dart_failed": "DART analysis failed. Try again in a moment.",
   "dart_name_label": "Company name",
   "dart_name_not_found": "No listed KR company matched that name.",
-  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)",
+  "dart_rules_with_key_hint": "Gemini AI is temporarily unavailable — showing OpenDART metric-based CPA brief. Retry shortly for full AI commentary."
 } as const;

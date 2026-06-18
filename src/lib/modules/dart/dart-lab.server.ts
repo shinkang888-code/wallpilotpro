@@ -37,7 +37,13 @@ export async function runDartLabAnalysis(
     sidecarContext,
   });
 
-  const ai = await explainDartWithAi(contextMarkdown, profile.corpName, metricHealth, geminiApiKey);
+  const ai = await explainDartWithAi(
+    contextMarkdown,
+    profile.corpName,
+    metrics,
+    metricHealth,
+    geminiApiKey,
+  );
 
   return {
     stockCode,

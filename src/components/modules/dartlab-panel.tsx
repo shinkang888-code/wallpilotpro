@@ -179,7 +179,13 @@ export function DartLabPanel() {
 
       setCompanyName(data.corpName);
 
-      toast.success(data.aiMode === "gemini" ? t("dart_analysis_done") : t("dart_gemini_hint"));
+      toast.success(
+        data.aiMode === "gemini"
+          ? t("dart_analysis_done")
+          : data.aiMode === "rules"
+            ? t("dart_analysis_rules_done")
+            : t("dart_gemini_hint"),
+      );
 
     } catch (e) {
 

@@ -449,10 +449,13 @@ export const pack = {
   "tm_lab_intro": "तत्काल त्वरित स्कैन या वर्कर ऑनलाइन होने पर पूर्ण TradeMaster RL से पोर्टफोलियो रणनीतियाँ सत्यापित करें।",
   "showcase_title": "वे ट्रेड करें जो दिग्गज ट्रेड करते हैं — टेप पकड़ने से पहले।",
   "showcase_sub": "संस्थागत 13F फ़ाइलिंग, Toss हाई-रोलर प्रवाह और शॉर्ट-इंटरेस्ट सिग्नल — एक निर्णय में संघनित।",
+  "dart_ai_mode_rules": "CPA rules",
+  "dart_analysis_rules_done": "DART analysis complete (OpenDART CPA brief).",
   "dart_code_label": "Stock code",
   "dart_code_pending": "Auto-filled",
   "dart_failed": "DART analysis failed. Try again in a moment.",
   "dart_name_label": "Company name",
   "dart_name_not_found": "No listed KR company matched that name.",
-  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)",
+  "dart_rules_with_key_hint": "Gemini AI is temporarily unavailable — showing OpenDART metric-based CPA brief. Retry shortly for full AI commentary."
 } as const;

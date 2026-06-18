@@ -61,7 +61,7 @@ export type DartMetricHealth = {
   currentRatio: DartMetricHealthItem;
 };
 
-export type DartAiMode = "gemini" | "fallback";
+export type DartAiMode = "gemini" | "rules" | "fallback";
 
 export type DartLabAnalysis = {
   stockCode: string;

@@ -449,10 +449,13 @@ export const pack = {
   "tm_lab_intro": "ワーカーオンライン時はインスタントクイックスキャンまたはフルTradeMaster RLでポートフォリオ戦略を検証。",
   "showcase_title": "巨人が取引する銘柄を — 市場が追いつく前に。",
   "showcase_sub": "機関投資家13F提出、Toss大口投資家フロー、空売り残高シグナル — ひとつの意思決定に凝縮。",
+  "dart_ai_mode_rules": "CPA rules",
+  "dart_analysis_rules_done": "DART analysis complete (OpenDART CPA brief).",
   "dart_code_label": "Stock code",
   "dart_code_pending": "Auto-filled",
   "dart_failed": "DART analysis failed. Try again in a moment.",
   "dart_name_label": "Company name",
   "dart_name_not_found": "No listed KR company matched that name.",
-  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)"
+  "dart_name_placeholder": "Search by company name (e.g. Samsung, 한국정보공학)",
+  "dart_rules_with_key_hint": "Gemini AI is temporarily unavailable — showing OpenDART metric-based CPA brief. Retry shortly for full AI commentary."
 } as const;

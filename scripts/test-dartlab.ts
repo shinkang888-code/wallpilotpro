@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 
 import { resolveCorpCode, resetCorpCodeCacheForTests, normalizeCorpName, lookupKrStockByCorpName } from "../src/lib/modules/dart/corp-code.server";
 import { resolveKrStockInput, searchKrStocks } from "../src/lib/api/stock-search.server";
+import { buildRuleBasedCpaExplanation } from "../src/lib/modules/dart/dart-cpa-rules.server";
+import { explainDartWithAi } from "../src/lib/modules/dart/dart-analyze.server";
 import { computeDartMetrics } from "../src/lib/modules/dart/opendart.server";
 import { buildDartContextMarkdown } from "../src/lib/modules/dart/dart-context.server";
 import { gradeDartMetrics } from "../src/lib/modules/dart/dart-metrics-health.server";
@@ -91,5 +93,14 @@ assert.ok(dartMenu);
 assert.equal(dartMenu!.namespace, "dart");
 assert.equal(canAccessMenu("dart_lab", "day_trading", "execute"), true);
 assert.equal(canAccessMenu("dart_lab", "free", "execute"), false);
+
+const rulesMd = buildRuleBasedCpaExplanation("삼성전자", metrics, health, md);
+assert.ok(rulesMd.includes("## CPA 결론"));
+assert.ok(rulesMd.includes("부채비율"));
+assert.ok(!rulesMd.includes("Gemini 키 설정"));
+
+const noKeyAi = await explainDartWithAi(md, "삼성전자", metrics, health, null);
+assert.equal(noKeyAi.aiMode, "rules");
+assert.ok(noKeyAi.markdown.includes("## 핵심 요약"));
 
 console.log("✓ All DARTLAB checks passed");
