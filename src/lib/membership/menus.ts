@@ -6,13 +6,14 @@ export type AppMenuId =
   | "wall_report"
   | "ai_pilot"
   | "agent_desk"
-  | "signal_hub"
-  | "rl_lab"
-  | "crypto_bot"
   | "toss_trader"
   | "dart_lab"
   | "my_api"
-  | "pricing";
+  | "pricing"
+  /** @deprecated Nav removed — routes/entitlements only */
+  | "signal_hub"
+  | "rl_lab"
+  | "crypto_bot";
 
 export type MenuAction = "view" | "execute" | "export_pdf";
 
@@ -69,30 +70,6 @@ export const APP_MENUS: AppMenuDefinition[] = [
     namespace: "ta",
     defaultMinTier: "premium",
     phase: 2,
-  },
-  {
-    id: "signal_hub",
-    path: "/signals",
-    labelKey: "nav_signal_hub",
-    namespace: "ait",
-    defaultMinTier: "free",
-    phase: 3,
-  },
-  {
-    id: "rl_lab",
-    path: "/quant/rl-lab",
-    labelKey: "nav_rl_lab",
-    namespace: "tm",
-    defaultMinTier: "elite",
-    phase: 4,
-  },
-  {
-    id: "crypto_bot",
-    path: "/crypto-bot",
-    labelKey: "nav_crypto_bot",
-    namespace: "ft",
-    defaultMinTier: "day_trading",
-    phase: 6,
   },
   {
     id: "toss_trader",

@@ -36,10 +36,6 @@ const FEATURE_MENU: Partial<Record<EntitlementFeature, AppMenuId>> = {
   wall_report: "wall_report",
   ai_pilot: "ai_pilot",
   agent_desk: "agent_desk",
-  signals_read: "signal_hub",
-  signals_write: "signal_hub",
-  rl_lab: "rl_lab",
-  crypto_bot: "crypto_bot",
   toss_trader: "toss_trader",
   dart_lab: "dart_lab",
 };
