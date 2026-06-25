@@ -59,5 +59,8 @@ export function getServerConfig() {
     opendartApiKey: process.env.OPENDART_API_KEY ?? "",
     dartlabServiceUrl: process.env.DARTLAB_SERVICE_URL ?? "",
     trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",
+    freqtradeApiUrl: process.env.FREQTRADE_API_URL ?? "http://127.0.0.1:8080",
+    freqtradeApiUser: process.env.FREQTRADE_API_USER ?? "freqtrader",
+    freqtradeApiPassword: process.env.FREQTRADE_API_PASSWORD ?? "freqtrader",
   };
 }

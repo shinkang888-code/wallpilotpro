@@ -8,6 +8,7 @@ export type AppMenuId =
   | "agent_desk"
   | "signal_hub"
   | "rl_lab"
+  | "crypto_bot"
   | "dart_lab"
   | "my_api"
   | "pricing";
@@ -19,11 +20,11 @@ export type AppMenuDefinition = {
   path: string;
   labelKey: string;
   /** Source repo namespace — empty = WallPilot core. */
-  namespace: "" | "ta" | "ait" | "tm" | "dart";
+  namespace: "" | "ta" | "ait" | "tm" | "dart" | "ft";
   /** Default minimum tier when DB override absent. */
   defaultMinTier: MembershipTier;
   /** Extension module phase (for placeholder UI). */
-  phase: 1 | 2 | 3 | 4 | 5;
+  phase: 1 | 2 | 3 | 4 | 5 | 6;
 };
 
 /** Top navigation menus in display order. Admin routes are separate (role-gated). */
@@ -83,6 +84,14 @@ export const APP_MENUS: AppMenuDefinition[] = [
     namespace: "tm",
     defaultMinTier: "elite",
     phase: 4,
+  },
+  {
+    id: "crypto_bot",
+    path: "/crypto-bot",
+    labelKey: "nav_crypto_bot",
+    namespace: "ft",
+    defaultMinTier: "day_trading",
+    phase: 6,
   },
   {
     id: "my_api",

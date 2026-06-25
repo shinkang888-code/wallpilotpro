@@ -39,6 +39,7 @@
     "setup:credentials": "node scripts/setup-credentials.mjs",
     "env:pull": "npx tsx scripts/pull-vercel-env.ts",
     "setup:local": "vercel env pull .env.local --yes && node scripts/setup-local-env.mjs",
+    "setup:freqtrade": "powershell -ExecutionPolicy Bypass -File scripts/setup-freqtrade.ps1",
     "vercel:link": "vercel link --yes --project wallpilotpro",
     "vercel:env:pull": "vercel env pull .env.local --yes",
     "vercel:deploy": "vercel --prod",
