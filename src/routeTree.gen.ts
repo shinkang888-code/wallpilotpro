@@ -15,6 +15,7 @@ import { Route as PendingRouteImport } from './routes/pending'
 import { Route as MyApiRouteImport } from './routes/my-api'
 import { Route as AiPilotRouteImport } from './routes/ai-pilot'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TossTraderIndexRouteImport } from './routes/toss-trader/index'
 import { Route as SignalsIndexRouteImport } from './routes/signals/index'
 import { Route as DartlabIndexRouteImport } from './routes/dartlab/index'
 import { Route as CryptoBotIndexRouteImport } from './routes/crypto-bot/index'
@@ -54,6 +55,11 @@ const AiPilotRoute = AiPilotRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TossTraderIndexRoute = TossTraderIndexRouteImport.update({
+  id: '/toss-trader/',
+  path: '/toss-trader/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignalsIndexRoute = SignalsIndexRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/crypto-bot/': typeof CryptoBotIndexRoute
   '/dartlab/': typeof DartlabIndexRoute
   '/signals/': typeof SignalsIndexRoute
+  '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/crypto-bot': typeof CryptoBotIndexRoute
   '/dartlab': typeof DartlabIndexRoute
   '/signals': typeof SignalsIndexRoute
+  '/toss-trader': typeof TossTraderIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/crypto-bot/': typeof CryptoBotIndexRoute
   '/dartlab/': typeof DartlabIndexRoute
   '/signals/': typeof SignalsIndexRoute
+  '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/crypto-bot/'
     | '/dartlab/'
     | '/signals/'
+    | '/toss-trader/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/crypto-bot'
     | '/dartlab'
     | '/signals'
+    | '/toss-trader'
   id:
     | '__root__'
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/crypto-bot/'
     | '/dartlab/'
     | '/signals/'
+    | '/toss-trader/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   CryptoBotIndexRoute: typeof CryptoBotIndexRoute
   DartlabIndexRoute: typeof DartlabIndexRoute
   SignalsIndexRoute: typeof SignalsIndexRoute
+  TossTraderIndexRoute: typeof TossTraderIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toss-trader/': {
+      id: '/toss-trader/'
+      path: '/toss-trader'
+      fullPath: '/toss-trader/'
+      preLoaderRoute: typeof TossTraderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signals/': {
@@ -372,6 +392,7 @@ const rootRouteChildren: RootRouteChildren = {
   CryptoBotIndexRoute: CryptoBotIndexRoute,
   DartlabIndexRoute: DartlabIndexRoute,
   SignalsIndexRoute: SignalsIndexRoute,
+  TossTraderIndexRoute: TossTraderIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

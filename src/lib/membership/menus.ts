@@ -9,6 +9,7 @@ export type AppMenuId =
   | "signal_hub"
   | "rl_lab"
   | "crypto_bot"
+  | "toss_trader"
   | "dart_lab"
   | "my_api"
   | "pricing";
@@ -92,6 +93,14 @@ export const APP_MENUS: AppMenuDefinition[] = [
     namespace: "ft",
     defaultMinTier: "day_trading",
     phase: 6,
+  },
+  {
+    id: "toss_trader",
+    path: "/toss-trader",
+    labelKey: "nav_toss_trader",
+    namespace: "",
+    defaultMinTier: "day_trading",
+    phase: 1,
   },
   {
     id: "my_api",

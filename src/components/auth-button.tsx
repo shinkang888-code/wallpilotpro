@@ -23,13 +23,12 @@ export function AuthButton() {
   const { t, lang } = useI18n();
   const auth = useAuth();
 
-  if (!auth.enforced && !auth.loading) return null;
-
   if (auth.loading) {
     return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
   }
 
   if (!auth.user) {
+    if (!auth.clientConfigured && !auth.enforced) return null;
     return (
       <button
         type="button"

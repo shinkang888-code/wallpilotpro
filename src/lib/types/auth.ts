@@ -45,6 +45,7 @@ export type EntitlementFeature =
   | "signals_write"
   | "rl_lab"
   | "crypto_bot"
+  | "toss_trader"
   | "dart_lab"
   | "pdf_export";
 

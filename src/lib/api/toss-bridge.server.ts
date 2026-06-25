@@ -1,4 +1,10 @@
 import { getServerConfig } from "@/lib/config.server";
+import type {
+  TossBuyingPowerDetail,
+  TossHoldingsOverview,
+  TossOpenOrder,
+  TossTraderSnapshot,
+} from "@/lib/api/toss-trader.types";
 import {
   fetchLivePrice,
   fetchYahooLivePrice,
@@ -7,6 +13,11 @@ import {
 import { getTossBearerToken } from "@/lib/market/toss-auth.server";
 
 export type TossWallet = { krw: number; usd: number };
+
+type TossAccountContext = {
+  headers: Record<string, string>;
+  accountSeq: number;
+};
 
 async function tossHeaders(accessToken: string): Promise<Record<string, string> | null> {
   const bearer = (await getTossBearerToken(accessToken)) ?? accessToken;
@@ -17,8 +28,7 @@ async function tossHeaders(accessToken: string): Promise<Record<string, string> 
   };
 }
 
-/** Toss Open API bridge — credentials travel per-request, never persisted server-side. */
-export async function fetchTossWallet(accessToken: string): Promise<TossWallet | null> {
+async function tossAccountContext(accessToken: string): Promise<TossAccountContext | null> {
   const { tossApiBaseUrl } = getServerConfig();
   const headers = await tossHeaders(accessToken);
   if (!headers) return null;
@@ -31,12 +41,27 @@ export async function fetchTossWallet(accessToken: string): Promise<TossWallet |
     };
     const accountSeq = accountsJson.result?.[0]?.accountSeq;
     if (accountSeq == null) return null;
-
-    const bpRes = await fetch(`${tossApiBaseUrl}/api/v1/buying-power`, {
+    return {
       headers: {
         ...headers,
         "X-Tossinvest-Account": String(accountSeq),
       },
+      accountSeq,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Toss Open API bridge — credentials travel per-request, never persisted server-side. */
+export async function fetchTossWallet(accessToken: string): Promise<TossWallet | null> {
+  const { tossApiBaseUrl } = getServerConfig();
+  const ctx = await tossAccountContext(accessToken);
+  if (!ctx) return null;
+
+  try {
+    const bpRes = await fetch(`${tossApiBaseUrl}/api/v1/buying-power`, {
+      headers: ctx.headers,
     });
     if (!bpRes.ok) return null;
     const bpJson = (await bpRes.json()) as {
@@ -49,6 +74,124 @@ export async function fetchTossWallet(accessToken: string): Promise<TossWallet |
   } catch {
     return null;
   }
+}
+
+export async function fetchTossHoldings(accessToken: string): Promise<TossHoldingsOverview | null> {
+  const { tossApiBaseUrl } = getServerConfig();
+  const ctx = await tossAccountContext(accessToken);
+  if (!ctx) return null;
+
+  try {
+    const res = await fetch(`${tossApiBaseUrl}/api/v1/holdings`, { headers: ctx.headers });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { result?: TossHoldingsOverview };
+    return json.result ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchTossBuyingPowerDetail(
+  accessToken: string,
+): Promise<TossBuyingPowerDetail | null> {
+  const { tossApiBaseUrl } = getServerConfig();
+  const ctx = await tossAccountContext(accessToken);
+  if (!ctx) return null;
+
+  try {
+    const res = await fetch(`${tossApiBaseUrl}/api/v1/buying-power`, { headers: ctx.headers });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      result?: {
+        cashBuyingPower?: string;
+        totalBuyingPower?: string;
+        currency?: "KRW" | "USD";
+      };
+    };
+    if (!json.result?.cashBuyingPower) return null;
+    return {
+      cashBuyingPower: json.result.cashBuyingPower,
+      totalBuyingPower: json.result.totalBuyingPower,
+      currency: json.result.currency ?? "KRW",
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchTossOpenOrders(accessToken: string): Promise<TossOpenOrder[]> {
+  const { tossApiBaseUrl } = getServerConfig();
+  const ctx = await tossAccountContext(accessToken);
+  if (!ctx) return [];
+
+  try {
+    const res = await fetch(`${tossApiBaseUrl}/api/v1/orders?status=OPEN`, {
+      headers: ctx.headers,
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      result?: {
+        orders?: Array<{
+          orderId: string;
+          symbol: string;
+          side: "BUY" | "SELL";
+          orderType: string;
+          status: string;
+          price: string;
+          quantity: string;
+          currency: "KRW" | "USD";
+          orderedAt: string;
+          execution?: { filledQuantity?: string };
+        }>;
+      };
+    };
+    return (json.result?.orders ?? []).map((o) => ({
+      orderId: o.orderId,
+      symbol: o.symbol,
+      side: o.side,
+      orderType: o.orderType,
+      status: o.status,
+      price: o.price,
+      quantity: o.quantity,
+      currency: o.currency,
+      orderedAt: o.orderedAt,
+      filledQuantity: o.execution?.filledQuantity ?? "0",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchTossTraderSnapshot(accessToken: string): Promise<TossTraderSnapshot> {
+  const ctx = await tossAccountContext(accessToken);
+  if (!ctx) {
+    return {
+      connected: false,
+      accountSeq: null,
+      error: "toss_auth_failed",
+      holdings: null,
+      buyingPower: null,
+      openOrders: [],
+      wallet: null,
+    };
+  }
+
+  const [holdings, buyingPower, openOrders, wallet] = await Promise.all([
+    fetchTossHoldings(accessToken),
+    fetchTossBuyingPowerDetail(accessToken),
+    fetchTossOpenOrders(accessToken),
+    fetchTossWallet(accessToken),
+  ]);
+
+  return {
+    connected: Boolean(holdings || buyingPower || wallet),
+    accountSeq: ctx.accountSeq,
+    error: holdings || buyingPower || wallet ? null : "toss_empty",
+    holdings,
+    buyingPower,
+    openOrders,
+    wallet,
+  };
 }
 
 export async function fetchTossQuote(
