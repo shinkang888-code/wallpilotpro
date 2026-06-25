@@ -7,6 +7,7 @@ import { getStockChart } from "@/lib/api/chart.functions";
 import { getUsdKrwRate } from "@/lib/api/fx.functions";
 import { formatDualPrice } from "@/lib/format-price";
 import { useI18n } from "@/lib/i18n";
+import { useTossApiKey } from "@/lib/use-toss-api-key";
 import type { StockChartSeries } from "@/lib/types/chart";
 import type { Currency, WallStreetReport } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export function WallStreetPriceChart({
   accessToken: string | null;
 }) {
   const { t } = useI18n();
+  const { key: tossKey } = useTossApiKey();
   const [series, setSeries] = useState<StockChartSeries | null>(null);
   const [usdKrw, setUsdKrw] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,7 @@ export function WallStreetPriceChart({
             market: report.market,
             interval: "1d",
             accessToken,
+            tossKey,
           },
         }),
         getUsdKrwRate({ data: {} }).catch(() => null),
@@ -47,7 +50,7 @@ export function WallStreetPriceChart({
     } finally {
       setLoading(false);
     }
-  }, [report.ticker, report.market, accessToken]);
+  }, [report.ticker, report.market, accessToken, tossKey]);
 
   useEffect(() => {
     setLoading(true);

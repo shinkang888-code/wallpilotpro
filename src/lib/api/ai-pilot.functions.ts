@@ -8,6 +8,7 @@ import type { StockRow } from "@/lib/types/stock";
 
 const chatInput = z.object({
   accessToken: z.string().nullable().optional(),
+  tossKey: z.string().nullable().optional(),
   ...clientGeminiKeySchema.shape,
   messages: z.array(
     z.object({

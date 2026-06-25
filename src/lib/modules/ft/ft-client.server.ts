@@ -3,6 +3,10 @@ import type {
   FtBacktestHighlight,
   FtBotStatus,
   FtConnectionStatus,
+  FtControlAction,
+  FtControlResult,
+  FtForceExitResult,
+  FtOpenTrade,
   FtOpenTradeCount,
   FtProfitSummary,
 } from "@/lib/modules/ft/types";
@@ -33,7 +37,6 @@ function ftConfig() {
 
 async function ftFetch<T>(path: string): Promise<T> {
   const { apiUrl, user, password } = ftConfig();
-  const started = Date.now();
   const auth = Buffer.from(`${user}:${password}`).toString("base64");
   const res = await fetch(`${apiUrl}${path}`, {
     headers: {
@@ -45,10 +48,100 @@ async function ftFetch<T>(path: string): Promise<T> {
   if (!res.ok) {
     throw new Error(`freqtrade_http_${res.status}`);
   }
-  const latencyMs = Date.now() - started;
-  const data = (await res.json()) as T;
-  void latencyMs;
-  return data;
+  return (await res.json()) as T;
+}
+
+async function ftPost<T>(path: string, body?: unknown): Promise<T> {
+  const { apiUrl, user, password } = ftConfig();
+  const auth = Buffer.from(`${user}:${password}`).toString("base64");
+  const res = await fetch(`${apiUrl}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: body != null ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(6_000),
+  });
+  if (!res.ok) {
+    throw new Error(`freqtrade_http_${res.status}`);
+  }
+  return (await res.json()) as T;
+}
+
+const CONTROL_PATH: Record<FtControlAction, string> = {
+  start: "/api/v1/start",
+  stop: "/api/v1/stop",
+  pause: "/api/v1/pause",
+  reload: "/api/v1/reload_config",
+};
+
+export async function controlFtBot(action: FtControlAction): Promise<FtControlResult> {
+  try {
+    const res = await ftPost<{ status?: string }>(CONTROL_PATH[action]);
+    return {
+      ok: true,
+      action,
+      status: res.status ?? null,
+      message: res.status ?? `${action} sent`,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      action,
+      status: null,
+      message: e instanceof Error ? e.message : "control_failed",
+    };
+  }
+}
+
+export async function forceExitAllFt(): Promise<FtForceExitResult> {
+  try {
+    const res = await ftPost<{ result?: string }>("/api/v1/forceexit", {
+      tradeid: "all",
+    });
+    return { ok: true, message: res.result ?? "force exit sent" };
+  } catch (e) {
+    return {
+      ok: false,
+      message: e instanceof Error ? e.message : "forceexit_failed",
+    };
+  }
+}
+
+type FtRawOpenTrade = {
+  trade_id?: number;
+  pair?: string;
+  is_open?: boolean;
+  amount?: number;
+  open_rate?: number;
+  current_rate?: number | null;
+  stake_amount?: number;
+  profit_pct?: number | null;
+  profit_abs?: number | null;
+  open_date?: string;
+};
+
+export async function fetchFtOpenTrades(): Promise<FtOpenTrade[]> {
+  try {
+    const trades = await ftFetch<FtRawOpenTrade[]>("/api/v1/status");
+    if (!Array.isArray(trades)) return [];
+    return trades.map((trd) => ({
+      tradeId: Number(trd.trade_id ?? 0),
+      pair: trd.pair ?? "—",
+      isOpen: Boolean(trd.is_open),
+      amount: Number(trd.amount ?? 0),
+      openRate: Number(trd.open_rate ?? 0),
+      currentRate: trd.current_rate != null ? Number(trd.current_rate) : null,
+      stakeAmount: Number(trd.stake_amount ?? 0),
+      profitPct: trd.profit_pct != null ? Number(trd.profit_pct) : null,
+      profitAbs: trd.profit_abs != null ? Number(trd.profit_abs) : null,
+      openDate: trd.open_date ?? "",
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export function demoBacktestHighlight(): FtBacktestHighlight {
@@ -90,24 +183,30 @@ export async function probeFreqtradeConnection(): Promise<FtConnectionStatus> {
 
 export async function fetchFtBotStatus(): Promise<FtBotStatus | null> {
   try {
-    const [showConfig, status] = await Promise.all([
+    const [showConfig, whitelist] = await Promise.all([
       ftFetch<Record<string, unknown>>("/api/v1/show_config"),
-      ftFetch<{ state: string; dry_run?: boolean }>("/api/v1/status"),
+      ftFetch<{ whitelist?: string[] }>("/api/v1/whitelist").catch(() => ({
+        whitelist: [] as string[],
+      })),
     ]);
 
-    const exchange = showConfig.exchange as Record<string, unknown> | undefined;
-    const pairWhitelist = (exchange?.pair_whitelist as string[] | undefined) ?? [];
+    const exchangeRaw = showConfig.exchange;
+    const exchangeName =
+      typeof exchangeRaw === "string"
+        ? exchangeRaw
+        : ((exchangeRaw as Record<string, unknown> | undefined)?.name as string | undefined) ??
+          null;
 
     return {
-      state: status.state,
-      dryRun: Boolean(status.dry_run ?? showConfig.dry_run),
+      state: (showConfig.state as string | undefined) ?? "unknown",
+      dryRun: Boolean(showConfig.dry_run),
       strategy: (showConfig.strategy as string | undefined) ?? null,
-      exchange: (exchange?.name as string | undefined) ?? null,
+      exchange: exchangeName,
       timeframe: (showConfig.timeframe as string | undefined) ?? null,
       stakeCurrency: (showConfig.stake_currency as string | undefined) ?? null,
       stakeAmount: Number(showConfig.stake_amount ?? 0) || null,
       maxOpenTrades: Number(showConfig.max_open_trades ?? 0) || null,
-      pairWhitelist,
+      pairWhitelist: whitelist.whitelist ?? [],
     };
   } catch {
     return null;
@@ -129,7 +228,7 @@ export async function fetchFtProfit(): Promise<FtProfitSummary | null> {
   }
 }
 
-export async function fetchFtOpenTrades(): Promise<FtOpenTradeCount | null> {
+export async function fetchFtOpenTradeCount(): Promise<FtOpenTradeCount | null> {
   try {
     const count = await ftFetch<Record<string, unknown>>("/api/v1/count");
     return {

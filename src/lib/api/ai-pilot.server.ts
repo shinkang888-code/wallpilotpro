@@ -140,10 +140,13 @@ export async function runAiPilotChat(input: {
   lang: "ko" | "en";
   scanContext?: { shortSqueeze: StockRow[]; highCash: StockRow[] } | null;
   geminiApiKey?: string | null;
+  tossKey?: string | null;
 }): Promise<AiPilotResponse> {
   const latest = input.messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
 
-  const grounded = await fetchGroundedQuotes(latest, input.scanContext).catch(() => []);
+  const grounded = await fetchGroundedQuotes(latest, input.scanContext, 4, {
+    tossKey: input.tossKey,
+  }).catch(() => []);
   const groundedBlock = renderGroundedBlock(grounded);
 
   const singleStockSignal =

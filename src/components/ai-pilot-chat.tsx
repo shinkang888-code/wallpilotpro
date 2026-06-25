@@ -18,6 +18,7 @@ import {
   parseGeminiErrorReason,
 } from "@/lib/gemini/gemini-error-i18n";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
+import { useTossApiKey } from "@/lib/use-toss-api-key";
 import { useGeminiKeySource } from "@/lib/use-gemini-key-source";
 import type { AiPilotMessage, AiPilotResponse } from "@/lib/types/ai-pilot";
 import type { StockRow, TradingPayload } from "@/lib/types/stock";
@@ -288,6 +289,7 @@ export function AiPilotChat({
   const { t, lang } = useI18n();
   const { accessToken } = useAuth();
   const { key: geminiApiKey } = useGeminiApiKey();
+  const { key: tossKey } = useTossApiKey();
   const geminiKeySource = useGeminiKeySource();
   const [messages, setMessages] = useState<AiPilotMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -343,6 +345,7 @@ export function AiPilotChat({
         const response = await chatAiPilot({
           data: {
             accessToken,
+            tossKey,
             geminiApiKey: geminiApiKey ?? undefined,
             messages: apiMessages,
             lang: toAiPilotLang(lang),
@@ -393,7 +396,7 @@ export function AiPilotChat({
         setLoading(false);
       }
     },
-    [loading, messages, lang, scanContext, accessToken, geminiApiKey, t],
+    [loading, messages, lang, scanContext, accessToken, geminiApiKey, tossKey, t],
   );
 
   return (

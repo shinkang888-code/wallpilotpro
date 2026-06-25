@@ -3,10 +3,13 @@ import { z } from "zod";
 
 import { guardFeature } from "@/lib/auth/guard-auth.server";
 import {
+  controlFtBot,
   demoBacktestHighlight,
   fetchFtBotStatus,
+  fetchFtOpenTradeCount,
   fetchFtOpenTrades,
   fetchFtProfit,
+  forceExitAllFt,
   probeFreqtradeConnection,
 } from "@/lib/modules/ft/ft-client.server";
 import type { FtDashboardSnapshot } from "@/lib/modules/ft/types";
@@ -27,7 +30,7 @@ export const getCryptoBotDashboard = createServerFn({ method: "POST" })
     const [status, profit, openTrades] = await Promise.all([
       fetchFtBotStatus(),
       fetchFtProfit(),
-      fetchFtOpenTrades(),
+      fetchFtOpenTradeCount(),
     ]);
 
     return {
@@ -54,7 +57,33 @@ export const refreshCryptoBotLive = createServerFn({ method: "POST" })
     const [status, profit, openTrades] = await Promise.all([
       fetchFtBotStatus(),
       fetchFtProfit(),
-      fetchFtOpenTrades(),
+      fetchFtOpenTradeCount(),
     ]);
     return { connection, status, profit, openTrades };
+  });
+
+export const getCryptoBotTrades = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ accessToken: z.string().nullable().optional() }))
+  .handler(async ({ data }) => {
+    await guardFeature(data.accessToken ?? null, "crypto_bot");
+    return fetchFtOpenTrades();
+  });
+
+export const controlCryptoBot = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      accessToken: z.string().nullable().optional(),
+      action: z.enum(["start", "stop", "pause", "reload"]),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await guardFeature(data.accessToken ?? null, "crypto_bot");
+    return controlFtBot(data.action);
+  });
+
+export const forceExitAllCryptoBot = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ accessToken: z.string().nullable().optional() }))
+  .handler(async ({ data }) => {
+    await guardFeature(data.accessToken ?? null, "crypto_bot");
+    return forceExitAllFt();
   });

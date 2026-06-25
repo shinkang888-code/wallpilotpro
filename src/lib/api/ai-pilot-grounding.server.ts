@@ -1,4 +1,4 @@
-import { fetchMarketSnapshot } from "@/lib/api/market-data.server";
+import { fetchMarketSnapshot, type MarketDataOptions } from "@/lib/api/market-data.server";
 import { resolveStockInput, searchStocks } from "@/lib/api/stock-search.server";
 import { buildUniverse } from "@/lib/quant/universe.server";
 import type { RawMarketSnapshot, StockRow } from "@/lib/types/stock";
@@ -174,6 +174,7 @@ export async function fetchGroundedQuotes(
   latestUserMessage: string,
   scanContext?: { shortSqueeze: StockRow[]; highCash: StockRow[] } | null,
   maxQuotes = 4,
+  options?: MarketDataOptions,
 ): Promise<GroundedQuote[]> {
   const tokens = tokenize(latestUserMessage);
 
@@ -189,12 +190,15 @@ export async function fetchGroundedQuotes(
 
   const snapshots = await Promise.all(
     resolved.map((r) =>
-      fetchMarketSnapshot({
-        ticker: r.ticker,
-        market: r.market,
-        name: r.name,
-        yahooSymbol: r.yahooSymbol,
-      }).catch(() => null),
+      fetchMarketSnapshot(
+        {
+          ticker: r.ticker,
+          market: r.market,
+          name: r.name,
+          yahooSymbol: r.yahooSymbol,
+        },
+        options,
+      ).catch(() => null),
     ),
   );
 
@@ -224,7 +228,7 @@ export function renderGroundedBlock(quotes: GroundedQuote[]): string {
     const volRatio = q.avgVolume20d > 0 ? (q.volume / q.avgVolume20d).toFixed(2) + "x" : "n/a";
     return `- ${q.name} (${q.ticker} · ${q.market}) — price ${fmtPrice(q)} · 30D ${fmtPct(q.change30dPct)} · PER ${pe} · ROE ${roe} · OPM ${om} · vol ${volRatio} 20D-avg`;
   });
-  return `\n\n### Live market data (authoritative — Yahoo Finance, fetched just now)
+  return `\n\n### Live market data (authoritative — Toss Securities real-time when connected, Yahoo Finance fallback)
 You MUST use the EXACT prices below for any ticker that appears here. Do NOT invent or
 estimate prices, PER, ROE, or 30D change for these names. If a number is "n/a",
 say so instead of guessing. Entry bands / stop / target you derive must reference

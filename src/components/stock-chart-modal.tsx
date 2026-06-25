@@ -6,6 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { getStockChart } from "@/lib/api/chart.functions";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
+import { useTossApiKey } from "@/lib/use-toss-api-key";
 import type { ChartInterval, StockChartSeries } from "@/lib/types/chart";
 import type { StockRow } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export function StockChartModal({
 }) {
   const { t } = useI18n();
   const { accessToken } = useAuth();
+  const { key: tossKey } = useTossApiKey();
   const [interval, setChartInterval] = useState<ChartInterval>("1d");
   const [series, setSeries] = useState<StockChartSeries | null>(null);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,9 @@ export function StockChartModal({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    getStockChart({ data: { ticker: row.ticker, market: row.market, interval, accessToken } })
+    getStockChart({
+      data: { ticker: row.ticker, market: row.market, interval, accessToken, tossKey },
+    })
       .then((data) => {
         if (!cancelled) setSeries(data);
       })
@@ -55,7 +59,7 @@ export function StockChartModal({
     return () => {
       cancelled = true;
     };
-  }, [row, interval, accessToken]);
+  }, [row, interval, accessToken, tossKey]);
 
   if (!row) return null;
 

@@ -36,7 +36,7 @@ export function normalizeTicker(ticker: string, market: Market): string {
 export async function buildWallStreetReportContext(
   tickerInput: string,
   nameHint?: string,
-  options?: { geminiApiKey?: string | null },
+  options?: { geminiApiKey?: string | null; tossKey?: string | null },
 ): Promise<WallStreetReportContext> {
   const resolved = await resolveStockInput(tickerInput);
   const entry: UniverseEntry = {
@@ -46,7 +46,7 @@ export async function buildWallStreetReportContext(
     yahooSymbol: resolved.yahooSymbol,
   };
 
-  let snapshot = await fetchMarketSnapshot(entry);
+  let snapshot = await fetchMarketSnapshot(entry, { tossKey: options?.tossKey });
   if (!snapshot) {
     throw new Error(`Market data unavailable for ${tickerInput}`);
   }
@@ -150,7 +150,7 @@ export async function buildWallStreetReportContext(
 export async function buildWallStreetReport(
   tickerInput: string,
   nameHint?: string,
-  options?: { geminiApiKey?: string | null },
+  options?: { geminiApiKey?: string | null; tossKey?: string | null },
 ): Promise<WallStreetReport> {
   const ctx = await buildWallStreetReportContext(tickerInput, nameHint, options);
   return ctx.report;

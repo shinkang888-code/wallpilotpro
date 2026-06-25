@@ -34,6 +34,33 @@ export type FtOpenTradeCount = {
   totalStake: number;
 };
 
+export type FtOpenTrade = {
+  tradeId: number;
+  pair: string;
+  isOpen: boolean;
+  amount: number;
+  openRate: number;
+  currentRate: number | null;
+  stakeAmount: number;
+  profitPct: number | null;
+  profitAbs: number | null;
+  openDate: string;
+};
+
+export type FtControlAction = "start" | "stop" | "pause" | "reload";
+
+export type FtControlResult = {
+  ok: boolean;
+  action: FtControlAction;
+  status: string | null;
+  message: string;
+};
+
+export type FtForceExitResult = {
+  ok: boolean;
+  message: string;
+};
+
 export type FtDashboardSnapshot = {
   connection: FtConnectionStatus;
   status: FtBotStatus | null;

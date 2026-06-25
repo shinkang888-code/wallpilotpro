@@ -10,6 +10,7 @@ const reportInput = z.object({
   ticker: z.string().min(1),
   name: z.string().optional(),
   accessToken: z.string().nullable().optional(),
+  tossKey: z.string().nullable().optional(),
   ...clientGeminiKeySchema.shape,
 });
 
@@ -17,5 +18,8 @@ export const generateWallStreetReport = createServerFn({ method: "POST" })
   .inputValidator(reportInput)
   .handler(async ({ data }): Promise<WallStreetReport> => {
     await guardFeature(data.accessToken, "wall_report");
-    return buildWallStreetReport(data.ticker, data.name, { geminiApiKey: data.geminiApiKey });
+    return buildWallStreetReport(data.ticker, data.name, {
+      geminiApiKey: data.geminiApiKey,
+      tossKey: data.tossKey,
+    });
   });

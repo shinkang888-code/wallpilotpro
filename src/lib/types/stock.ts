@@ -62,6 +62,8 @@ export type RawMarketSnapshot = {
   supplyTrend?: SupplyTrend | null;
   supplyLabel?: string | null;
   technical?: TechnicalSnapshot | null;
+  /** Live price source — Toss when connected, otherwise Yahoo. */
+  priceSource?: "toss" | "yahoo";
 };
 
 export type ValuationResult = {

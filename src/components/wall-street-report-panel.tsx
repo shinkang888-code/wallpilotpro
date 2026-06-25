@@ -11,6 +11,7 @@ import { formatFeatureError } from "@/lib/auth/format-feature-error";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
+import { useTossApiKey } from "@/lib/use-toss-api-key";
 import type { StockSearchResult } from "@/lib/types/search";
 import type { DeepAgentReport, WallStreetReport } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ export function WallStreetReportPanel() {
   const { t } = useI18n();
   const { accessToken, loading: authLoading, enforced, isActive, entitlements, isPending } = useAuth();
   const { key: geminiApiKey } = useGeminiApiKey();
+  const { key: tossKey } = useTossApiKey();
   const [query, setQuery] = useState("005930");
   const [report, setReport] = useState<WallStreetReport | null>(null);
   const [deepReport, setDeepReport] = useState<DeepAgentReport | null>(null);
@@ -63,7 +65,12 @@ export function WallStreetReportPanel() {
     setError(null);
     try {
       const result = await generateWallStreetReport({
-        data: { ticker: symbol, accessToken, geminiApiKey: geminiApiKey ?? undefined },
+        data: {
+          ticker: symbol,
+          accessToken,
+          tossKey,
+          geminiApiKey: geminiApiKey ?? undefined,
+        },
       });
       if (seq !== requestSeq.current) return;
       setReport(result);

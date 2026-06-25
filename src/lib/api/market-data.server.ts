@@ -1,7 +1,15 @@
 import { canonicalTicker } from "@/lib/api/stock-search.server";
+import {
+  entryPriceKey,
+  fetchLivePricesForEntries,
+  type LivePrice,
+  type MarketDataOptions,
+} from "@/lib/market/price-provider.server";
 import { computeTechnicalIndicators } from "@/lib/quant/technical.server";
 import type { Market, RawMarketSnapshot } from "@/lib/types/stock";
 import type { UniverseEntry } from "@/lib/quant/universe.server";
+
+export type { MarketDataOptions };
 
 function yahooSymbolCandidates(ticker: string, market: Market, override?: string): string[] {
   if (override) return [override];
@@ -51,7 +59,25 @@ type YahooSummary = {
   };
 };
 
-export async function fetchMarketSnapshot(entry: UniverseEntry): Promise<RawMarketSnapshot | null> {
+export async function fetchMarketSnapshot(
+  entry: UniverseEntry,
+  options?: MarketDataOptions & { livePriceOverride?: LivePrice },
+): Promise<RawMarketSnapshot | null> {
+  let live = options?.livePriceOverride;
+  if (!live) {
+    const liveMap = await fetchLivePricesForEntries(
+      [
+        {
+          ticker: entry.ticker,
+          market: entry.market,
+          yahooSymbol: entry.yahooSymbol,
+        },
+      ],
+      options?.tossKey,
+    );
+    live = liveMap.get(entryPriceKey(entry.ticker, entry.market));
+  }
+
   const candidates = yahooSymbolCandidates(entry.ticker, entry.market, entry.yahooSymbol);
   try {
     let chart: Awaited<ReturnType<typeof fetchYahooChart>> = null;
@@ -63,21 +89,23 @@ export async function fetchMarketSnapshot(entry: UniverseEntry): Promise<RawMark
         break;
       }
     }
-    if (!chart?.meta?.regularMarketPrice) return null;
+    if (!chart?.meta?.regularMarketPrice && !live) return null;
 
-    const summary = await fetchYahooSummary(symbol);
-    const price = chart.meta.regularMarketPrice;
+    const summary = chart ? await fetchYahooSummary(symbol) : null;
+    const yahooPrice = chart?.meta?.regularMarketPrice ?? 0;
+    const price = live?.price ?? yahooPrice;
+    const priceSource = live?.source ?? "yahoo";
     const resolvedTicker =
       entry.market === "KR"
-        ? canonicalTicker(chart.meta.symbol ?? symbol, "KR")
-        : canonicalTicker(chart.meta.symbol ?? entry.ticker, "US");
-    const volumes = chart.volumes.filter((v): v is number => v != null && v > 0);
-    const closes = chart.closes.filter((c): c is number => c != null && c > 0);
+        ? canonicalTicker(chart?.meta?.symbol ?? symbol, "KR")
+        : canonicalTicker(chart?.meta?.symbol ?? entry.ticker, "US");
+    const volumes = chart?.volumes.filter((v): v is number => v != null && v > 0) ?? [];
+    const closes = chart?.closes.filter((c): c is number => c != null && c > 0) ?? [];
     const volume = volumes.at(-1) ?? 0;
     const avgVolume20d =
       volumes.length > 0 ? volumes.reduce((a, b) => a + b, 0) / volumes.length : volume;
-    const change30dPct = compute30dChange(closes);
-    const technical = computeTechnicalIndicators({ closes, price });
+    const change30dPct = compute30dChange(closes.length > 0 ? closes : [price]);
+    const technical = computeTechnicalIndicators({ closes: closes.length > 0 ? closes : [price], price });
 
     const fin = summary?.financialData;
     const stats = summary?.defaultKeyStatistics;
@@ -91,10 +119,11 @@ export async function fetchMarketSnapshot(entry: UniverseEntry): Promise<RawMark
 
     return {
       ticker: resolvedTicker,
-      name: chart.meta.longName ?? chart.meta.shortName ?? entry.name,
+      name: chart?.meta?.longName ?? chart?.meta?.shortName ?? entry.name,
       market: entry.market,
       currency: entry.market === "KR" ? "KRW" : "USD",
       price,
+      priceSource,
       change30dPct,
       volume,
       avgVolume20d,
@@ -110,9 +139,26 @@ export async function fetchMarketSnapshot(entry: UniverseEntry): Promise<RawMark
   }
 }
 
-export async function fetchMarketBatch(entries: UniverseEntry[]): Promise<RawMarketSnapshot[]> {
+export async function fetchMarketBatch(
+  entries: UniverseEntry[],
+  options?: MarketDataOptions,
+): Promise<RawMarketSnapshot[]> {
+  const liveMap = await fetchLivePricesForEntries(
+    entries.map((e) => ({
+      ticker: e.ticker,
+      market: e.market,
+      yahooSymbol: e.yahooSymbol,
+    })),
+    options?.tossKey,
+  );
+
   const results = await Promise.all(
-    entries.map((e) => fetchMarketSnapshot(e)),
+    entries.map((e) =>
+      fetchMarketSnapshot(e, {
+        tossKey: options?.tossKey,
+        livePriceOverride: liveMap.get(entryPriceKey(e.ticker, e.market)),
+      }),
+    ),
   );
   return results.filter((r): r is RawMarketSnapshot => r != null);
 }

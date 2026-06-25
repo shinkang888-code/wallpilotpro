@@ -1,0 +1,130 @@
+/* Toss Securities–inspired crypto engine dashboard (scoped under .cb-toss) */
+
+.cb-toss {
+  --cb-bg-deep: #101013;
+  --cb-bg-body: rgb(23, 23, 28);
+  --cb-bg-overlay: #202025;
+  --cb-border: rgba(214, 224, 239, 0.09);
+  --cb-border-strong: rgba(214, 224, 239, 0.14);
+  --cb-text: #e8eaed;
+  --cb-text-muted: rgba(232, 234, 237, 0.55);
+  --cb-text-dim: rgba(232, 234, 237, 0.35);
+  --cb-blue: #3182f6;
+  --cb-red: #dc2e47;
+  --cb-radius: 8px;
+  --cb-radius-pill: 32px;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+.cb-toss .cb-panel {
+  background: var(--cb-bg-body);
+  border: 1px solid var(--cb-border);
+  border-radius: var(--cb-radius);
+}
+
+.cb-toss .cb-panel-deep {
+  background: var(--cb-bg-deep);
+  border: 1px solid var(--cb-border);
+  border-radius: var(--cb-radius);
+}
+
+.cb-toss .cb-divider {
+  border-color: var(--cb-border);
+}
+
+.cb-toss .cb-text-muted {
+  color: var(--cb-text-muted);
+}
+
+.cb-toss .cb-text-dim {
+  color: var(--cb-text-dim);
+}
+
+.cb-toss .cb-up {
+  color: var(--cb-red);
+}
+
+.cb-toss .cb-down {
+  color: var(--cb-blue);
+}
+
+.cb-toss .cb-chip {
+  border-radius: var(--cb-radius-pill);
+  border: 1px solid var(--cb-border);
+  background: transparent;
+  color: var(--cb-text-muted);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.cb-toss .cb-chip:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cb-text);
+}
+
+.cb-toss .cb-chip-active {
+  background: rgba(49, 130, 246, 0.15);
+  border-color: rgba(49, 130, 246, 0.35);
+  color: var(--cb-blue);
+}
+
+.cb-toss .cb-nav-pill {
+  border-radius: var(--cb-radius-pill);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--cb-text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.cb-toss .cb-nav-pill:hover {
+  color: var(--cb-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cb-toss .cb-nav-pill-active {
+  background: var(--cb-text);
+  color: var(--cb-bg-deep);
+}
+
+.cb-toss .cb-row-hover:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cb-toss .cb-action-btn {
+  border-radius: var(--cb-radius);
+  border: 1px solid var(--cb-border);
+  background: var(--cb-bg-overlay);
+  color: var(--cb-text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 14px;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.cb-toss .cb-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cb-toss .cb-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cb-toss .cb-action-primary {
+  background: var(--cb-blue);
+  border-color: var(--cb-blue);
+  color: #fff;
+}
+
+.cb-toss .cb-action-primary:hover:not(:disabled) {
+  background: #4a93f7;
+}
+
+.cb-toss .cb-action-danger {
+  border-color: rgba(220, 46, 71, 0.4);
+  color: var(--cb-red);
+}

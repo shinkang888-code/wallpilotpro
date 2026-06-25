@@ -1,4 +1,5 @@
 import { resolveStockInput } from "@/lib/api/stock-search.server";
+import { fetchLivePrice, type MarketDataOptions } from "@/lib/market/price-provider.server";
 import type { ChartInterval, ChartPoint, StockChartSeries } from "@/lib/types/chart";
 import type { Market } from "@/lib/types/stock";
 
@@ -37,6 +38,7 @@ export async function fetchStockChartSeries(
   tickerInput: string,
   market: Market,
   interval: ChartInterval,
+  options?: MarketDataOptions,
 ): Promise<StockChartSeries> {
   const resolved = await resolveStockInput(tickerInput);
   const cfg = INTERVAL_CONFIG[interval];
@@ -61,19 +63,30 @@ export async function fetchStockChartSeries(
     throw new Error(`Chart data unavailable for ${tickerInput}`);
   }
 
+  const live = await fetchLivePrice(resolved.ticker, resolved.market, {
+    tossKey: options?.tossKey,
+    yahooSymbol: resolved.yahooSymbol,
+  });
+  const last = live?.price ?? (lastPrice || points.at(-1)!.close);
+
   return {
     ticker: resolved.ticker,
     name: resolved.name,
     currency,
     interval,
     points,
-    lastPrice: lastPrice || points.at(-1)!.close,
+    lastPrice: last,
+    priceSource: live?.source,
   };
 }
 
 /** Last 3 months daily OHLCV for strategy engine. */
-export async function fetchDailyVolumeSeries(tickerInput: string, market: Market): Promise<ChartPoint[]> {
-  const series = await fetchStockChartSeries(tickerInput, market, "1d");
+export async function fetchDailyVolumeSeries(
+  tickerInput: string,
+  market: Market,
+  options?: MarketDataOptions,
+): Promise<ChartPoint[]> {
+  const series = await fetchStockChartSeries(tickerInput, market, "1d", options);
   return series.points;
 }
 

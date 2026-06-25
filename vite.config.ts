@@ -7,6 +7,12 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    server: {
+      port: 5173,
+      strictPort: true,
+    },
+  },
   // Vercel by default; set NITRO_PRESET=node-server for Render Docker deploy.
   nitro:
     process.env.NITRO_PRESET === "node-server"

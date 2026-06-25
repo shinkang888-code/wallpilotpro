@@ -33,7 +33,9 @@ export const scanReverseQuant = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<TradingPayload> => {
     const authSession = await guardFeature(data.accessToken, "scan");
     const universe = buildUniverse(data.toggles);
-    const snapshots = await enrichMarketBatch(await fetchMarketBatch(universe));
+    const snapshots = await enrichMarketBatch(
+      await fetchMarketBatch(universe, { tossKey: data.tossKey }),
+    );
     const ranked = rankCandidates(snapshots);
 
     if (ranked.length === 0) {

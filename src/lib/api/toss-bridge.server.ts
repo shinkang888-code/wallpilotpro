@@ -1,28 +1,51 @@
 import { getServerConfig } from "@/lib/config.server";
+import {
+  fetchLivePrice,
+  fetchYahooLivePrice,
+  toTossSymbol,
+} from "@/lib/market/price-provider.server";
+import { getTossBearerToken } from "@/lib/market/toss-auth.server";
 
 export type TossWallet = { krw: number; usd: number };
 
-/** Toss Open API bridge — token travels per-request, never persisted server-side. */
+async function tossHeaders(accessToken: string): Promise<Record<string, string> | null> {
+  const bearer = (await getTossBearerToken(accessToken)) ?? accessToken;
+  if (!bearer) return null;
+  return {
+    Authorization: `Bearer ${bearer}`,
+    Accept: "application/json",
+  };
+}
+
+/** Toss Open API bridge — credentials travel per-request, never persisted server-side. */
 export async function fetchTossWallet(accessToken: string): Promise<TossWallet | null> {
   const { tossApiBaseUrl } = getServerConfig();
+  const headers = await tossHeaders(accessToken);
+  if (!headers) return null;
+
   try {
-    const res = await fetch(`${tossApiBaseUrl}/v1/account/balance`, {
+    const accountsRes = await fetch(`${tossApiBaseUrl}/api/v1/accounts`, { headers });
+    if (!accountsRes.ok) return null;
+    const accountsJson = (await accountsRes.json()) as {
+      result?: Array<{ accountSeq?: number }>;
+    };
+    const accountSeq = accountsJson.result?.[0]?.accountSeq;
+    if (accountSeq == null) return null;
+
+    const bpRes = await fetch(`${tossApiBaseUrl}/api/v1/buying-power`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
+        ...headers,
+        "X-Tossinvest-Account": String(accountSeq),
       },
     });
-    if (!res.ok) return null;
-    const json = (await res.json()) as {
-      krw_balance?: number;
-      usd_balance?: number;
-      total_krw?: number;
-      total_usd?: number;
+    if (!bpRes.ok) return null;
+    const bpJson = (await bpRes.json()) as {
+      result?: { cashBuyingPower?: string; currency?: string };
     };
-    return {
-      krw: json.krw_balance ?? json.total_krw ?? 0,
-      usd: json.usd_balance ?? json.total_usd ?? 0,
-    };
+    const cash = Number.parseFloat(bpJson.result?.cashBuyingPower ?? "0");
+    if (!Number.isFinite(cash)) return { krw: 0, usd: 0 };
+    if (bpJson.result?.currency === "USD") return { krw: 0, usd: cash };
+    return { krw: cash, usd: 0 };
   } catch {
     return null;
   }
@@ -33,23 +56,8 @@ export async function fetchTossQuote(
   ticker: string,
   market: "KR" | "US",
 ): Promise<number | null> {
-  const { tossApiBaseUrl } = getServerConfig();
-  try {
-    const res = await fetch(
-      `${tossApiBaseUrl}/v1/market/quote?symbol=${encodeURIComponent(ticker)}&market=${market}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      },
-    );
-    if (!res.ok) return null;
-    const json = (await res.json()) as { price?: number; last?: number };
-    return json.price ?? json.last ?? null;
-  } catch {
-    return null;
-  }
+  const live = await fetchLivePrice(ticker, market, { tossKey: accessToken });
+  return live?.source === "toss" ? live.price : null;
 }
 
 export type SplitLimitOrder = {
@@ -66,16 +74,28 @@ export async function placeSplitLimitOrder(
   order: SplitLimitOrder,
 ): Promise<{ ok: boolean; orderIds: string[]; message: string }> {
   const { tossApiBaseUrl } = getServerConfig();
+  const headers = await tossHeaders(accessToken);
+  if (!headers) {
+    return {
+      ok: false,
+      orderIds: [],
+      message: "Toss API unavailable — verify client_id/client_secret or tossKey",
+    };
+  }
+
   const [a, b, c] = order.splits;
   const total = a + b + c;
   const qtys = [
     Math.floor((order.totalQty * a) / total),
     Math.floor((order.totalQty * b) / total),
-    order.totalQty - Math.floor((order.totalQty * a) / total) - Math.floor((order.totalQty * b) / total),
+    order.totalQty -
+      Math.floor((order.totalQty * a) / total) -
+      Math.floor((order.totalQty * b) / total),
   ];
   const step = (order.zoneHigh - order.zoneLow) / 2;
   const prices = [order.zoneLow, order.zoneLow + step, order.zoneHigh];
   const orderIds: string[] = [];
+  const symbol = toTossSymbol(order.ticker, order.market);
 
   for (let i = 0; i < 3; i++) {
     if (qtys[i] <= 0) continue;
@@ -83,12 +103,11 @@ export async function placeSplitLimitOrder(
       const res = await fetch(`${tossApiBaseUrl}/v1/order/limit`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          ...headers,
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
-          symbol: order.ticker,
+          symbol,
           market: order.market,
           side: "buy",
           quantity: qtys[i],
@@ -113,3 +132,5 @@ export async function placeSplitLimitOrder(
         : "Toss API unavailable — verify token and TOSS_API_BASE_URL",
   };
 }
+
+export { fetchYahooLivePrice };

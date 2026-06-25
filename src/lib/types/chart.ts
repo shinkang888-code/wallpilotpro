@@ -13,6 +13,7 @@ export type StockChartSeries = {
   interval: ChartInterval;
   points: ChartPoint[];
   lastPrice: number;
+  priceSource?: "toss" | "yahoo";
 };
 
 export type StrategyAdvice = {

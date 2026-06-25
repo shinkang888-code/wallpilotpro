@@ -23,6 +23,8 @@ export function getServerConfig() {
     fmpApiKey: process.env.FMP_API_KEY ?? "",
     tossApiBaseUrl:
       process.env.TOSS_API_BASE_URL ?? "https://openapi.tossinvest.com",
+    tossClientId: process.env.TOSS_CLIENT_ID ?? "",
+    tossClientSecret: process.env.TOSS_CLIENT_SECRET ?? "",
     koreaStockMcpUrl:
       process.env.KOREA_STOCK_MCP_URL ?? "https://korea-stock-analyzer-mcp.vercel.app",
     alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY ?? "",

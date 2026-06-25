@@ -12,9 +12,12 @@ export const getStockChart = createServerFn({ method: "POST" })
       market: z.enum(["KR", "US"]),
       interval: z.enum(["1d", "1wk", "1mo"] satisfies [ChartInterval, ...ChartInterval[]]),
       accessToken: z.string().nullable().optional(),
+      tossKey: z.string().nullable().optional(),
     }),
   )
   .handler(async ({ data }) => {
     await guardFeature(data.accessToken, "chart");
-    return fetchStockChartSeries(data.ticker, data.market, data.interval);
+    return fetchStockChartSeries(data.ticker, data.market, data.interval, {
+      tossKey: data.tossKey,
+    });
   });
