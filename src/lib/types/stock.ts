@@ -133,10 +133,37 @@ export type WallStreetReport = {
   riskGate?: RiskGateResult | null;
 };
 
+export type DeepAgentAnalystReports = {
+  market: string;
+  fundamentals: string;
+  news: string;
+  sentiment: string;
+};
+
+export type DeepAgentTraderProposal = {
+  action: "Buy" | "Hold" | "Sell";
+  reasoning: string;
+  entryPrice?: number | null;
+  stopLoss?: number | null;
+  positionSizing?: string | null;
+};
+
+export type DeepAgentPortfolioDecision = {
+  rating: PortfolioRating;
+  executiveSummary: string;
+  investmentThesis: string;
+  priceTarget?: number | null;
+  timeHorizon?: string | null;
+};
+
 export type DeepAgentReport = WallStreetReport & {
   debate: DebateVerdict;
   riskGate: RiskGateResult;
   markdown: string;
   markdownKo: string;
   source: "wallpilot-ts" | "tradingagents-ms";
+  analysts: DeepAgentAnalystReports;
+  trader: DeepAgentTraderProposal;
+  portfolio: DeepAgentPortfolioDecision;
+  analysisDate: string;
 };

@@ -18,5 +18,6 @@ export function formatFeatureError(message: string, t: (key: string) => string):
   if (message === "dart_kr_only") return t("dart_kr_only");
   if (message === "dart_name_not_found") return t("dart_name_not_found");
   if (message === "dart_failed") return t("dart_failed");
+  if (message === "agent_desk_sidecar_unavailable") return t("agent_desk_sidecar_unavailable");
   return message;
 }
