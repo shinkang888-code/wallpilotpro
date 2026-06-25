@@ -594,6 +594,8 @@
   "tt_crypto_offline": "Crypto engine offline",
   "tt_crypto_offline_desc": "Start local Freqtrade to show USDT P/L and open positions here.",
   "tt_crypto_setup": "Set up crypto bot",
+  "tt_crypto_collapse": "Collapse",
+  "tt_crypto_inline_hint": "Start your local Freqtrade bot and refresh — control it inline below without leaving this page.",
   "tt_crypto_pnl": "Cumulative P/L (USDT)",
   "tt_crypto_hint": "Crypto tab — see bot analysis below"
 }

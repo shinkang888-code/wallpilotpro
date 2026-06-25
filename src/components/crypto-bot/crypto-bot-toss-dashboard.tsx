@@ -17,13 +17,18 @@ const TABS: { id: CryptoBotTab; labelKey: string }[] = [
   { id: "setup", labelKey: "ft_ui_tab_setup" },
 ];
 
-export function CryptoBotTossDashboard() {
+export function CryptoBotTossDashboard({ embedded = false }: { embedded?: boolean }) {
   const { t } = useI18n();
   const engine = useCryptoBotEngine();
 
+  const shellClass = cn(
+    "cb-toss space-y-0 overflow-hidden text-[var(--cb-text)]",
+    !embedded && "rounded-xl cb-panel",
+  );
+
   if (engine.loading) {
     return (
-      <div className="cb-toss flex min-h-[480px] items-center justify-center rounded-xl cb-panel">
+      <div className={cn(shellClass, "flex min-h-[480px] items-center justify-center")}>
         <Loader2 className="h-8 w-8 animate-spin text-[var(--cb-blue)]" />
       </div>
     );
@@ -34,7 +39,7 @@ export function CryptoBotTossDashboard() {
   const isUp = profitPct >= 0;
 
   return (
-    <div className="cb-toss space-y-0 overflow-hidden rounded-xl cb-panel text-[var(--cb-text)]">
+    <div className={shellClass}>
       {/* ── Top bar: status + refresh (토스증권 헤더 느낌) ── */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b cb-divider px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">

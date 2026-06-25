@@ -594,6 +594,8 @@
   "tt_crypto_offline": "크립토 엔진 오프라인",
   "tt_crypto_offline_desc": "로컬 Freqtrade 봇을 실행하면 USDT 손익·오픈 포지션이 여기에 표시됩니다.",
   "tt_crypto_setup": "크립토 봇 설정",
+  "tt_crypto_collapse": "접기",
+  "tt_crypto_inline_hint": "로컬 Freqtrade 봇을 실행한 뒤 새로고침하면 아래에서 바로 제어할 수 있습니다.",
   "tt_crypto_pnl": "누적 손익 (USDT)",
   "tt_crypto_hint": "크립토 탭 — 아래 크립토 봇 분석 참고"
 }

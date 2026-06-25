@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import type { TossTraderDashboardPayload } from "@/lib/api/toss-trader.functions";
+import { TossTraderCryptoPanel } from "@/components/toss-trader/toss-trader-crypto-panel";
 import type { TossHoldingItem, TossTraderFilter } from "@/lib/api/toss-trader.types";
 import { useI18n } from "@/lib/i18n";
 import { useTossTraderDashboard } from "@/lib/toss-trader/use-toss-trader-dashboard";
@@ -119,10 +119,6 @@ export function TossTraderDashboard() {
   const plRate = parseNum(holdings?.profitLoss.rate);
   const plKrw = parseNum(holdings?.profitLoss.amount.krw);
   const dailyKrw = parseNum(holdings?.dailyProfitLoss.amount.krw);
-
-  const cryptoProfitPct = crypto?.profit?.profitClosedPercent ?? 0;
-  const cryptoProfitCoin = crypto?.profit?.profitAllCoin ?? 0;
-  const cryptoUp = cryptoProfitPct >= 0;
 
   if (!tossKey.isConnected) {
     return (
@@ -263,7 +259,7 @@ export function TossTraderDashboard() {
             </span>
           </div>
           {filter === "crypto" ? (
-            <CryptoStrip crypto={crypto} t={t} embedded />
+            <TossTraderCryptoPanel crypto={crypto} defaultExpanded className="border-0 bg-transparent" />
           ) : filteredItems.length === 0 ? (
             <p className="px-5 py-10 text-center text-sm cb-text-muted">{t("tt_holdings_empty")}</p>
           ) : (
@@ -336,24 +332,9 @@ export function TossTraderDashboard() {
         </aside>
       </div>
 
-      {/* Crypto bot analysis strip */}
+      {/* Crypto bot — 인라인 확장 패널 */}
       {filter !== "crypto" ? (
-        <section className="mx-4 cb-panel sm:mx-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b cb-divider px-4 py-3 sm:px-6">
-            <div>
-              <p className="text-xs font-semibold text-[var(--cb-blue)]">{t("tt_crypto_section_label")}</p>
-              <h2 className="text-sm font-bold">{t("tt_crypto_section_title")}</h2>
-            </div>
-            <Link
-              to="/crypto-bot"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--cb-blue)] hover:underline"
-            >
-              {t("tt_crypto_open_full")}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <CryptoStrip crypto={crypto} t={t} />
-        </section>
+        <TossTraderCryptoPanel crypto={crypto} className="mx-4 sm:mx-0" />
       ) : null}
     </div>
   );
@@ -364,69 +345,6 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-[11px] cb-text-muted">{label}</dt>
       <dd className="mt-1 text-sm font-bold tabular-nums text-[var(--cb-text)]">{value}</dd>
-    </div>
-  );
-}
-
-function CryptoStrip({
-  crypto,
-  t,
-  embedded = false,
-}: {
-  crypto: TossTraderDashboardPayload["crypto"] | undefined;
-  t: (key: string) => string;
-  embedded?: boolean;
-}) {
-  const online = crypto?.connection.online ?? false;
-  const profitPct = crypto?.profit?.profitClosedPercent ?? 0;
-  const profitCoin = crypto?.profit?.profitAllCoin ?? 0;
-  const up = profitPct >= 0;
-
-  if (!online) {
-    return (
-      <div className={cn("px-5 py-8 text-center", embedded && "py-10")}>
-        <p className="text-sm font-semibold cb-text-muted">{t("tt_crypto_offline")}</p>
-        <p className="mt-2 text-xs cb-text-dim">{t("tt_crypto_offline_desc")}</p>
-        <Link
-          to="/crypto-bot"
-          className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[var(--cb-blue)] hover:underline"
-        >
-          {t("tt_crypto_setup")}
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn("grid gap-4 p-4 sm:grid-cols-4 sm:p-6", embedded && "sm:grid-cols-1")}>
-      <div className={embedded ? "text-center" : ""}>
-        <p className="text-xs cb-text-muted">{t("tt_crypto_pnl")}</p>
-        <p className="mt-1 font-display text-2xl font-bold tabular-nums">
-          {profitCoin >= 0 ? "+" : ""}
-          {profitCoin.toFixed(2)}
-          <span className="ml-1 text-base cb-text-muted">USDT</span>
-        </p>
-        <span
-          className={cn(
-            "mt-2 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold",
-            up ? "cb-up bg-[rgba(220,46,71,0.12)]" : "cb-down bg-[rgba(49,130,246,0.12)]",
-          )}
-        >
-          {up ? "+" : ""}
-          {profitPct.toFixed(2)}%
-        </span>
-      </div>
-      {!embedded ? (
-        <>
-          <Stat label={t("ft_metric_state")} value={crypto?.status?.state?.toUpperCase() ?? "—"} />
-          <Stat label={t("ft_metric_strategy")} value={crypto?.status?.strategy ?? "—"} />
-          <Stat
-            label={t("ft_open_current")}
-            value={`${crypto?.openTrades?.current ?? 0} / ${crypto?.openTrades?.max ?? 0}`}
-          />
-        </>
-      ) : null}
     </div>
   );
 }
