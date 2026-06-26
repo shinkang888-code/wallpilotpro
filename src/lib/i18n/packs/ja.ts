@@ -708,5 +708,16 @@ export const pack = {
   "tm_mode_live": "Live",
   "ta_action_buy": "Buy",
   "ta_action_hold": "Hold",
-  "ta_action_sell": "Sell"
+  "ta_action_sell": "Sell",
+  "pilot_prompts_add": "Add",
+  "pilot_prompts_cancel": "Cancel",
+  "pilot_prompts_delete": "Delete",
+  "pilot_prompts_dialog_sub": "Add, edit, or remove quick prompts shown below the chat header.",
+  "pilot_prompts_dialog_title": "Sample questions",
+  "pilot_prompts_edit": "Edit",
+  "pilot_prompts_empty": "No questions yet.",
+  "pilot_prompts_placeholder": "Enter a new question…",
+  "pilot_prompts_reset": "Reset to defaults",
+  "pilot_prompts_save": "Save",
+  "pilot_register_questions": "Manage prompts"
 } as const;

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Radar, Send, Sparkles } from "lucide-react";
+import { Loader2, MessageSquarePlus, Radar, Send, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { AiPilotQuickPromptsDialog } from "@/components/ai-pilot-quick-prompts-dialog";
 import { AiPilotPickTable } from "@/components/ai-pilot-pick-table";
 import { AiPilotScanResults } from "@/components/ai-pilot-scan-results";
 import { AiPilotLiveQuotes, AiPilotLiveChartPanel } from "@/components/ai-pilot-live-panel";
 import { chatAiPilot } from "@/lib/api/ai-pilot.functions";
+import { useQuickPrompts } from "@/lib/ai-pilot/use-quick-prompts";
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
 import { useI18n, toAiPilotLang } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
@@ -23,22 +25,6 @@ import { useGeminiKeySource } from "@/lib/use-gemini-key-source";
 import type { AiPilotMessage, AiPilotResponse } from "@/lib/types/ai-pilot";
 import type { StockRow, TradingPayload } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
-
-const QUICK_PROMPTS_KO = [
-  "미국주식중에 현시점 역설계 10가지 추천해줘 150달러미만",
-  "역설계적으로 현금흐름 좋고 단기 상승가능한 주식 5개 국내주 찍어",
-  "위 종목 중 단기 상승 가능한 순서로",
-  "단기 회전율 높은 종목에 자금 집중 배분 가이드",
-  "미국 AI 인프라 연동 국내 수혜주 3개",
-];
-
-const QUICK_PROMPTS_EN = [
-  "Reverse-engineer 10 US stocks under $150 with strong upside now",
-  "Pick 5 KR stocks with strong cash flow and near-term upside (reverse-quant)",
-  "Rank those by short-term breakout timeline",
-  "Aggressive vs conservative allocation guide",
-  "3 KR beneficiaries of US AI infrastructure",
-];
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -297,8 +283,10 @@ export function AiPilotChat({
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [scanTriggered, setScanTriggered] = useState(false);
+  const [promptsDialogOpen, setPromptsDialogOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const quickPrompts = lang === "ko" ? QUICK_PROMPTS_KO : QUICK_PROMPTS_EN;
+  const { prompts: quickPrompts, addPrompt, updatePrompt, deletePrompt, resetToDefaults } =
+    useQuickPrompts(lang);
 
   const handleRunScan = useCallback(() => {
     if (!onRunScan || scanLoading) return;
@@ -405,9 +393,19 @@ export function AiPilotChat({
     <div className="flex min-h-[calc(100vh-12rem)] flex-col rounded-3xl border border-hairline bg-surface/40">
       {/* Hero strip */}
       <div className="border-b border-hairline px-5 py-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-lg font-semibold">{t("pilot_chat_title")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold">{t("pilot_chat_title")}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPromptsDialogOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-white px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/5"
+          >
+            <MessageSquarePlus className="h-3.5 w-3.5" />
+            {t("pilot_register_questions")}
+          </button>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">{t("pilot_chat_sub")}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -434,9 +432,9 @@ export function AiPilotChat({
           <p className="mt-2 text-[10px] font-medium text-positive">{t("pilot_scan_linked")}</p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
-          {quickPrompts.map((q) => (
+          {quickPrompts.map((q, i) => (
             <button
-              key={q}
+              key={`${i}-${q.slice(0, 16)}`}
               type="button"
               onClick={() => send(q)}
               disabled={loading}
@@ -447,6 +445,16 @@ export function AiPilotChat({
           ))}
         </div>
       </div>
+
+      <AiPilotQuickPromptsDialog
+        open={promptsDialogOpen}
+        onOpenChange={setPromptsDialogOpen}
+        prompts={quickPrompts}
+        onAdd={addPrompt}
+        onUpdate={updatePrompt}
+        onDelete={deletePrompt}
+        onReset={resetToDefaults}
+      />
 
       {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
