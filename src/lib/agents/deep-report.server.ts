@@ -1,3 +1,4 @@
+import { generateAgentDeskLocalizedKo } from "@/lib/agents/agent-desk-localized-ko.server";
 import { generateDeepReportKorean } from "@/lib/agents/deep-report-ko.server";
 import { runTradingAgentsPipeline } from "@/lib/agents/tradingagents-pipeline.server";
 import { getServerConfig } from "@/lib/config.server";
@@ -68,6 +69,16 @@ export async function buildDeepAgentReport(
     geminiApiKey,
   });
 
+  const localizedKo = await generateAgentDeskLocalizedKo({
+    report: { ...report, rating },
+    analysts,
+    debate,
+    trader,
+    riskGate,
+    portfolio,
+    geminiApiKey,
+  });
+
   return {
     ...report,
     rating,
@@ -79,6 +90,7 @@ export async function buildDeepAgentReport(
     analysisDate,
     markdown,
     markdownKo,
+    localizedKo,
     source: external ? "tradingagents-ms" : "wallpilot-ts",
   };
 }

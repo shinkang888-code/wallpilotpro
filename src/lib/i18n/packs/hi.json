@@ -704,5 +704,8 @@
   "tm_demo_phase_test": "Running test phase…",
   "tm_demo_phase_train": "Running train phase…",
   "tm_mode_demo": "Demo",
-  "tm_mode_live": "Live"
+  "tm_mode_live": "Live",
+  "ta_action_buy": "Buy",
+  "ta_action_hold": "Hold",
+  "ta_action_sell": "Sell"
 }

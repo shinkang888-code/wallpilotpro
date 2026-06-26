@@ -156,11 +156,21 @@ export type DeepAgentPortfolioDecision = {
   timeHorizon?: string | null;
 };
 
+/** Korean UI copy for Agent Desk tabs (generated server-side). */
+export type DeepAgentLocalizedKo = {
+  analysts: DeepAgentAnalystReports;
+  debate: DebateVerdict;
+  trader: DeepAgentTraderProposal;
+  riskGate: RiskGateResult;
+  portfolio: DeepAgentPortfolioDecision;
+};
+
 export type DeepAgentReport = WallStreetReport & {
   debate: DebateVerdict;
   riskGate: RiskGateResult;
   markdown: string;
   markdownKo: string;
+  localizedKo?: DeepAgentLocalizedKo;
   source: "wallpilot-ts" | "tradingagents-ms";
   analysts: DeepAgentAnalystReports;
   trader: DeepAgentTraderProposal;

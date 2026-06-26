@@ -13,6 +13,7 @@ import { DeepAgentReportScroll } from "@/components/deep-agent-report-scroll";
 import { RatingBadge } from "@/components/rating-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/lib/i18n";
+import { pickAgentDeskContent } from "@/lib/modules/ta/pick-agent-desk-content";
 import type { DeepAgentReport } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,15 @@ function AnalystCard({
 }
 
 export function AgentDeskReportView({ report }: { report: DeepAgentReport }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const content = pickAgentDeskContent(report, lang);
+
+  const traderActionLabel =
+    content.trader.action === "Buy"
+      ? t("ta_action_buy")
+      : content.trader.action === "Sell"
+        ? t("ta_action_sell")
+        : t("ta_action_hold");
 
   return (
     <div className="space-y-6">
@@ -74,10 +83,10 @@ export function AgentDeskReportView({ report }: { report: DeepAgentReport }) {
 
         <TabsContent value="pipeline" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <AnalystCard icon={BarChart3} title={t("ta_legend_market")} body={report.analysts.market} />
-            <AnalystCard icon={Scale} title={t("ta_legend_fundamentals")} body={report.analysts.fundamentals} />
-            <AnalystCard icon={Newspaper} title={t("ta_legend_news")} body={report.analysts.news} />
-            <AnalystCard icon={Users} title={t("ta_legend_sentiment")} body={report.analysts.sentiment} />
+            <AnalystCard icon={BarChart3} title={t("ta_legend_market")} body={content.analysts.market} />
+            <AnalystCard icon={Scale} title={t("ta_legend_fundamentals")} body={content.analysts.fundamentals} />
+            <AnalystCard icon={Newspaper} title={t("ta_legend_news")} body={content.analysts.news} />
+            <AnalystCard icon={Users} title={t("ta_legend_sentiment")} body={content.analysts.sentiment} />
           </div>
         </TabsContent>
 
@@ -85,19 +94,19 @@ export function AgentDeskReportView({ report }: { report: DeepAgentReport }) {
           <div className="grid gap-4 md:grid-cols-2">
             <ReportBlock
               title={t("ta_bull_case")}
-              body={report.debate.bullCase}
+              body={content.debate.bullCase}
               accent="border-emerald-200/80 bg-emerald-50/40"
             />
             <ReportBlock
               title={t("ta_bear_case")}
-              body={report.debate.bearCase}
+              body={content.debate.bearCase}
               accent="border-red-200/80 bg-red-50/40"
             />
           </div>
-          <ReportBlock title={t("ta_research_verdict")} body={report.debate.verdict} />
+          <ReportBlock title={t("ta_research_verdict")} body={content.debate.verdict} />
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{t("ta_debate_rating")}</span>
-            <RatingBadge rating={report.debate.rating} />
+            <RatingBadge rating={content.debate.rating} />
           </div>
         </TabsContent>
 
@@ -106,37 +115,37 @@ export function AgentDeskReportView({ report }: { report: DeepAgentReport }) {
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase",
-                report.trader.action === "Buy" && "bg-emerald-100 text-emerald-800",
-                report.trader.action === "Hold" && "bg-amber-100 text-amber-900",
-                report.trader.action === "Sell" && "bg-red-100 text-red-800",
+                content.trader.action === "Buy" && "bg-emerald-100 text-emerald-800",
+                content.trader.action === "Hold" && "bg-amber-100 text-amber-900",
+                content.trader.action === "Sell" && "bg-red-100 text-red-800",
               )}
             >
-              {report.trader.action === "Buy" ? (
+              {content.trader.action === "Buy" ? (
                 <TrendingUp className="h-3.5 w-3.5" />
-              ) : report.trader.action === "Sell" ? (
+              ) : content.trader.action === "Sell" ? (
                 <TrendingDown className="h-3.5 w-3.5" />
               ) : null}
-              {report.trader.action}
+              {traderActionLabel}
             </span>
           </div>
-          <ReportBlock title={t("ta_trader_reasoning")} body={report.trader.reasoning} />
+          <ReportBlock title={t("ta_trader_reasoning")} body={content.trader.reasoning} />
           <div className="grid gap-3 sm:grid-cols-3">
-            {report.trader.entryPrice != null ? (
+            {content.trader.entryPrice != null ? (
               <div className="rounded-xl border border-hairline bg-white p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">{t("ta_entry_price")}</p>
-                <p className="mt-1 font-mono text-sm font-semibold">{report.trader.entryPrice}</p>
+                <p className="mt-1 font-mono text-sm font-semibold">{content.trader.entryPrice}</p>
               </div>
             ) : null}
-            {report.trader.stopLoss != null ? (
+            {content.trader.stopLoss != null ? (
               <div className="rounded-xl border border-hairline bg-white p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">{t("ta_stop_loss")}</p>
-                <p className="mt-1 font-mono text-sm font-semibold">{report.trader.stopLoss}</p>
+                <p className="mt-1 font-mono text-sm font-semibold">{content.trader.stopLoss}</p>
               </div>
             ) : null}
-            {report.trader.positionSizing ? (
+            {content.trader.positionSizing ? (
               <div className="rounded-xl border border-hairline bg-white p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">{t("ta_position_size")}</p>
-                <p className="mt-1 text-sm font-semibold">{report.trader.positionSizing}</p>
+                <p className="mt-1 text-sm font-semibold">{content.trader.positionSizing}</p>
               </div>
             ) : null}
           </div>
@@ -146,45 +155,45 @@ export function AgentDeskReportView({ report }: { report: DeepAgentReport }) {
           <div
             className={cn(
               "rounded-xl border px-4 py-3 text-sm font-semibold",
-              report.riskGate.approved
+              content.riskGate.approved
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-red-200 bg-red-50 text-red-800",
             )}
           >
             <Shield className="mb-1 inline h-4 w-4" />{" "}
-            {report.riskGate.approved ? t("ta_risk_approved") : t("ta_risk_blocked")}: {report.riskGate.reason}
+            {content.riskGate.approved ? t("ta_risk_approved") : t("ta_risk_blocked")}: {content.riskGate.reason}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <ReportBlock title={t("ta_risk_aggressive")} body={report.riskGate.aggressiveView} />
-            <ReportBlock title={t("ta_risk_conservative")} body={report.riskGate.conservativeView} />
+            <ReportBlock title={t("ta_risk_aggressive")} body={content.riskGate.aggressiveView} />
+            <ReportBlock title={t("ta_risk_conservative")} body={content.riskGate.conservativeView} />
           </div>
         </TabsContent>
 
         <TabsContent value="pm" className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <Briefcase className="h-5 w-5 text-primary" />
-            <RatingBadge rating={report.portfolio.rating} />
+            <RatingBadge rating={content.portfolio.rating} />
           </div>
-          <ReportBlock title={t("ta_pm_summary")} body={report.portfolio.executiveSummary} />
-          <ReportBlock title={t("ta_pm_thesis")} body={report.portfolio.investmentThesis} />
+          <ReportBlock title={t("ta_pm_summary")} body={content.portfolio.executiveSummary} />
+          <ReportBlock title={t("ta_pm_thesis")} body={content.portfolio.investmentThesis} />
           <div className="grid gap-3 sm:grid-cols-2">
-            {report.portfolio.priceTarget != null ? (
+            {content.portfolio.priceTarget != null ? (
               <div className="rounded-xl border border-hairline bg-white p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">{t("ta_price_target")}</p>
-                <p className="mt-1 font-mono text-sm font-semibold">{report.portfolio.priceTarget}</p>
+                <p className="mt-1 font-mono text-sm font-semibold">{content.portfolio.priceTarget}</p>
               </div>
             ) : null}
-            {report.portfolio.timeHorizon ? (
+            {content.portfolio.timeHorizon ? (
               <div className="rounded-xl border border-hairline bg-white p-3">
                 <p className="text-[10px] uppercase text-muted-foreground">{t("ta_time_horizon")}</p>
-                <p className="mt-1 text-sm font-semibold">{report.portfolio.timeHorizon}</p>
+                <p className="mt-1 text-sm font-semibold">{content.portfolio.timeHorizon}</p>
               </div>
             ) : null}
           </div>
         </TabsContent>
 
         <TabsContent value="full">
-          <DeepAgentReportScroll markdownEn={report.markdown} markdownKo={report.markdownKo} />
+          <DeepAgentReportScroll markdownEn={report.markdown} markdownKo={content.markdownKo || report.markdownKo} />
         </TabsContent>
       </Tabs>
     </div>
