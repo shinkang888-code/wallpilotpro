@@ -4,6 +4,7 @@ import {
   renderDeepProfileBlock,
   renderGroundedBlock,
 } from "@/lib/api/ai-pilot-grounding.server";
+import { enrichAiPilotPicks } from "@/lib/ai-pilot/yahoo-pick-metrics.server";
 import { runDualTrackAiPilot } from "@/lib/ai/ai-pilot-engine.server";
 import type { AiPilotPick, AiPilotResponse } from "@/lib/types/ai-pilot";
 import type { StockRow } from "@/lib/types/stock";
@@ -194,8 +195,10 @@ export async function runAiPilotChat(input: {
             priceNow: deepProfile.quote.price,
           }
         : undefined;
+    const picks = await enrichAiPilotPicks(result.data.picks, input.lang);
     return {
       ...result.data,
+      picks,
       liveQuotes: liveQuotes.length > 0 ? liveQuotes : undefined,
       liveChart,
     };
