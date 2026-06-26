@@ -13,6 +13,8 @@ uvicorn main:app --host 0.0.0.0 --port 8100
 
 Set on Vercel: `TRADINGAGENTS_SERVICE_URL=https://your-service` (base URL without path).
 
+Deploy guide: [`docs/TRADINGAGENTS_SIDECAR_DEPLOY.md`](../docs/TRADINGAGENTS_SIDECAR_DEPLOY.md)
+
 Sidecar env: `GEMINI_API_KEY` or `OPENAI_API_KEY`, optional `TRADINGAGENTS_DEEP_MODEL`, `TRADINGAGENTS_QUICK_MODEL`.
 
 ## TradeMaster Worker (Phase 4 · Full RL)

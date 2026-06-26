@@ -22,6 +22,9 @@ for (const loc of locales) {
   for (const k of keys) {
     if (!(k in data)) data[k] = en[k];
   }
+  if (loc !== "en") {
+    fs.writeFileSync(jsonPath, `${JSON.stringify(data, null, 2)}\n`);
+  }
   const out = `/** Auto-generated — run npm run i18n:build */\nexport const pack = ${JSON.stringify(data, null, 2)} as const;\n`;
   fs.writeFileSync(path.join(packsDir, `${loc}.ts`), out);
 }

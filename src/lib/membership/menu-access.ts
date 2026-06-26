@@ -33,6 +33,18 @@ const DEFAULT_MATRIX: MenuTierPermission[] = [
   { menuId: "ai_pilot", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "agent_desk", tier: "premium", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "agent_desk", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "signal_hub", tier: "free", canView: true, canExecute: false, canExportPdf: false },
+  { menuId: "signal_hub", tier: "day_trading", canView: true, canExecute: true, canExportPdf: false },
+  { menuId: "signal_hub", tier: "premium", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "signal_hub", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "rl_lab", tier: "free", canView: false, canExecute: false, canExportPdf: false },
+  { menuId: "rl_lab", tier: "day_trading", canView: false, canExecute: false, canExportPdf: false },
+  { menuId: "rl_lab", tier: "premium", canView: false, canExecute: false, canExportPdf: false },
+  { menuId: "rl_lab", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "crypto_bot", tier: "free", canView: false, canExecute: false, canExportPdf: false },
+  { menuId: "crypto_bot", tier: "day_trading", canView: false, canExecute: false, canExportPdf: false },
+  { menuId: "crypto_bot", tier: "premium", canView: true, canExecute: true, canExportPdf: false },
+  { menuId: "crypto_bot", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "toss_trader", tier: "free", canView: true, canExecute: false, canExportPdf: false },
   { menuId: "toss_trader", tier: "day_trading", canView: true, canExecute: true, canExportPdf: false },
   { menuId: "toss_trader", tier: "premium", canView: true, canExecute: true, canExportPdf: true },
@@ -61,7 +73,16 @@ function resolvePermission(
   const builtIn = defaultPermission(menuId, tier);
   if (builtIn) return builtIn;
   const menu = APP_MENUS.find((m) => m.id === menuId);
-  const minRank = TIER_RANK[menu?.defaultMinTier ?? "free"];
+  if (!menu) {
+    return {
+      menuId,
+      tier,
+      canView: false,
+      canExecute: false,
+      canExportPdf: false,
+    };
+  }
+  const minRank = TIER_RANK[menu.defaultMinTier];
   const tierRank = TIER_RANK[tier];
   return {
     menuId,

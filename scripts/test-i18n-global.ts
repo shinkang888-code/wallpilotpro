@@ -13,7 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const keys = Object.keys(enPack);
 
-assert.equal(keys.length, 449, "expected 449 translation keys");
+assert.ok(keys.length >= 600, `expected at least 600 translation keys, got ${keys.length}`);
 console.log("keys:", keys.length);
 
 for (const loc of LOCALE_ORDER) {

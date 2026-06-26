@@ -29,3 +29,14 @@ services:
         value: "18"
       - key: TM_TEST_SECONDS
         value: "12"
+
+  - type: web
+    name: wallpilot-tradingagents-api
+    runtime: docker
+    rootDir: services/tradingagents-api
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: TRADINGAGENTS_MAX_DEBATE_ROUNDS
+        value: "1"
