@@ -48,14 +48,15 @@ assert.equal(canAccessMenu("ai_pilot", "premium", "execute"), true);
 assert.equal(canAccessMenu("rl_lab", "premium", "execute"), false);
 assert.equal(canAccessMenu("rl_lab", "elite", "execute"), true);
 
-// Visible menus (nav only — signal_hub / rl_lab / crypto_bot routes exist but nav removed)
+// Visible menus (signal_hub / rl_lab restored in nav; crypto_bot route removed)
 const freeMenus = visibleMenusForTier("free");
 assert.ok(freeMenus.includes("scanner"));
 assert.ok(!freeMenus.includes("rl_lab"));
-assert.ok(!freeMenus.includes("signal_hub"));
+assert.ok(freeMenus.includes("signal_hub"));
 
 const eliteMenus = visibleMenusForTier("elite");
-assert.ok(!eliteMenus.includes("rl_lab"));
+assert.ok(eliteMenus.includes("rl_lab"));
+assert.ok(eliteMenus.includes("signal_hub"));
 assert.ok(eliteMenus.includes("agent_desk"));
 assert.ok(eliteMenus.includes("toss_trader"));
 
@@ -74,12 +75,12 @@ assert.equal(canAccess(premiumSession, "toss_execute"), false);
 assert.equal(canAccess(eliteSession, "toss_execute"), true);
 assert.equal(canAccess(eliteSession, "rl_lab"), true);
 
-// Extension menus in top nav (signal_hub / rl_lab removed from nav; routes remain)
+// Extension menus in top nav
 const ext = APP_MENUS.filter((m) => m.namespace);
-assert.equal(ext.length, 2);
+assert.equal(ext.length, 4);
 assert.deepEqual(
   ext.map((m) => m.namespace),
-  ["dart", "ta"],
+  ["dart", "ta", "ait", "tm"],
 );
 
 console.log("✓ All Phase 1 checks passed");

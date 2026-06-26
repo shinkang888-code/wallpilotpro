@@ -30,7 +30,7 @@ export function WallStreetReportPanel() {
   const { accessToken, loading: authLoading, enforced, isActive, entitlements, isPending } = useAuth();
   const { key: geminiApiKey } = useGeminiApiKey();
   const { key: tossKey } = useTossApiKey();
-  const [query, setQuery] = useState("005930");
+  const [query, setQuery] = useState("");
   const [report, setReport] = useState<WallStreetReport | null>(null);
   const [deepReport, setDeepReport] = useState<DeepAgentReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,15 +89,11 @@ export function WallStreetReportPanel() {
 
   useEffect(() => {
     const fromPilot = sessionStorage.getItem("wallpilot-ws-ticker");
-    if (fromPilot) {
-      sessionStorage.removeItem("wallpilot-ws-ticker");
-      setQuery(fromPilot);
-      void runReport(fromPilot);
-      return;
-    }
-    if (authLoading || !canRunReport || report) return;
-    void runReport(query.trim());
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial default ticker only
+    if (!fromPilot) return;
+    sessionStorage.removeItem("wallpilot-ws-ticker");
+    setQuery(fromPilot);
+    void runReport(fromPilot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI Pilot handoff only
   }, [authLoading, canRunReport]);
 
   const runDeepReport = async (symbol: string) => {

@@ -29,12 +29,12 @@ function mockSession(plan: AuthSession["subscription"]["plan"]): AuthSession {
 
 console.log("WallPilot Pro P2–P4 tests\n");
 
-// Extension menus in top nav (ait/tm nav removed; entitlements + routes remain)
+// Extension menus in top nav
 const ext = APP_MENUS.filter((m) => m.namespace);
-assert.equal(ext.length, 2);
+assert.equal(ext.length, 4);
 assert.deepEqual(
   ext.map((m) => m.namespace),
-  ["dart", "ta"],
+  ["dart", "ta", "ait", "tm"],
 );
 
 // Phase 2 — Agent Desk (premium+)

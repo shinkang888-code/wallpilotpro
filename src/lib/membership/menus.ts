@@ -10,9 +10,9 @@ export type AppMenuId =
   | "dart_lab"
   | "my_api"
   | "pricing"
-  /** @deprecated Nav removed — routes/entitlements only */
   | "signal_hub"
   | "rl_lab"
+  /** Routes/entitlements only — nav removed */
   | "crypto_bot";
 
 export type MenuAction = "view" | "execute" | "export_pdf";
@@ -70,6 +70,22 @@ export const APP_MENUS: AppMenuDefinition[] = [
     namespace: "ta",
     defaultMinTier: "premium",
     phase: 2,
+  },
+  {
+    id: "signal_hub",
+    path: "/signals",
+    labelKey: "nav_signal_hub",
+    namespace: "ait",
+    defaultMinTier: "day_trading",
+    phase: 3,
+  },
+  {
+    id: "rl_lab",
+    path: "/quant/rl-lab",
+    labelKey: "nav_rl_lab",
+    namespace: "tm",
+    defaultMinTier: "premium",
+    phase: 4,
   },
   {
     id: "toss_trader",

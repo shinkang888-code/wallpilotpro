@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Calendar, Loader2, Settings2 } from "lucide-react";
 
+import { AgentDeskDemoShell } from "@/components/modules/agent-desk-demo-shell";
 import {
   AgentDeskPipelineLegend,
   AgentDeskPipelineProgress,
@@ -41,6 +42,7 @@ export function AgentDeskPanel() {
   const [query, setQuery] = useState("NVDA");
   const [analysisDate, setAnalysisDate] = useState(todayIso);
   const [engine, setEngine] = useState<TradingAgentsEngine>("auto");
+  const [viewMode, setViewMode] = useState<"demo" | "live">("demo");
   const [report, setReport] = useState<DeepAgentReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState<PipelineStepId | null>(null);
@@ -126,6 +128,33 @@ export function AgentDeskPanel() {
     <div className="space-y-6">
       <AgentDeskSetupPanel />
 
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setViewMode("demo")}
+          className={cn(
+            "rounded-full border px-4 py-1.5 text-xs font-semibold",
+            viewMode === "demo" ? "border-violet-500 bg-violet-50 text-violet-800" : "border-hairline text-muted-foreground",
+          )}
+        >
+          {t("ta_mode_demo")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode("live")}
+          className={cn(
+            "rounded-full border px-4 py-1.5 text-xs font-semibold",
+            viewMode === "live" ? "border-primary bg-primary/10 text-primary" : "border-hairline text-muted-foreground",
+          )}
+        >
+          {t("ta_mode_live")}
+        </button>
+      </div>
+
+      {viewMode === "demo" ? <AgentDeskDemoShell /> : null}
+
+      {viewMode === "live" ? (
+      <>
       <section className="rounded-2xl border border-hairline bg-surface p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -244,6 +273,8 @@ export function AgentDeskPanel() {
           <WallStreetPriceChart ticker={report.ticker} market={report.market} />
           <AgentDeskReportView report={report} />
         </section>
+      ) : null}
+      </>
       ) : null}
     </div>
   );

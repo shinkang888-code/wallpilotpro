@@ -25,6 +25,7 @@ import type { StockRow, TradingPayload } from "@/lib/types/stock";
 import { cn } from "@/lib/utils";
 
 const QUICK_PROMPTS_KO = [
+  "미국주식중에 현시점 역설계 10가지 추천해줘 150달러미만",
   "역설계적으로 현금흐름 좋고 단기 상승가능한 주식 5개 국내주 찍어",
   "위 종목 중 단기 상승 가능한 순서로",
   "단기 회전율 높은 종목에 자금 집중 배분 가이드",
@@ -32,6 +33,7 @@ const QUICK_PROMPTS_KO = [
 ];
 
 const QUICK_PROMPTS_EN = [
+  "Reverse-engineer 10 US stocks under $150 with strong upside now",
   "Pick 5 KR stocks with strong cash flow and near-term upside (reverse-quant)",
   "Rank those by short-term breakout timeline",
   "Aggressive vs conservative allocation guide",

@@ -16,7 +16,7 @@ function SignalHubPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header walletBalance={null} />
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <MenuGate menuId="signal_hub" action="view">
           <AuthNoticeBanner feature="signals_read" className="mb-6" />
           <section className="mb-8">

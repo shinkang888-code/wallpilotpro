@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -44,13 +43,6 @@ export function TossTraderCryptoPanel({ crypto, defaultExpanded = false, classNa
           <h2 className="text-sm font-bold">{t("tt_crypto_section_title")}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/crypto-bot"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--cb-blue)] hover:underline"
-          >
-            {t("tt_crypto_open_full")}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}

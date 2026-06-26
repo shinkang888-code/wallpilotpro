@@ -32,6 +32,8 @@ import {
 
 } from "@/components/modules/dart-cpa-report";
 
+import { DartCpaConsultation } from "@/components/modules/dart-cpa-consultation";
+
 import { analyzeDartLab, getDartLabStatus } from "@/lib/api/dart.functions";
 
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
@@ -400,6 +402,8 @@ export function DartLabPanel() {
           {tab === "ai" && (
 
             <>
+
+              <DartCpaConsultation result={result} />
 
               {loading ? <DartCpaLoadingState /> : null}
 

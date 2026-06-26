@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { FlaskConical, Loader2, Play, Zap, Cpu } from "lucide-react";
 
+import { RlLabDemoShell } from "@/components/modules/rl-lab-demo-shell";
 import { RlLabJobCard } from "@/components/modules/rl-lab-job-card";
 import {
   fetchRlJobHistory,
@@ -29,6 +30,7 @@ export function RlLabPanel() {
   const [history, setHistory] = useState<TmRlJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"demo" | "live">("demo");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canRun = !enforced || (isActive && Boolean(entitlements?.rl_lab));
@@ -103,6 +105,33 @@ export function RlLabPanel() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setViewMode("demo")}
+          className={cn(
+            "rounded-full border px-4 py-1.5 text-xs font-semibold",
+            viewMode === "demo" ? "border-sky-500 bg-sky-50 text-sky-800" : "border-hairline text-muted-foreground",
+          )}
+        >
+          {t("tm_mode_demo")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode("live")}
+          className={cn(
+            "rounded-full border px-4 py-1.5 text-xs font-semibold",
+            viewMode === "live" ? "border-primary bg-primary/10 text-primary" : "border-hairline text-muted-foreground",
+          )}
+        >
+          {t("tm_mode_live")}
+        </button>
+      </div>
+
+      {viewMode === "demo" ? <RlLabDemoShell /> : null}
+
+      {viewMode === "live" ? (
+      <>
       <section className="rounded-2xl border border-hairline bg-surface p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-primary">
@@ -212,6 +241,8 @@ export function RlLabPanel() {
             ))}
           </ul>
         </section>
+      ) : null}
+      </>
       ) : null}
     </div>
   );
