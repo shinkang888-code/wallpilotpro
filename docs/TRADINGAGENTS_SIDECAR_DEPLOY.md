@@ -52,7 +52,11 @@ No trailing slash. After deploy, open `/agents/desk` → **TradingAgents 전체 
 
 ## Render (Blueprint)
 
-`render.yaml` includes `wallpilot-tradingagents-api`. After deploy:
+`render.yaml` includes `wallpilot-tradingagents-api`. Production URL:
+
+**https://wallpilot-tradingagents-api.onrender.com**
+
+After deploy:
 
 1. Render Dashboard → service → Environment → add `GEMINI_API_KEY`
 2. Copy service URL → Vercel `TRADINGAGENTS_SERVICE_URL`

@@ -671,5 +671,8 @@ export const pack = {
   "tt_status_connected": "Toss connected",
   "tt_status_disconnected": "Toss connection failed",
   "tt_total_assets": "Total portfolio value",
-  "tt_total_pl": "Total P/L"
+  "tt_total_pl": "Total P/L",
+  "toss_auth_failed": "Toss authentication failed. Verify Client ID and Secret.",
+  "toss_auth_missing_client_id": "Toss Client ID is missing. Add your c_… Client ID from developers.tossinvest.com in My API (ID + Secret both required).",
+  "toss_auth_missing_secret": "Toss Client Secret is missing. Add your tsck_live_… Secret in My API."
 } as const;

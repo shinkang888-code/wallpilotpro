@@ -30,6 +30,31 @@ export function resolveTossCredentials(tossKey?: string | null): TossCredentials
   return null;
 }
 
+export type TossCredentialIssue = "ok" | "missing_client_id" | "missing_secret" | "missing_both";
+
+/** Diagnose why Toss OAuth cannot run (server env or My API key). */
+export function diagnoseTossCredentialIssue(tossKey?: string | null): TossCredentialIssue {
+  const cfg = getServerConfig();
+  const raw = tossKey?.trim();
+
+  if (raw?.includes(":")) {
+    const idx = raw.indexOf(":");
+    const clientId = raw.slice(0, idx).trim();
+    const clientSecret = raw.slice(idx + 1).trim();
+    if (clientId && clientSecret) return "ok";
+    if (clientSecret && !clientId) return "missing_client_id";
+    if (clientId && !clientSecret) return "missing_secret";
+    return "missing_both";
+  }
+
+  const clientId = cfg.tossClientId.trim();
+  const clientSecret = (raw || cfg.tossClientSecret).trim();
+  if (clientId && clientSecret) return "ok";
+  if (clientSecret && !clientId) return "missing_client_id";
+  if (clientId && !clientSecret) return "missing_secret";
+  return "missing_both";
+}
+
 /** OAuth2 client_credentials access token (cached until expiry). */
 export async function getTossAccessToken(
   creds: TossCredentials,

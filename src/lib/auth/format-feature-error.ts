@@ -19,5 +19,7 @@ export function formatFeatureError(message: string, t: (key: string) => string):
   if (message === "dart_name_not_found") return t("dart_name_not_found");
   if (message === "dart_failed") return t("dart_failed");
   if (message === "agent_desk_sidecar_unavailable") return t("agent_desk_sidecar_unavailable");
+  if (message === "toss_auth_missing_client_id") return t("toss_auth_missing_client_id");
+  if (message === "toss_auth_missing_secret") return t("toss_auth_missing_secret");
   return message;
 }

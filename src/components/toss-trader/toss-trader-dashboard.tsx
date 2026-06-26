@@ -13,6 +13,7 @@ import { useMemo, useState } from "react";
 import { TossTraderCryptoPanel } from "@/components/toss-trader/toss-trader-crypto-panel";
 import type { TossHoldingItem, TossTraderFilter } from "@/lib/api/toss-trader.types";
 import { useI18n } from "@/lib/i18n";
+import { formatFeatureError } from "@/lib/auth/format-feature-error";
 import { useTossTraderDashboard } from "@/lib/toss-trader/use-toss-trader-dashboard";
 import { useTossApiKey } from "@/lib/use-toss-api-key";
 import { cn } from "@/lib/utils";
@@ -176,6 +177,9 @@ export function TossTraderDashboard() {
             ) : null}
           </span>
           {error ? <span className="text-xs text-amber-400">{error}</span> : null}
+          {!data?.toss.connected && data?.toss.error ? (
+            <span className="text-xs text-amber-400">{formatFeatureError(data.toss.error, t)}</span>
+          ) : null}
         </div>
         <button
           type="button"

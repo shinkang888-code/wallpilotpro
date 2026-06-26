@@ -10,7 +10,7 @@ import {
   fetchYahooLivePrice,
   toTossSymbol,
 } from "@/lib/market/price-provider.server";
-import { getTossBearerToken } from "@/lib/market/toss-auth.server";
+import { getTossBearerToken, diagnoseTossCredentialIssue } from "@/lib/market/toss-auth.server";
 
 export type TossWallet = { krw: number; usd: number };
 
@@ -163,6 +163,30 @@ export async function fetchTossOpenOrders(accessToken: string): Promise<TossOpen
 }
 
 export async function fetchTossTraderSnapshot(accessToken: string): Promise<TossTraderSnapshot> {
+  const credIssue = diagnoseTossCredentialIssue(accessToken);
+  if (credIssue === "missing_client_id") {
+    return {
+      connected: false,
+      accountSeq: null,
+      error: "toss_auth_missing_client_id",
+      holdings: null,
+      buyingPower: null,
+      openOrders: [],
+      wallet: null,
+    };
+  }
+  if (credIssue === "missing_secret" || credIssue === "missing_both") {
+    return {
+      connected: false,
+      accountSeq: null,
+      error: "toss_auth_missing_secret",
+      holdings: null,
+      buyingPower: null,
+      openOrders: [],
+      wallet: null,
+    };
+  }
+
   const ctx = await tossAccountContext(accessToken);
   if (!ctx) {
     return {
