@@ -22,10 +22,18 @@ const DEMO_BACKTEST: FtBacktestHighlight = {
 };
 
 const API_URL = (
-  import.meta.env.VITE_FREQTRADE_API_URL ?? "http://127.0.0.1:8080"
+  import.meta.env.VITE_WALLPILOT_CRYPTO_API_URL ??
+  import.meta.env.VITE_FREQTRADE_API_URL ??
+  "http://127.0.0.1:8080"
 ).replace(/\/$/, "");
-const API_USER = import.meta.env.VITE_FREQTRADE_API_USER ?? "freqtrader";
-const API_PASSWORD = import.meta.env.VITE_FREQTRADE_API_PASSWORD ?? "freqtrader";
+const API_USER =
+  import.meta.env.VITE_WALLPILOT_CRYPTO_API_USER ??
+  import.meta.env.VITE_FREQTRADE_API_USER ??
+  "wallpilot";
+const API_PASSWORD =
+  import.meta.env.VITE_WALLPILOT_CRYPTO_API_PASSWORD ??
+  import.meta.env.VITE_FREQTRADE_API_PASSWORD ??
+  "wallpilot";
 
 function authHeader(): string {
   return `Basic ${btoa(`${API_USER}:${API_PASSWORD}`)}`;
@@ -39,7 +47,7 @@ async function browserFetch<T>(path: string): Promise<T> {
     },
     signal: AbortSignal.timeout(4_000),
   });
-  if (!res.ok) throw new Error(`freqtrade_http_${res.status}`);
+  if (!res.ok) throw new Error(`crypto_engine_http_${res.status}`);
   return (await res.json()) as T;
 }
 
@@ -54,7 +62,7 @@ async function browserPost<T>(path: string, body?: unknown): Promise<T> {
     body: body != null ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(6_000),
   });
-  if (!res.ok) throw new Error(`freqtrade_http_${res.status}`);
+  if (!res.ok) throw new Error(`crypto_engine_http_${res.status}`);
   return (await res.json()) as T;
 }
 
@@ -140,7 +148,7 @@ export function isMixedContentBlocked(): boolean {
   return window.location.protocol === "https:" && API_URL.startsWith("http:");
 }
 
-export function freqtradeApiUrl(): string {
+export function cryptoEngineApiUrl(): string {
   return API_URL;
 }
 
@@ -165,8 +173,8 @@ function parseShowConfig(cfg: Record<string, unknown>): FtBotStatus {
   };
 }
 
-/** Probe local Freqtrade from the user's browser (works when WallPilot runs on Vercel). */
-export async function probeFreqtradeBrowser(): Promise<FtConnectionStatus> {
+/** Probe local crypto engine from the user's browser (works when WallPilot runs on Vercel). */
+export async function probeCryptoEngineBrowser(): Promise<FtConnectionStatus> {
   const started = Date.now();
   try {
     await browserFetch<{ status: string }>("/api/v1/ping");
@@ -189,7 +197,7 @@ export async function probeFreqtradeBrowser(): Promise<FtConnectionStatus> {
 }
 
 export async function fetchFtDashboardBrowser(): Promise<FtDashboardSnapshot | null> {
-  const connection = await probeFreqtradeBrowser();
+  const connection = await probeCryptoEngineBrowser();
   if (!connection.online) return null;
 
   try {

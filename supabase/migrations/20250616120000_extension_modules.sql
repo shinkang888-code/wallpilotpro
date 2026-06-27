@@ -67,7 +67,7 @@ create policy ait_replies_read on public.ait_signal_replies
 create policy tm_rl_jobs_read_own on public.tm_rl_jobs
   for select to authenticated using (auth.uid() = user_id);
 
--- Seed demo signals (AI-Trader style hub content)
+-- Seed demo signals (WallPilot Signal Hub sample content)
 insert into public.ait_signals (author_name, message_type, market, symbol, side, title, content, tags, quality_score, source)
 values
   (

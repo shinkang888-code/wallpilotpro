@@ -1,4 +1,4 @@
--- Crypto Bot (Freqtrade) menu permissions
+-- WallPilot Crypto Bot menu permissions
 insert into public.menu_tier_permissions (menu_id, tier, can_view, can_execute, can_export_pdf)
 values
   ('crypto_bot', 'free', true, false, false),

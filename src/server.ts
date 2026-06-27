@@ -2,6 +2,12 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { logIpViolation } from "./lib/db/ip-violation.server";
+import {
+  applyIpShieldHeaders,
+  cloneBlockResponse,
+  evaluateRequest,
+} from "./lib/security/ip-shield.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -59,18 +65,38 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const shield = evaluateRequest(request);
+
+      if (shield.verdict === "block") {
+        void logIpViolation({
+          violationType: shield.reasons.includes("scraper_user_agent")
+            ? "scraper_ua"
+            : "foreign_origin",
+          host: shield.host,
+          origin: shield.origin,
+          referer: shield.referer,
+          userAgent: shield.userAgent,
+          detail: { path: shield.url.pathname, reasons: shield.reasons },
+        });
+        return applyIpShieldHeaders(cloneBlockResponse(shield), request);
+      }
+
       const apiResponse = await tryApiRoute(request);
-      if (apiResponse) return apiResponse;
+      if (apiResponse) return applyIpShieldHeaders(apiResponse, request);
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      return applyIpShieldHeaders(normalized, request);
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      return applyIpShieldHeaders(
+        new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+        request,
+      );
     }
   },
 };

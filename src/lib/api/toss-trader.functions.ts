@@ -8,7 +8,7 @@ import {
   fetchFtBotStatus,
   fetchFtOpenTradeCount,
   fetchFtProfit,
-  probeFreqtradeConnection,
+  probeCryptoEngineConnection,
 } from "@/lib/modules/ft/ft-client.server";
 import type { FtDashboardSnapshot } from "@/lib/modules/ft/types";
 
@@ -26,7 +26,7 @@ export const getTossTraderDashboard = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<TossTraderDashboardPayload> => {
     const [toss, connection] = await Promise.all([
       fetchTossTraderSnapshot(data.accessToken),
-      probeFreqtradeConnection(),
+      probeCryptoEngineConnection(),
     ]);
 
     let crypto: FtDashboardSnapshot = {

@@ -1,7 +1,7 @@
 {
   "name": "WallPilot",
   "short_name": "WallPilot",
-  "description": "Reverse-Quant Trading for KR & US Markets",
+  "description": "WallPilot Pro — Terrabridge Capital Inc. Proprietary trading platform",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,6 +10,7 @@
   "theme_color": "#0a0a0a",
   "lang": "ko",
   "categories": ["finance", "business"],
+  "id": "com.terrabridgecapital.wallpilot",
   "icons": [
     {
       "src": "/icon.png",

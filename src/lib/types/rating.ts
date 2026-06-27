@@ -1,4 +1,4 @@
-/** 5-tier scale — mirrors TradingAgents PortfolioRating / parse_rating. */
+/** 5-tier scale — WallPilot portfolio rating. */
 
 export const PORTFOLIO_RATINGS = [
   "Buy",
@@ -26,7 +26,7 @@ export function coercePortfolioRating(value: unknown, fallback: PortfolioRating 
   return fallback;
 }
 
-/** TradingAgents-style heuristic parse from prose (Rating: Buy). */
+/** Heuristic parse from prose (Rating: Buy). */
 export function parseRatingFromText(text: string, fallback: PortfolioRating = "Hold"): PortfolioRating {
   const labelRe = /rating.*?[:\-][\s*]*(\w+)/i;
   for (const line of text.split("\n")) {

@@ -171,7 +171,7 @@ export type DeepAgentReport = WallStreetReport & {
   markdown: string;
   markdownKo: string;
   localizedKo?: DeepAgentLocalizedKo;
-  source: "wallpilot-ts" | "tradingagents-ms";
+  source: "wallpilot-ts" | "wallpilot-ms";
   analysts: DeepAgentAnalystReports;
   trader: DeepAgentTraderProposal;
   portfolio: DeepAgentPortfolioDecision;

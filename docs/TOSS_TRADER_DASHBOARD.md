@@ -1,6 +1,6 @@
 # 토스 트레이더 대시보드 — 상세 기획 보고서
 
-> WallPilot Pro `/toss-trader` — 토스증권 Open API + Freqtrade 크립토 봇 통합 트레이더 계기판  
+> WallPilot Pro `/toss-trader` — 토스증권 Open API + WallPilot Crypto Engine 통합 트레이더 계기판  
 > 작성: 2026-06-25 · 납품 버전 v1
 
 ---
@@ -8,9 +8,9 @@
 ## 1. 배경 및 목표
 
 ### 1.1 문제 정의
-- 트레이더는 **주식(토스)** 과 **크립토(Freqtrade)** 포지션을 각각 다른 앱/탭에서 확인해야 함.
+- 트레이더는 **주식(토스)** 과 **크립토(WallPilot Crypto Engine)** 포지션을 각각 다른 앱/탭에서 확인해야 함.
 - 주문 전 필요한 정보(매수 가능 금액, 미체결, 보유 평단)가 분산되어 의사결정 지연.
-- WallPilot은 이미 Toss 시세·지갑·분할 지정가 API와 Freqtrade 연동基盤을 보유 → **단일 대시보드**로 통합 가능.
+- WallPilot은 이미 Toss 시세·지갑·분할 지정가 API와 크립토 엔진 연동 기반을 보유 → **단일 대시보드**로 통합 가능.
 
 ### 1.2 목표 (v1 납품 범위)
 | 목표 | 설명 | v1 |
@@ -30,7 +30,7 @@
 - **매수 가능 금액** 별도 강조
 - 미체결 주문 섹션
 
-WallPilot 확장: **크립토** 필터 + 하단 **Freqtrade 분석 스트립**.
+WallPilot 확장: **크립토** 필터 + 하단 **WallPilot Crypto Engine** 분석 스트립.
 
 ---
 
@@ -83,7 +83,7 @@ sequenceDiagram
   participant U as Browser
   participant WP as WallPilot Server
   participant T as Toss Open API
-  participant F as Freqtrade (local)
+  participant F as WallPilot Crypto Engine
 
   U->>WP: getTossTraderDashboard(tossKey)
   par Toss
@@ -97,7 +97,7 @@ sequenceDiagram
 ```
 
 - **Toss 키**: 브라우저 localStorage (`wallpilot.toss.key`) — 서버에 저장하지 않음.
-- **Freqtrade**: Vercel 배포 시 로컬 봇 직접 연결 불가 → 오프라인 안내 + `/crypto-bot` 링크.
+- **Crypto Engine**: Vercel 배포 시 로컬 엔진 직접 연결 불가 → 오프라인 안내 + `/crypto-bot` 링크.
 
 ---
 
@@ -142,7 +142,7 @@ sequenceDiagram
 
 - [ ] My API에 Toss 키 저장 → 보유 종목 표시
 - [ ] 미체결 주문 존재 시 목록 표시
-- [ ] Freqtrade 로컬 실행 → 크립토 스트립 온라인
+- [ ] WallPilot Crypto Engine 로컬 실행 → 크립토 스트립 온라인
 - [ ] Google 로그인 버튼 (Supabase 설정 시) 헤더 표시
 - [ ] `/toss-trader` 네비 메뉴 노출 (day_trading+)
 

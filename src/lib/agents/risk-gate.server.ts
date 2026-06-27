@@ -58,7 +58,7 @@ function codeRiskGate(
   };
 }
 
-/** Aggressive vs Conservative gate before Toss execute (TradingAgents Risk PM 축소). */
+/** Aggressive vs Conservative gate before Toss execute (WallPilot risk committee). */
 export async function riskGateBeforeOrder(
   row: StockRow,
   wallet: { krw: number; usd: number } | null,

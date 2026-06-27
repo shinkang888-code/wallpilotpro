@@ -10,18 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WallStreetReportRouteImport } from './routes/wall-street-report'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PendingRouteImport } from './routes/pending'
 import { Route as MyApiRouteImport } from './routes/my-api'
 import { Route as AiPilotRouteImport } from './routes/ai-pilot'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TossTraderIndexRouteImport } from './routes/toss-trader/index'
-import { Route as SignalsIndexRouteImport } from './routes/signals/index'
-import { Route as DartlabIndexRouteImport } from './routes/dartlab/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as QuantRlLabRouteImport } from './routes/quant/rl-lab'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
-import { Route as AgentsDeskRouteImport } from './routes/agents/desk'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminPermissionsRouteImport } from './routes/admin/permissions'
 import { Route as AdminActivityRouteImport } from './routes/admin/activity'
@@ -29,6 +27,16 @@ import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 const WallStreetReportRoute = WallStreetReportRouteImport.update({
   id: '/wall-street-report',
   path: '/wall-street-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -61,34 +69,14 @@ const TossTraderIndexRoute = TossTraderIndexRouteImport.update({
   path: '/toss-trader/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignalsIndexRoute = SignalsIndexRouteImport.update({
-  id: '/signals/',
-  path: '/signals/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DartlabIndexRoute = DartlabIndexRouteImport.update({
-  id: '/dartlab/',
-  path: '/dartlab/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuantRlLabRoute = QuantRlLabRouteImport.update({
-  id: '/quant/rl-lab',
-  path: '/quant/rl-lab',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgentsDeskRoute = AgentsDeskRouteImport.update({
-  id: '/agents/desk',
-  path: '/agents/desk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSecurityRoute = AdminSecurityRouteImport.update({
@@ -113,16 +101,14 @@ export interface FileRoutesByFullPath {
   '/my-api': typeof MyApiRoute
   '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/wall-street-report': typeof WallStreetReportRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
-  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
-  '/dartlab/': typeof DartlabIndexRoute
-  '/signals/': typeof SignalsIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRoutesByTo {
@@ -131,16 +117,14 @@ export interface FileRoutesByTo {
   '/my-api': typeof MyApiRoute
   '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/wall-street-report': typeof WallStreetReportRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
-  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin': typeof AdminIndexRoute
-  '/dartlab': typeof DartlabIndexRoute
-  '/signals': typeof SignalsIndexRoute
   '/toss-trader': typeof TossTraderIndexRoute
 }
 export interface FileRoutesById {
@@ -150,16 +134,14 @@ export interface FileRoutesById {
   '/my-api': typeof MyApiRoute
   '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/wall-street-report': typeof WallStreetReportRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
-  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
-  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
-  '/dartlab/': typeof DartlabIndexRoute
-  '/signals/': typeof SignalsIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRouteTypes {
@@ -170,16 +152,14 @@ export interface FileRouteTypes {
     | '/my-api'
     | '/pending'
     | '/pricing'
+    | '/privacy'
+    | '/terms'
     | '/wall-street-report'
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
-    | '/agents/desk'
     | '/auth/callback'
-    | '/quant/rl-lab'
     | '/admin/'
-    | '/dartlab/'
-    | '/signals/'
     | '/toss-trader/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -188,16 +168,14 @@ export interface FileRouteTypes {
     | '/my-api'
     | '/pending'
     | '/pricing'
+    | '/privacy'
+    | '/terms'
     | '/wall-street-report'
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
-    | '/agents/desk'
     | '/auth/callback'
-    | '/quant/rl-lab'
     | '/admin'
-    | '/dartlab'
-    | '/signals'
     | '/toss-trader'
   id:
     | '__root__'
@@ -206,16 +184,14 @@ export interface FileRouteTypes {
     | '/my-api'
     | '/pending'
     | '/pricing'
+    | '/privacy'
+    | '/terms'
     | '/wall-street-report'
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
-    | '/agents/desk'
     | '/auth/callback'
-    | '/quant/rl-lab'
     | '/admin/'
-    | '/dartlab/'
-    | '/signals/'
     | '/toss-trader/'
   fileRoutesById: FileRoutesById
 }
@@ -225,16 +201,14 @@ export interface RootRouteChildren {
   MyApiRoute: typeof MyApiRoute
   PendingRoute: typeof PendingRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
   WallStreetReportRoute: typeof WallStreetReportRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
-  AgentsDeskRoute: typeof AgentsDeskRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
-  QuantRlLabRoute: typeof QuantRlLabRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  DartlabIndexRoute: typeof DartlabIndexRoute
-  SignalsIndexRoute: typeof SignalsIndexRoute
   TossTraderIndexRoute: typeof TossTraderIndexRoute
 }
 
@@ -245,6 +219,20 @@ declare module '@tanstack/react-router' {
       path: '/wall-street-report'
       fullPath: '/wall-street-report'
       preLoaderRoute: typeof WallStreetReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -289,20 +277,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TossTraderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signals/': {
-      id: '/signals/'
-      path: '/signals'
-      fullPath: '/signals/'
-      preLoaderRoute: typeof SignalsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dartlab/': {
-      id: '/dartlab/'
-      path: '/dartlab'
-      fullPath: '/dartlab/'
-      preLoaderRoute: typeof DartlabIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -310,25 +284,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/quant/rl-lab': {
-      id: '/quant/rl-lab'
-      path: '/quant/rl-lab'
-      fullPath: '/quant/rl-lab'
-      preLoaderRoute: typeof QuantRlLabRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agents/desk': {
-      id: '/agents/desk'
-      path: '/agents/desk'
-      fullPath: '/agents/desk'
-      preLoaderRoute: typeof AgentsDeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/security': {
@@ -361,16 +321,14 @@ const rootRouteChildren: RootRouteChildren = {
   MyApiRoute: MyApiRoute,
   PendingRoute: PendingRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
   WallStreetReportRoute: WallStreetReportRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
-  AgentsDeskRoute: AgentsDeskRoute,
   AuthCallbackRoute: AuthCallbackRoute,
-  QuantRlLabRoute: QuantRlLabRoute,
   AdminIndexRoute: AdminIndexRoute,
-  DartlabIndexRoute: DartlabIndexRoute,
-  SignalsIndexRoute: SignalsIndexRoute,
   TossTraderIndexRoute: TossTraderIndexRoute,
 }
 export const routeTree = rootRouteImport

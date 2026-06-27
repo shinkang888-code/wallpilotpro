@@ -1,7 +1,8 @@
+// filepath: src/components/toss-trader/toss-trader-crypto-panel.tsx
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { CryptoBotTossDashboard } from "@/components/crypto-bot/crypto-bot-toss-dashboard";
 import type { TossTraderDashboardPayload } from "@/lib/api/toss-trader.functions";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,6 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 type Props = {
   crypto: TossTraderDashboardPayload["crypto"] | undefined;
-  /** 크립토 필터 탭 — 기본 펼침 */
   defaultExpanded?: boolean;
   className?: string;
 };
@@ -43,6 +43,13 @@ export function TossTraderCryptoPanel({ crypto, defaultExpanded = false, classNa
           <h2 className="text-sm font-bold">{t("tt_crypto_section_title")}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/my-api"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--cb-blue)] hover:underline"
+          >
+            {t("tt_crypto_open_full")}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
@@ -61,7 +68,6 @@ export function TossTraderCryptoPanel({ crypto, defaultExpanded = false, classNa
         </div>
       </div>
 
-      {/* 요약 스트립 — 접혀 있을 때 또는 펼쳐도 상단 요약 유지 */}
       <div className="border-b cb-divider">
         {!online ? (
           <div className="px-5 py-8 text-center">
@@ -108,7 +114,6 @@ export function TossTraderCryptoPanel({ crypto, defaultExpanded = false, classNa
         )}
       </div>
 
-      {/* 확장 영역 — 크립토 봇 전체 대시보드 인라인 */}
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-300 ease-out",
@@ -118,8 +123,23 @@ export function TossTraderCryptoPanel({ crypto, defaultExpanded = false, classNa
         <div className="overflow-hidden">
           <div className="border-t cb-divider bg-[var(--cb-bg-deep)]">
             {expanded ? (
-              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                <CryptoBotTossDashboard embedded />
+              <div className="space-y-4 px-4 py-5 sm:px-6">
+                <p className="text-xs leading-relaxed cb-text-muted">{t("tt_crypto_inline_hint")}</p>
+                {online && crypto?.demoBacktest ? (
+                  <dl className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+                    <Stat label={t("ft_bt_winrate")} value={`${crypto.demoBacktest.winRate.toFixed(1)}%`} />
+                    <Stat label={t("ft_bt_profit")} value={`${crypto.demoBacktest.profitPct >= 0 ? "+" : ""}${crypto.demoBacktest.profitPct.toFixed(1)}%`} />
+                    <Stat label={t("ft_profit_trades")} value={String(crypto.demoBacktest.totalTrades)} />
+                    <Stat label={t("ft_bt_drawdown")} value={`${crypto.demoBacktest.maxDrawdownPct.toFixed(1)}%`} />
+                  </dl>
+                ) : null}
+                <Link
+                  to="/my-api"
+                  className="cb-action-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto"
+                >
+                  {t("tt_crypto_setup")}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             ) : null}
           </div>

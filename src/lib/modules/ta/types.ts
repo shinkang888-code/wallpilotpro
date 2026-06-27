@@ -1,6 +1,6 @@
-export type TradingAgentsEngine = "auto" | "sidecar" | "ts";
+export type AgentDeskEngine = "auto" | "sidecar" | "ts";
 
-export type TradingAgentsStatus = {
+export type AgentDeskStatus = {
   sidecarConfigured: boolean;
   sidecarHost: string | null;
   sidecarOnline: boolean;

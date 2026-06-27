@@ -1,24 +1,24 @@
-import { generateAgentDeskLocalizedKo } from "@/lib/agents/agent-desk-localized-ko.server";
+import { generateAgentDeskLocalizedKo } from "@/lib/agents/deep-report-localized-ko.server";
 import { generateDeepReportKorean } from "@/lib/agents/deep-report-ko.server";
-import { runTradingAgentsPipeline } from "@/lib/agents/tradingagents-pipeline.server";
+import { runAgentDeskPipeline } from "@/lib/agents/deep-report-pipeline.server";
 import { getServerConfig } from "@/lib/config.server";
-import type { TradingAgentsEngine } from "@/lib/modules/ta/types";
+import type { AgentDeskEngine } from "@/lib/modules/ta/types";
 import { buildWallStreetReportContext } from "@/lib/quant/wall-street-report.server";
 import type { DeepAgentReport } from "@/lib/types/stock";
 
 const EXTERNAL_TIMEOUT_MS = 45_000;
 
-async function fetchExternalTradingAgentsReport(
+async function fetchExternalAgentReport(
   ticker: string,
   date: string,
   enabled: boolean,
 ): Promise<{ markdown: string; rating?: string } | null> {
   if (!enabled) return null;
-  const { tradingAgentsServiceUrl } = getServerConfig();
-  if (!tradingAgentsServiceUrl) return null;
+  const { agentServiceUrl } = getServerConfig();
+  if (!agentServiceUrl) return null;
 
   try {
-    const res = await fetch(`${tradingAgentsServiceUrl.replace(/\/$/, "")}/propagate`, {
+    const res = await fetch(`${agentServiceUrl.replace(/\/$/, "")}/propagate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticker, date }),
@@ -33,11 +33,11 @@ async function fetchExternalTradingAgentsReport(
   }
 }
 
-/** Phase 2 — TradingAgents pipeline (Python sidecar optional, TS primary). */
+/** WallPilot Agent Desk — optional Python sidecar, TS pipeline primary. */
 export async function buildDeepAgentReport(
   tickerInput: string,
   geminiApiKey?: string | null,
-  options?: { analysisDate?: string; engine?: TradingAgentsEngine },
+  options?: { analysisDate?: string; engine?: AgentDeskEngine },
 ): Promise<DeepAgentReport> {
   const analysisDate = options?.analysisDate ?? new Date().toISOString().slice(0, 10);
   const engine = options?.engine ?? "auto";
@@ -45,14 +45,14 @@ export async function buildDeepAgentReport(
 
   const [ctx, external] = await Promise.all([
     buildWallStreetReportContext(tickerInput, undefined, { geminiApiKey }),
-    fetchExternalTradingAgentsReport(tickerInput, analysisDate, useSidecar),
+    fetchExternalAgentReport(tickerInput, analysisDate, useSidecar),
   ]);
 
   if (engine === "sidecar" && !external) {
     throw new Error("agent_desk_sidecar_unavailable");
   }
 
-  const pipeline = await runTradingAgentsPipeline(ctx, geminiApiKey);
+  const pipeline = await runAgentDeskPipeline(ctx, geminiApiKey);
   const { report } = ctx;
   const { analysts, debate, trader, riskGate, portfolio, markdown: pipelineMarkdown } = pipeline;
 
@@ -91,6 +91,6 @@ export async function buildDeepAgentReport(
     markdown,
     markdownKo,
     localizedKo,
-    source: external ? "tradingagents-ms" : "wallpilot-ts",
+    source: external ? "wallpilot-ms" : "wallpilot-ts",
   };
 }

@@ -1,0 +1,25 @@
+# WallPilot Pro — Terrabridge Capital Inc.
+# Proprietary software. Unauthorized scraping or cloning prohibited.
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Block aggressive SEO/scrape bots (best-effort; not legally binding)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+Sitemap: https://wallpilot.vercel.app/sitemap.xml

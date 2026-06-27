@@ -9,8 +9,12 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { SiteAnalytics } from "../components/analytics/site-analytics";
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { IpShieldGuard } from "../components/ip-shield-guard";
+import { LegalFooter } from "../components/legal-footer";
+import { IP_COPYRIGHT_LINE, IP_OWNER } from "../lib/ip/ownership";
+import { reportWallPilotError } from "../lib/wallpilot-error-reporting";
 import { I18nProvider } from "../lib/i18n";
 import { AuthProvider } from "../lib/use-auth";
 import { ActivityTracker } from "../components/activity-tracker";
@@ -44,7 +48,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportWallPilotError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -94,15 +98,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "application-name", content: "WallPilot" },
       { name: "format-detection", content: "telephone=no" },
       { name: "google", content: "notranslate" },
-      { title: "WallPilot" },
-      { name: "description", content: "Wall Street Trade Navigator for Elites" },
-      { name: "author", content: "WallPilot" },
-      { property: "og:title", content: "WallPilot" },
-      { property: "og:description", content: "Wall Street Trade Navigator for Elites" },
+      { title: "WallPilot Pro — 데이터 기반 퀀트 주식 분석 | 수급·재무·적정가" },
+      {
+        name: "description",
+        content:
+          "AI와 월가 퀀트 방식으로 거래량·세력 수급·재무·뉴스를 분석. 한·미 주식 Reverse-Quant 스캐너. 투자 참고 정보 제공.",
+      },
+      {
+        name: "keywords",
+        content: "주식분석, 퀀트투자, 수급분석, 적정가, 13F, AI주식, 토스증권",
+      },
+      { name: "author", content: IP_OWNER.legalName },
+      { name: "copyright", content: IP_COPYRIGHT_LINE },
+      { name: "rights", content: "Terrabridge Capital Inc. — All Rights Reserved" },
+      { property: "og:title", content: "WallPilot Pro — Quant Stock Analysis" },
+      {
+        property: "og:description",
+        content:
+          "Reverse-Quant scanner for KR & US markets. Supply, fundamentals, fair value — reference analysis only.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "WallPilot" },
-      { name: "twitter:description", content: "Wall Street Trade Navigator for Elites" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "WallPilot Pro" },
+      {
+        name: "twitter:description",
+        content: "Data-driven quant analysis — supply, fundamentals, fair value in one view.",
+      },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f262e85d-79bb-4868-acbe-9ad0c5295e40" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f262e85d-79bb-4868-acbe-9ad0c5295e40" },
     ],
@@ -121,7 +142,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" translate="no" className="notranslate">
+    <html lang="en" translate="no" className="notranslate" data-wallpilot-owner={IP_OWNER.legalName}>
       <head>
         <HeadContent />
       </head>
@@ -142,8 +163,11 @@ function RootComponent() {
         <AuthProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <PwaRegister />
+          <SiteAnalytics />
+          <IpShieldGuard />
           <ActivityTracker />
           <Outlet />
+          <LegalFooter />
           <PwaInstallHint className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-lg sm:left-auto sm:right-6 sm:max-w-sm" />
           <Toaster position="top-center" />
         </AuthProvider>

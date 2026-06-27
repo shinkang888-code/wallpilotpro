@@ -1,4 +1,4 @@
--- TradeMaster worker async job fields
+-- WallPilot RL worker async job fields
 
 alter table public.tm_rl_jobs
   add column if not exists run_mode text not null default 'quick'

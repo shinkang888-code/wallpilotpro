@@ -39,13 +39,13 @@ function fallbackDebate(input: DebateInput): DebateVerdict {
   };
 }
 
-/** Bull/Bear 1-round mini-debate → Judge 5-tier (TradingAgents Research Manager 축소). */
+/** Bull/Bear 1-round mini-debate → Judge 5-tier (WallPilot research manager). */
 export async function runMiniDebate(input: DebateInput): Promise<DebateVerdict> {
   const { snapshot, valuation, news, initialRating } = input;
   const fallback = fallbackDebate(input);
   const tech = snapshot.technical?.label ?? "N/A";
 
-  const prompt = `You simulate a Wall Street investment committee mini-debate (TradingAgents style).
+  const prompt = `You simulate a Wall Street investment committee mini-debate (WallPilot Agent Desk style).
 Roles: Bull Analyst (1 paragraph), Bear Analyst (1 paragraph), Research Manager (verdict + 5-tier rating).
 
 Ticker: ${snapshot.ticker} (${snapshot.name}) · ${snapshot.market}

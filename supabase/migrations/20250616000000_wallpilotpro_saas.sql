@@ -33,7 +33,7 @@ create table if not exists public.user_activity_log (
 create index if not exists user_activity_log_user_idx on public.user_activity_log (user_id, created_at desc);
 create index if not exists user_activity_log_event_idx on public.user_activity_log (event_type, created_at desc);
 
--- Security audit runs (fireauto-inspired)
+-- Security audit runs (WallPilot security center)
 create table if not exists public.security_audit_log (
   id uuid primary key default gen_random_uuid(),
   run_by uuid references auth.users(id) on delete set null,

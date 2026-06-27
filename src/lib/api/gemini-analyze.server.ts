@@ -85,7 +85,7 @@ export async function geminiAnalyzeStock(
   const newsBlock = formatNewsForPrompt(news);
   const techBlock = technical?.label ?? "N/A";
 
-  const prompt = `You are a cold Wall Street quant analyst (TradingAgents-style Portfolio Manager).
+  const prompt = `You are a cold Wall Street quant analyst (WallPilot Portfolio Manager).
 Use ONLY the numbers and headlines below. No hype. Output a 5-tier rating.
 
 Ticker: ${snapshot.ticker} (${snapshot.name})

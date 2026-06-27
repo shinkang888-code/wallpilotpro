@@ -79,6 +79,18 @@ const CHECKS: Array<{
     },
   },
   {
+    category: "ip_shield",
+    severity: "medium",
+    title: "IP Shield legal notice missing",
+    check: () => (existsSync(join(process.cwd(), "LEGAL/PROPRIETARY_NOTICE.md")) ? null : "LEGAL/PROPRIETARY_NOTICE.md not found"),
+  },
+  {
+    category: "ip_shield",
+    severity: "medium",
+    title: "Security headers config missing",
+    check: () => (existsSync(join(process.cwd(), "vercel.json")) ? null : "vercel.json security headers not configured"),
+  },
+  {
     category: "dependencies",
     severity: "low",
     title: "Package lock missing",

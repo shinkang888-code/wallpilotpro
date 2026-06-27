@@ -1,0 +1,24 @@
+{
+  "product": "WallPilot Pro",
+  "mark": "WallPilot",
+  "rightsHolder": {
+    "legalName": "Terrabridge Capital Inc.",
+    "jurisdiction": "United States",
+    "domain": "terrabridgecapital.inc",
+    "contactEmail": "terrabridgecapital@gmail.com"
+  },
+  "inventor": {
+    "email": "kangjunchul8@gmail.com",
+    "role": "Inventor & Lead Developer"
+  },
+  "license": "Proprietary — all rights reserved. No redistribution or cloning permitted.",
+  "prohibited": [
+    "site_cloning",
+    "reverse_engineering",
+    "unauthorized_embedding",
+    "automated_scraping",
+    "copyright_notice_removal"
+  ],
+  "reportInfringement": "terrabridgecapital@gmail.com",
+  "updated": "2026-06-27"
+}

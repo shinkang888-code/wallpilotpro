@@ -1,5 +1,5 @@
 /**
- * Technical indicators — RSI, MACD, Bollinger (TradingAgents Technical Analyst).
+ * Technical indicators — RSI, MACD, Bollinger (WallPilot technical analyst).
  * Pure TypeScript; computed from Yahoo OHLCV closes.
  */
 
@@ -50,7 +50,7 @@ export function computeTechnicalIndicators(series: OhlcvSeries): TechnicalSnapsh
   };
 }
 
-/** Screener boost — TradingAgents technical momentum patterns. */
+/** Screener boost — WallPilot technical momentum patterns. */
 export function technicalScore(tech: TechnicalSnapshot | null | undefined): number {
   if (!tech) return 0;
   let score = 0;

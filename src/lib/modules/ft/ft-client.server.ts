@@ -22,16 +22,12 @@ const DEMO_BACKTEST: FtBacktestHighlight = {
 };
 
 function ftConfig() {
-  const {
-    freqtradeApiUrl,
-    freqtradeApiUser,
-    freqtradeApiPassword,
-  } = getServerConfig();
+  const { cryptoEngineApiUrl, cryptoEngineApiUser, cryptoEngineApiPassword } = getServerConfig();
   return {
-    apiUrl: freqtradeApiUrl.replace(/\/$/, ""),
-    user: freqtradeApiUser,
-    password: freqtradeApiPassword,
-    configured: Boolean(freqtradeApiUrl),
+    apiUrl: cryptoEngineApiUrl.replace(/\/$/, ""),
+    user: cryptoEngineApiUser,
+    password: cryptoEngineApiPassword,
+    configured: Boolean(cryptoEngineApiUrl),
   };
 }
 
@@ -46,7 +42,7 @@ async function ftFetch<T>(path: string): Promise<T> {
     signal: AbortSignal.timeout(4_000),
   });
   if (!res.ok) {
-    throw new Error(`freqtrade_http_${res.status}`);
+    throw new Error(`crypto_engine_http_${res.status}`);
   }
   return (await res.json()) as T;
 }
@@ -65,7 +61,7 @@ async function ftPost<T>(path: string, body?: unknown): Promise<T> {
     signal: AbortSignal.timeout(6_000),
   });
   if (!res.ok) {
-    throw new Error(`freqtrade_http_${res.status}`);
+    throw new Error(`crypto_engine_http_${res.status}`);
   }
   return (await res.json()) as T;
 }
@@ -148,7 +144,7 @@ export function demoBacktestHighlight(): FtBacktestHighlight {
   return DEMO_BACKTEST;
 }
 
-export async function probeFreqtradeConnection(): Promise<FtConnectionStatus> {
+export async function probeCryptoEngineConnection(): Promise<FtConnectionStatus> {
   const { apiUrl, configured } = ftConfig();
   if (!configured) {
     return {

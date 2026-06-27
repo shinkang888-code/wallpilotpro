@@ -17,7 +17,7 @@ function yahooSymbol(ticker: string, market: Market): string {
 }
 
 /**
- * News Analyst layer — Alpha Vantage NEWS_SENTIMENT (TradingAgents)
+ * News Analyst layer — Alpha Vantage NEWS_SENTIMENT (WallPilot)
  * with Yahoo Finance search fallback (yfinance_news pattern).
  */
 export async function fetchNewsHeadlines(

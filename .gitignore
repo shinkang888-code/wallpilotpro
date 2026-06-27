@@ -33,3 +33,9 @@ secrets/
 *.sw?
 .vercel
 .env*
+
+# Generated IR deliverables (local/Downloads; regenerate via scripts)
+deliverables/
+assets/ir-v4/
+assets/chart_*.png
+scripts/__pycache__/

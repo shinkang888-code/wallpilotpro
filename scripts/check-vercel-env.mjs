@@ -1,4 +1,11 @@
-console.log("GEMINI_LEN=" + (process.env.GEMINI_API_KEY ?? "").length);
-console.log("TOSS_ID_LEN=" + (process.env.TOSS_CLIENT_ID ?? "").length);
-console.log("TOSS_SEC_LEN=" + (process.env.TOSS_CLIENT_SECRET ?? "").length);
-console.log("TA_URL_LEN=" + (process.env.TRADINGAGENTS_SERVICE_URL ?? "").length);
+const keys = [
+  "WALLPILOT_AGENT_SERVICE_URL",
+  "WALLPILOT_RL_SERVICE_URL",
+  "WALLPILOT_SIGNAL_SERVICE_URL",
+  "WALLPILOT_CRYPTO_API_URL",
+];
+
+for (const key of keys) {
+  const len = (process.env[key] ?? "").length;
+  console.log(`${key}_LEN=${len}`);
+}

@@ -28,7 +28,10 @@ export function getServerConfig() {
     koreaStockMcpUrl:
       process.env.KOREA_STOCK_MCP_URL ?? "https://korea-stock-analyzer-mcp.vercel.app",
     alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY ?? "",
-    tradingAgentsServiceUrl: process.env.TRADINGAGENTS_SERVICE_URL ?? "",
+    agentServiceUrl:
+      process.env.WALLPILOT_AGENT_SERVICE_URL ??
+      process.env.TRADINGAGENTS_SERVICE_URL ??
+      "",
     supabaseUrl: process.env.SUPABASE_URL ?? "",
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
     vercelAccessToken: process.env.VERCEL_ACCESS_TOKEN ?? process.env.VERCEL_TOKEN ?? "",
@@ -57,12 +60,26 @@ export function getServerConfig() {
     danalMerchantId: process.env.DANAL_MERCHANT_ID ?? process.env.DANAL_CLIENT_ID ?? "",
     danalClientKey: process.env.DANAL_CLIENT_KEY ?? "",
     resendApiKey: process.env.RESEND_API_KEY ?? "",
-    aitServiceUrl: process.env.AIT_SERVICE_URL ?? process.env.AI4TRADE_API_BASE ?? "",
+    signalHubServiceUrl:
+      process.env.WALLPILOT_SIGNAL_SERVICE_URL ??
+      process.env.AIT_SERVICE_URL ??
+      process.env.AI4TRADE_API_BASE ??
+      "",
     opendartApiKey: process.env.OPENDART_API_KEY ?? "",
     dartlabServiceUrl: process.env.DARTLAB_SERVICE_URL ?? "",
-    trademasterServiceUrl: process.env.TRADEMASTER_SERVICE_URL ?? "",
-    freqtradeApiUrl: process.env.FREQTRADE_API_URL ?? "http://127.0.0.1:8080",
-    freqtradeApiUser: process.env.FREQTRADE_API_USER ?? "freqtrader",
-    freqtradeApiPassword: process.env.FREQTRADE_API_PASSWORD ?? "freqtrader",
+    rlServiceUrl:
+      process.env.WALLPILOT_RL_SERVICE_URL ??
+      process.env.TRADEMASTER_SERVICE_URL ??
+      "",
+    cryptoEngineApiUrl:
+      process.env.WALLPILOT_CRYPTO_API_URL ??
+      process.env.FREQTRADE_API_URL ??
+      "http://127.0.0.1:8080",
+    cryptoEngineApiUser:
+      process.env.WALLPILOT_CRYPTO_API_USER ?? process.env.FREQTRADE_API_USER ?? "wallpilot",
+    cryptoEngineApiPassword:
+      process.env.WALLPILOT_CRYPTO_API_PASSWORD ??
+      process.env.FREQTRADE_API_PASSWORD ??
+      "wallpilot",
   };
 }
