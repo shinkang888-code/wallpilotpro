@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { pickLocaleString } from "@/components/language-scroll-selector";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
+import { isTrialDemoMode } from "@/lib/membership/trial-demo";
 
 const COPY = {
   title: {
@@ -25,7 +26,7 @@ export function ScannerPreviewBanner() {
   const { lang, t } = useI18n();
   const auth = useAuth();
 
-  if (auth.loading || auth.user) return null;
+  if (auth.loading || auth.user || isTrialDemoMode()) return null;
 
   return (
     <div className="mb-6 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">

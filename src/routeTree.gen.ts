@@ -18,7 +18,10 @@ import { Route as MyApiRouteImport } from './routes/my-api'
 import { Route as AiPilotRouteImport } from './routes/ai-pilot'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TossTraderIndexRouteImport } from './routes/toss-trader/index'
+import { Route as SignalsIndexRouteImport } from './routes/signals/index'
+import { Route as DartlabIndexRouteImport } from './routes/dartlab/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as QuantRlLabRouteImport } from './routes/quant/rl-lab'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AgentsDeskRouteImport } from './routes/agents/desk'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
@@ -70,9 +73,24 @@ const TossTraderIndexRoute = TossTraderIndexRouteImport.update({
   path: '/toss-trader/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignalsIndexRoute = SignalsIndexRouteImport.update({
+  id: '/signals/',
+  path: '/signals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DartlabIndexRoute = DartlabIndexRouteImport.update({
+  id: '/dartlab/',
+  path: '/dartlab/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuantRlLabRoute = QuantRlLabRouteImport.update({
+  id: '/quant/rl-lab',
+  path: '/quant/rl-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -115,7 +133,10 @@ export interface FileRoutesByFullPath {
   '/admin/security': typeof AdminSecurityRoute
   '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
+  '/dartlab/': typeof DartlabIndexRoute
+  '/signals/': typeof SignalsIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRoutesByTo {
@@ -132,7 +153,10 @@ export interface FileRoutesByTo {
   '/admin/security': typeof AdminSecurityRoute
   '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin': typeof AdminIndexRoute
+  '/dartlab': typeof DartlabIndexRoute
+  '/signals': typeof SignalsIndexRoute
   '/toss-trader': typeof TossTraderIndexRoute
 }
 export interface FileRoutesById {
@@ -150,7 +174,10 @@ export interface FileRoutesById {
   '/admin/security': typeof AdminSecurityRoute
   '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/quant/rl-lab': typeof QuantRlLabRoute
   '/admin/': typeof AdminIndexRoute
+  '/dartlab/': typeof DartlabIndexRoute
+  '/signals/': typeof SignalsIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
 }
 export interface FileRouteTypes {
@@ -169,7 +196,10 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/agents/desk'
     | '/auth/callback'
+    | '/quant/rl-lab'
     | '/admin/'
+    | '/dartlab/'
+    | '/signals/'
     | '/toss-trader/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,7 +216,10 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/agents/desk'
     | '/auth/callback'
+    | '/quant/rl-lab'
     | '/admin'
+    | '/dartlab'
+    | '/signals'
     | '/toss-trader'
   id:
     | '__root__'
@@ -203,7 +236,10 @@ export interface FileRouteTypes {
     | '/admin/security'
     | '/agents/desk'
     | '/auth/callback'
+    | '/quant/rl-lab'
     | '/admin/'
+    | '/dartlab/'
+    | '/signals/'
     | '/toss-trader/'
   fileRoutesById: FileRoutesById
 }
@@ -221,7 +257,10 @@ export interface RootRouteChildren {
   AdminSecurityRoute: typeof AdminSecurityRoute
   AgentsDeskRoute: typeof AgentsDeskRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  QuantRlLabRoute: typeof QuantRlLabRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  DartlabIndexRoute: typeof DartlabIndexRoute
+  SignalsIndexRoute: typeof SignalsIndexRoute
   TossTraderIndexRoute: typeof TossTraderIndexRoute
 }
 
@@ -290,11 +329,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TossTraderIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signals/': {
+      id: '/signals/'
+      path: '/signals'
+      fullPath: '/signals/'
+      preLoaderRoute: typeof SignalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dartlab/': {
+      id: '/dartlab/'
+      path: '/dartlab'
+      fullPath: '/dartlab/'
+      preLoaderRoute: typeof DartlabIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quant/rl-lab': {
+      id: '/quant/rl-lab'
+      path: '/quant/rl-lab'
+      fullPath: '/quant/rl-lab'
+      preLoaderRoute: typeof QuantRlLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -349,7 +409,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSecurityRoute: AdminSecurityRoute,
   AgentsDeskRoute: AgentsDeskRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  QuantRlLabRoute: QuantRlLabRoute,
   AdminIndexRoute: AdminIndexRoute,
+  DartlabIndexRoute: DartlabIndexRoute,
+  SignalsIndexRoute: SignalsIndexRoute,
   TossTraderIndexRoute: TossTraderIndexRoute,
 }
 export const routeTree = rootRouteImport

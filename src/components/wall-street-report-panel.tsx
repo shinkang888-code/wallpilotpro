@@ -10,6 +10,7 @@ import { generateWallStreetReport } from "@/lib/api/wall-street-report.functions
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
+import { clientHasEntitlement } from "@/lib/membership/trial-demo";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
 import { useTossApiKey } from "@/lib/use-toss-api-key";
 import type { StockSearchResult } from "@/lib/types/search";
@@ -38,20 +39,19 @@ export function WallStreetReportPanel() {
   const [error, setError] = useState<string | null>(null);
   const requestSeq = useRef(0);
 
-  const canRunReport =
-    !enforced || (Boolean(accessToken) && isActive && Boolean(entitlements?.wall_report));
+  const canRunReport = clientHasEntitlement(enforced, entitlements, "wall_report");
 
   const guardReport = (): boolean => {
     if (authLoading) return false;
-    if (enforced && !accessToken) {
+    if (enforced && !accessToken && !clientHasEntitlement(enforced, entitlements, "wall_report")) {
       setError(t("auth_sign_in_first"));
       return false;
     }
-    if (enforced && isPending) {
+    if (enforced && isPending && !clientHasEntitlement(enforced, entitlements, "wall_report")) {
       setError(t("auth_notice_pending"));
       return false;
     }
-    if (enforced && !entitlements?.wall_report) {
+    if (enforced && !clientHasEntitlement(enforced, entitlements, "wall_report")) {
       setError(t("auth_err_need_pro"));
       return false;
     }

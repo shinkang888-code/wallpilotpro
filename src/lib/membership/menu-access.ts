@@ -1,5 +1,6 @@
 import type { MembershipTier } from "@/lib/membership/tiers";
 import { APP_MENUS, type AppMenuId, type MenuAction } from "@/lib/membership/menus";
+import { isTrialDemoMode, trialDemoAllowsMenu } from "@/lib/membership/trial-demo";
 
 export type MenuTierPermission = {
   menuId: AppMenuId;
@@ -103,6 +104,7 @@ export function canAccessMenu(
   isAdmin = false,
 ): boolean {
   if (isAdmin) return true;
+  if (isTrialDemoMode()) return trialDemoAllowsMenu(menuId, tier, action);
   const perm = resolvePermission(menuId, tier, overrides);
   if (action === "view") return perm.canView;
   if (action === "execute") return perm.canExecute;

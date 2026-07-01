@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import type { EntitlementFeature } from "@/lib/types/auth";
 import { useAuth } from "@/lib/use-auth";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
+import { trialDemoSkipsAuthNotice } from "@/lib/membership/trial-demo";
 import { cn } from "@/lib/utils";
 
 export function AuthNoticeBanner({
@@ -20,6 +21,7 @@ export function AuthNoticeBanner({
   const { isConnected: hasGeminiKey } = useGeminiApiKey();
 
   const byokAiPilot = feature === "ai_pilot" && hasGeminiKey;
+  const trialDemo = trialDemoSkipsAuthNotice(feature);
 
   if (auth.loading) return null;
   if (!auth.enforced) return null;
@@ -32,7 +34,7 @@ export function AuthNoticeBanner({
     );
   }
 
-  if (auth.enforced && !auth.user && !byokAiPilot && feature !== "agent_desk") {
+  if (auth.enforced && !auth.user && !byokAiPilot && !trialDemo) {
     return (
       <Banner className={className} tone="info">
         <span>{t("auth_notice_sign_in")}</span>
@@ -52,7 +54,7 @@ export function AuthNoticeBanner({
     );
   }
 
-  if (auth.isPending && !byokAiPilot && feature !== "agent_desk") {
+  if (auth.isPending && !byokAiPilot && !trialDemo) {
     return (
       <Banner className={className} tone="warn">
         <span>{t("auth_notice_pending")}</span>
@@ -63,7 +65,7 @@ export function AuthNoticeBanner({
     );
   }
 
-  if (feature && auth.entitlements && !auth.entitlements[feature] && !byokAiPilot) {
+  if (feature && auth.entitlements && !auth.entitlements[feature] && !byokAiPilot && !trialDemo) {
     return (
       <Banner className={className} tone="warn">
         <span>{t("auth_notice_upgrade")}</span>

@@ -2,6 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { entitlementsFor, isAuthEnforced } from "@/lib/auth/entitlements.server";
+import {
+  isTrialDemoMode,
+  trialDemoGuestEntitlements,
+  trialDemoMemberEntitlements,
+} from "@/lib/membership/trial-demo";
 import { getAuthDiagnostics } from "@/lib/auth/auth-diagnostics.server";
 import { explainAuthSessionFailure, resolveAuthSession } from "@/lib/auth/session.server";
 import { getServerConfig } from "@/lib/config.server";
@@ -35,7 +40,7 @@ export const getAuthMe = createServerFn({ method: "POST" })
       return {
         enforced: true as const,
         session: null,
-        entitlements: null,
+        entitlements: isTrialDemoMode() ? trialDemoGuestEntitlements() : null,
         sessionError: explainAuthSessionFailure(data.accessToken ?? null),
       };
     }
@@ -46,6 +51,8 @@ export const getAuthMe = createServerFn({ method: "POST" })
         profile: session.profile,
         subscription: session.subscription,
       },
-      entitlements: entitlementsFor(session),
+      entitlements: isTrialDemoMode()
+        ? trialDemoMemberEntitlements()
+        : entitlementsFor(session),
     };
   });

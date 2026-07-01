@@ -19,6 +19,7 @@ import { useI18n } from "@/lib/i18n";
 import { LANDING_SEO } from "@/lib/marketing/landing-copy";
 import { parseBuyingZoneBounds } from "@/lib/order-sizing";
 import { useAuth } from "@/lib/use-auth";
+import { clientHasEntitlement, isTrialDemoMode } from "@/lib/membership/trial-demo";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
 import { useTossApiKey } from "@/lib/use-toss-api-key";
 import { useRealtimeTradingData, type StockRow } from "@/lib/use-realtime-trading-data";
@@ -51,6 +52,7 @@ function Dashboard() {
 
   const canScan =
     !auth.enforced ||
+    isTrialDemoMode() ||
     (Boolean(auth.accessToken) && auth.isActive && Boolean(auth.entitlements?.scan));
 
   const scannerRef = useRef<HTMLDivElement>(null);
@@ -67,15 +69,15 @@ function Dashboard() {
 
   const handleScan = () => {
     if (auth.loading) return;
-    if (auth.enforced && !auth.accessToken) {
+    if (auth.enforced && !auth.accessToken && !isTrialDemoMode()) {
       toast.error(t("auth_sign_in_first"));
       return;
     }
-    if (auth.enforced && auth.isPending) {
+    if (auth.enforced && auth.isPending && !isTrialDemoMode()) {
       toast.error(t("auth_notice_pending"));
       return;
     }
-    if (auth.enforced && !auth.entitlements?.scan) {
+    if (auth.enforced && !clientHasEntitlement(auth.enforced, auth.entitlements, "scan")) {
       toast.error(t("auth_err_need_basic"));
       return;
     }

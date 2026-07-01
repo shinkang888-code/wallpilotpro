@@ -94,7 +94,7 @@ async function loadCorpMap(apiKey: string): Promise<Map<string, { corpCode: stri
 
 export function normalizeCorpName(name: string): string {
   return name
-    .replace(/\(주\)|㈜|주식회사|\(유\)|\(합\)|\s+/g, "")
+    .replace(/\(주\)|（주）|㈜|주식회사|\(유\)|\(유한\)|\s+/g, "")
     .trim()
     .toLowerCase();
 }
