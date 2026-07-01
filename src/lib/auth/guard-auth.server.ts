@@ -28,3 +28,29 @@ export async function guardFeature(
   assertEntitlement(session, feature);
   return session;
 }
+
+/** Agent Desk trial: all tiers + guest demo (read); writes need login when auth enforced. */
+export async function guardAgentDeskTrial(
+  accessToken: string | null | undefined,
+  options?: { requireUser?: boolean; geminiApiKey?: string | null },
+): Promise<AuthSession | null> {
+  if (!isAuthEnforced()) return null;
+
+  if (accessToken?.trim()) {
+    const session = await resolveAuthSession(accessToken);
+    if (session) {
+      if (session.profile.accountStatus === "suspended") throw new Error("account_suspended");
+      if (session.profile.accountStatus === "deleted") throw new Error("account_deleted");
+      if (
+        session.profile.accountStatus === "active" ||
+        session.profile.accountStatus === "pending"
+      ) {
+        return session;
+      }
+      throw new Error("account_blocked");
+    }
+  }
+
+  if (options?.requireUser) throw new Error("unauthorized");
+  return null;
+}

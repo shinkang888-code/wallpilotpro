@@ -31,6 +31,8 @@ const DEFAULT_MATRIX: MenuTierPermission[] = [
   { menuId: "dart_lab", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "ai_pilot", tier: "premium", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "ai_pilot", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "agent_desk", tier: "free", canView: true, canExecute: true, canExportPdf: true },
+  { menuId: "agent_desk", tier: "day_trading", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "agent_desk", tier: "premium", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "agent_desk", tier: "elite", canView: true, canExecute: true, canExportPdf: true },
   { menuId: "signal_hub", tier: "free", canView: true, canExecute: false, canExportPdf: false },

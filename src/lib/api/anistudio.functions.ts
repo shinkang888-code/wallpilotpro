@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { guardFeature } from "@/lib/auth/guard-auth.server";
+import { guardAgentDeskTrial } from "@/lib/auth/guard-auth.server";
 import {
   createAniProject,
   deleteAniProject,
@@ -15,7 +15,7 @@ const tokenSchema = z.object({ accessToken: z.string().nullable().optional() });
 export const getAniStudioBindings = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) return { bindings: [] };
     const bindings = await listDeptBindings(session.userId);
     return { bindings };
@@ -24,7 +24,7 @@ export const getAniStudioBindings = createServerFn({ method: "GET" })
 export const getAniStudioProjects = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) return { projects: [] };
     const projects = await listAniProjects(session.userId);
     return { projects };
@@ -39,7 +39,7 @@ export const createAniStudioProject = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     const project = await createAniProject(session.userId, data.name, data.departmentSlug);
     return { project };
@@ -53,7 +53,7 @@ export const deleteAniStudioProject = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     await deleteAniProject(session.userId, data.projectId);
     return { ok: true };
@@ -68,7 +68,7 @@ export const patchAniStudioEmoji = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     await updateAniProjectEmoji(session.userId, data.projectId, data.emoji);
     return { ok: true };

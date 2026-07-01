@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { guardFeature } from "@/lib/auth/guard-auth.server";
+import { guardAgentDeskTrial } from "@/lib/auth/guard-auth.server";
 import { clientGeminiKeySchema } from "@/lib/api/client-gemini-key";
 import { generateDeptReportBody, runOfficeTeamChat } from "@/lib/office/gemini-chat.server";
 import {
@@ -20,14 +20,14 @@ const tokenSchema = z.object({
 export const getAgentDeskCompany = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     return loadOfficeCompany(session?.userId ?? null);
   });
 
 export const getAgentDeskEvents = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     return loadOfficeEvents(session?.userId ?? null);
   });
 
@@ -42,7 +42,7 @@ export const postAgentDeskChat = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk", {
+    const session = await guardAgentDeskTrial(data.accessToken, {
       geminiApiKey: data.geminiApiKey,
     });
     const result = await runOfficeTeamChat({
@@ -68,7 +68,7 @@ export const postAgentDeskDeptReport = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    await guardFeature(data.accessToken, "agent_desk");
+    await guardAgentDeskTrial(data.accessToken);
     const body = await generateDeptReportBody(data);
     return { body };
   });
@@ -82,7 +82,7 @@ export const patchAgentDeskDeptProfile = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     const dept = await saveDeptProfile(session.userId, data.deptSlug, data.realMemberName);
     return { dept };
@@ -98,7 +98,7 @@ export const patchAgentDeskEmployee = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     const employee = await patchEmployeeTask(session.userId, data.employeeId, {
       status: data.status,
@@ -110,7 +110,7 @@ export const patchAgentDeskEmployee = createServerFn({ method: "POST" })
 export const runAgentDeskSiteCheck = createServerFn({ method: "POST" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
-    const session = await guardFeature(data.accessToken, "agent_desk");
+    const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.userId) throw new Error("auth_required");
     const sites = await checkOfficeSites(session.userId);
     return { sites };

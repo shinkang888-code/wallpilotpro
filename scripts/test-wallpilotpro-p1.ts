@@ -53,6 +53,7 @@ const freeMenus = visibleMenusForTier("free");
 assert.ok(freeMenus.includes("scanner"));
 assert.ok(!freeMenus.includes("rl_lab"));
 assert.ok(freeMenus.includes("signal_hub"));
+assert.ok(freeMenus.includes("agent_desk"));
 
 const eliteMenus = visibleMenusForTier("elite");
 assert.ok(eliteMenus.includes("rl_lab"));
@@ -74,6 +75,8 @@ assert.equal(canAccess(premiumSession, "ai_pilot"), true);
 assert.equal(canAccess(premiumSession, "toss_execute"), false);
 assert.equal(canAccess(eliteSession, "toss_execute"), true);
 assert.equal(canAccess(eliteSession, "rl_lab"), true);
+assert.equal(canAccess(freeSession, "agent_desk"), true);
+assert.equal(canAccess(proSession, "agent_desk"), true);
 
 // Extension menus in top nav
 const ext = APP_MENUS.filter((m) => m.namespace);

@@ -32,7 +32,7 @@ export function AuthNoticeBanner({
     );
   }
 
-  if (auth.enforced && !auth.user && !byokAiPilot) {
+  if (auth.enforced && !auth.user && !byokAiPilot && feature !== "agent_desk") {
     return (
       <Banner className={className} tone="info">
         <span>{t("auth_notice_sign_in")}</span>
@@ -52,7 +52,7 @@ export function AuthNoticeBanner({
     );
   }
 
-  if (auth.isPending && !byokAiPilot) {
+  if (auth.isPending && !byokAiPilot && feature !== "agent_desk") {
     return (
       <Banner className={className} tone="warn">
         <span>{t("auth_notice_pending")}</span>

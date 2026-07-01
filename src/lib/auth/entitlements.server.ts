@@ -21,7 +21,7 @@ const FEATURE_MIN_PLAN: Record<EntitlementFeature, SubscriptionPlan> = {
   signals_read: "free",
   signals_write: "pro",
   ai_pilot: "premium",
-  agent_desk: "premium",
+  agent_desk: "free",
   pdf_export: "premium",
   rl_lab: "elite",
   crypto_bot: "premium",
@@ -57,7 +57,7 @@ function effectivePlan(session: AuthSession): SubscriptionPlan {
 
 export function canAccess(session: AuthSession, feature: EntitlementFeature): boolean {
   if (session.profile.accountStatus !== "active") {
-    return feature === "scan_preview" || feature === "signals_read";
+    return feature === "scan_preview" || feature === "signals_read" || feature === "agent_desk";
   }
   if (session.profile.role === "admin") return true;
 

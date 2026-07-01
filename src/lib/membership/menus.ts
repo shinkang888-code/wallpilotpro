@@ -68,7 +68,7 @@ export const APP_MENUS: AppMenuDefinition[] = [
     path: "/agents/desk",
     labelKey: "nav_agent_desk",
     namespace: "ta",
-    defaultMinTier: "premium",
+    defaultMinTier: "free",
     phase: 2,
   },
   {
