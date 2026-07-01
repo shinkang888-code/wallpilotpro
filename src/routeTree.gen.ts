@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TossTraderIndexRouteImport } from './routes/toss-trader/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AgentsDeskRouteImport } from './routes/agents/desk'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminPermissionsRouteImport } from './routes/admin/permissions'
 import { Route as AdminActivityRouteImport } from './routes/admin/activity'
@@ -79,6 +80,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentsDeskRoute = AgentsDeskRouteImport.update({
+  id: '/agents/desk',
+  path: '/agents/desk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSecurityRoute = AdminSecurityRouteImport.update({
   id: '/admin/security',
   path: '/admin/security',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
+  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
+  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin': typeof AdminIndexRoute
   '/toss-trader': typeof TossTraderIndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/permissions': typeof AdminPermissionsRoute
   '/admin/security': typeof AdminSecurityRoute
+  '/agents/desk': typeof AgentsDeskRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
   '/toss-trader/': typeof TossTraderIndexRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
+    | '/agents/desk'
     | '/auth/callback'
     | '/admin/'
     | '/toss-trader/'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
+    | '/agents/desk'
     | '/auth/callback'
     | '/admin'
     | '/toss-trader'
@@ -190,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/permissions'
     | '/admin/security'
+    | '/agents/desk'
     | '/auth/callback'
     | '/admin/'
     | '/toss-trader/'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
   AdminPermissionsRoute: typeof AdminPermissionsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
+  AgentsDeskRoute: typeof AgentsDeskRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AdminIndexRoute: typeof AdminIndexRoute
   TossTraderIndexRoute: typeof TossTraderIndexRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agents/desk': {
+      id: '/agents/desk'
+      path: '/agents/desk'
+      fullPath: '/agents/desk'
+      preLoaderRoute: typeof AgentsDeskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/security': {
       id: '/admin/security'
       path: '/admin/security'
@@ -327,6 +347,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
   AdminPermissionsRoute: AdminPermissionsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
+  AgentsDeskRoute: AgentsDeskRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AdminIndexRoute: AdminIndexRoute,
   TossTraderIndexRoute: TossTraderIndexRoute,
