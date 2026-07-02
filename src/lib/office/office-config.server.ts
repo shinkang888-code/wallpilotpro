@@ -1,5 +1,6 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/db/supabase.server";
-import { inferConstitutionRole } from "@/lib/office/constitution";
+import { appendFsmSnapshot, buildFsmSnapshot } from "@/lib/office/office-fsm.server";
+import type { CeoOrderFsmState } from "@/lib/office/constitution";
 import { buildSeedCompany } from "@/lib/office/seed-agency";
 import type {
   CeoOrder,
@@ -559,6 +560,18 @@ function mapCeoOrderRow(row: Record<string, unknown>): CeoOrder {
   };
 }
 
+export async function emitCeoOrderFsm(
+  userId: string,
+  company: CompanyData,
+  orderId: string,
+  fsmState: CeoOrderFsmState,
+  version: number,
+  targetDeptSlugs?: string[],
+): Promise<void> {
+  const snap = buildFsmSnapshot(company, fsmState, orderId, version, targetDeptSlugs);
+  await appendFsmSnapshot(userId, snap);
+}
+
 export async function approveCeoOrder(userId: string, orderId: string): Promise<CeoOrder> {
   const admin = getSupabaseAdmin();
   if (!admin) throw new Error("db_unavailable");
@@ -590,6 +603,9 @@ export async function approveCeoOrder(userId: string, orderId: string): Promise<
     status: "completed",
     completed_at: new Date().toISOString(),
   });
+
+  const company = await loadMergedCompany(userId);
+  await emitCeoOrderFsm(userId, company, orderId, "COMPLETED", (order.version ?? 1) + 3);
 
   const updated = (await loadCeoOrders(userId, 50)).find((o) => o.id === orderId);
   if (!updated) throw new Error("order_not_found");

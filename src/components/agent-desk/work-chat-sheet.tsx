@@ -52,6 +52,7 @@ export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [llmInfo, setLlmInfo] = useState<{ vendor?: string; fallback?: boolean } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastUserPromptRef = useRef("");
 
@@ -112,6 +113,10 @@ export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose
         createdAt: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      setLlmInfo({
+        vendor: res.llm_vendor ?? undefined,
+        fallback: res.llm_fallback,
+      });
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -161,6 +166,12 @@ export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose
           <div className="min-w-0 flex-1">
             <p className="text-xs text-blue-100">{dept.label}</p>
             <h2 className="truncate font-bold">{leader.name}</h2>
+            {llmInfo?.vendor && (
+              <p className="text-[10px] text-blue-200">
+                {llmInfo.vendor === "openai" ? "OpenAI" : "Gemini"}
+                {llmInfo.fallback ? " (폴백)" : " Primary"}
+              </p>
+            )}
           </div>
           <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-white/15">
             <X className="size-5" />

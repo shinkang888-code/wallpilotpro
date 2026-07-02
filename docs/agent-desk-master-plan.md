@@ -61,8 +61,15 @@ Gemini system prompt = 부서 mission + 헌법 역할 템플릿 + vibe + constit
 - ReportArchiveDrawer
 - 채팅/보고 자동 저장
 
-### Phase 4 — 고도화 (후속)
-- SSE FSM 스트림, OpenAI/Gemini 비대칭 라우팅, ZIP 번들 S3
+### Phase 4 — 완료 (2025-07-02)
+- [x] 비대칭 LLM 라우팅 (Director/Reviewer→OpenAI, Researcher/Marketer→Gemini + 폴백)
+- [x] FSM 공간 스냅샷 DB + SSE 스트림 (`/api/agent-desk/fsm-stream`)
+- [x] 빌딩 뷰 FSM 동기화 (CEO Meeting Zone, Tier-1 런타임 우선)
+- [x] CEO 일괄 지시 ZIP 번들 다운로드
+
+### Phase 5 — 후속
+- S3/R2 오브젝트 스토리지 프로비저닝
+- Redis Pub/Sub 이중 채널 (멀티 인스턴스)
 
 ## 6. 성공 기준
 - [ ] 부서 CRUD 동작

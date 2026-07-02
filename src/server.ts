@@ -40,6 +40,10 @@ async function tryApiRoute(request: Request): Promise<Response | null> {
   if (url.pathname === "/api/stripe/webhook" && request.method === "POST") {
     return handleStripeWebhookRequest(request);
   }
+  if (url.pathname === "/api/agent-desk/fsm-stream" && request.method === "GET") {
+    const { handleOfficeFsmStream } = await import("./lib/office/office-fsm-stream.server");
+    return handleOfficeFsmStream(request);
+  }
   return null;
 }
 

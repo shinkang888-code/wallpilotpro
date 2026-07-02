@@ -17,6 +17,7 @@ import {
 } from "@/components/agent-desk/report-archive-drawer";
 import { WorkChatSheet } from "@/components/agent-desk/work-chat-sheet";
 import { useAgentDesk } from "@/lib/agent-desk/use-agent-desk";
+import { useOfficeFsm } from "@/lib/agent-desk/use-office-fsm";
 import { useI18n } from "@/lib/i18n";
 import type { Department, Employee } from "@/lib/office/types";
 import { useAuth } from "@/lib/use-auth";
@@ -38,6 +39,7 @@ export function AgentDeskDashboard() {
   const { key: geminiApiKey } = useGeminiApiKey();
   const { company, events, routeBindings, loading, checking, runSiteCheck, refresh } =
     useAgentDesk(accessToken);
+  const { snapshot: fsmSnapshot, streaming: fsmStreaming } = useOfficeFsm(accessToken);
 
   const [view, setView] = useState<"grid" | "building">("grid");
   const [panel, setPanel] = useState<Panel>(null);
@@ -98,6 +100,9 @@ export function AgentDeskDashboard() {
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-blue-100/90">
           AI 직원별 독립 워크스페이스 · 헌법 규칙 기반 답변 · 보고서 아티팩트 보관
+          {fsmStreaming && (
+            <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-[10px]">FSM Live</span>
+          )}
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -133,6 +138,7 @@ export function AgentDeskDashboard() {
           <BuildingScene
             company={company}
             routeBindings={routeBindings}
+            fsmSnapshot={fsmSnapshot}
             onSelectEmployee={(leader) => {
               const dept = company.departments.find((d) => d.slug === leader.department_slug);
               if (dept) setChatTarget({ leader, dept });

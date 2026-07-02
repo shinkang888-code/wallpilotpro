@@ -80,6 +80,8 @@ export type OfficeChatResult = {
   summary: string;
   body: string;
   links: Array<{ label: string; url: string }>;
+  llm_vendor?: "openai" | "gemini" | null;
+  llm_fallback?: boolean;
 };
 
 export type DeptReportInput = {

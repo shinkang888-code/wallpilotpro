@@ -273,6 +273,47 @@ ${paragraphs.join("\n")}
   downloadBlob(blob, `${sanitizeFilename(doc.title)}.hwpx`);
 }
 
+import type { CeoOrder } from "@/lib/office/types";
+
+export async function exportCeoOrderZip(order: CeoOrder) {
+  const JSZip = (await import("jszip")).default;
+  const zip = new JSZip();
+  const folder = zip.folder("wallpilot-reports");
+  if (!folder) return;
+
+  folder.file(
+    "README.txt",
+    [
+      "WallPilot Pro — CEO 일괄 지시 보고서 번들",
+      `지시: ${order.message}`,
+      `상태: ${order.fsm_state}`,
+      `생성: ${new Date(order.created_at).toLocaleString("ko-KR")}`,
+    ].join("\n"),
+  );
+
+  for (const r of order.results ?? []) {
+    if (!r.body) continue;
+    const safeName = r.department_label.replace(/[<>:"/\\|?*]/g, "_");
+    const plain = [
+      r.department_label,
+      r.employee_name ?? "",
+      r.summary ?? "",
+      "",
+      r.body,
+    ].join("\n");
+    folder.file(`${safeName}.txt`, plain);
+    folder.file(`${safeName}.md`, r.body);
+  }
+
+  const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `CEO지시_${order.id.slice(0, 8)}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export type ExportFormat = "txt" | "pdf" | "docx" | "pptx" | "hwp";
 
 export async function exportChatDocument(format: ExportFormat, doc: ExportDocument) {

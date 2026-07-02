@@ -9,6 +9,7 @@ import {
   createCeoOrder,
   deactivateUserDepartment,
   deactivateUserEmployee,
+  emitCeoOrderFsm,
   loadCeoOrders,
   loadOfficeReports,
   saveCeoOrderResult,
@@ -17,6 +18,7 @@ import {
   upsertUserDepartment,
   upsertUserEmployee,
 } from "@/lib/office/office-config.server";
+import { loadLatestFsmSnapshot, loadFsmSnapshots } from "@/lib/office/office-fsm.server";
 import {
   appendOfficeEvent,
   checkOfficeSites,
@@ -72,6 +74,27 @@ export const getAgentDeskCeoOrders = createServerFn({ method: "GET" })
     const session = await guardAgentDeskTrial(data.accessToken);
     if (!session?.user.id) return [];
     return loadCeoOrders(session.user.id);
+  });
+
+export const getAgentDeskLatestFsm = createServerFn({ method: "GET" })
+  .inputValidator(tokenSchema)
+  .handler(async ({ data }) => {
+    const session = await guardAgentDeskTrial(data.accessToken);
+    if (!session?.user.id) return null;
+    return loadLatestFsmSnapshot(session.user.id);
+  });
+
+export const getAgentDeskFsmHistory = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      orderId: z.string().uuid().optional(),
+      accessToken: z.string().nullable().optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const session = await guardAgentDeskTrial(data.accessToken);
+    if (!session?.user.id) return [];
+    return loadFsmSnapshots(session.user.id, { orderId: data.orderId, limit: 50 });
   });
 
 export const postAgentDeskChat = createServerFn({ method: "POST" })
@@ -277,10 +300,13 @@ export const postAgentDeskCeoBulkOrder = createServerFn({ method: "POST" })
       target_dept_slugs: targetSlugs,
     });
 
+    await emitCeoOrderFsm(session.user.id, company, order.id, "CEO_INPUTED", 1, targetSlugs);
+
     await updateCeoOrderFsm(session.user.id, order.id, {
       fsm_state: "RUNNING",
       status: "running",
     });
+    await emitCeoOrderFsm(session.user.id, company, order.id, "RUNNING", 2, targetSlugs);
     await appendOfficeEvent(session.user.id, "CEO", `일괄 지시: ${data.message.slice(0, 60)}`);
 
     for (const deptSlug of targetSlugs) {
@@ -331,6 +357,7 @@ export const postAgentDeskCeoBulkOrder = createServerFn({ method: "POST" })
       fsm_state: "WAITING_APPROVAL",
       status: "waiting_approval",
     });
+    await emitCeoOrderFsm(session.user.id, company, order.id, "WAITING_APPROVAL", 3, targetSlugs);
 
     const orders = await loadCeoOrders(session.user.id, 5);
     return orders.find((o) => o.id === order.id) ?? order;

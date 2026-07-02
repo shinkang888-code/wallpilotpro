@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import {
   exportChatDocument,
+  exportCeoOrderZip,
   type ExportFormat,
 } from "@/lib/agent-desk/chat-document-export";
 import {
@@ -247,20 +248,38 @@ export function CeoBulkCommandPanel({
             ))}
           </div>
           {order.fsm_state === "WAITING_APPROVAL" && (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => void approve()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#22c55e] py-2.5 text-sm font-bold text-white"
-            >
-              <CheckCircle2 className="size-4" />
-              CEO 승인 · 보고서 보관함 저장
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void approve()}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#22c55e] py-2.5 text-sm font-bold text-white"
+              >
+                <CheckCircle2 className="size-4" />
+                CEO 승인 · 보고서 보관함 저장
+              </button>
+              <button
+                type="button"
+                onClick={() => void exportCeoOrderZip(order)}
+                className="mt-2 w-full rounded-xl border border-[#e5e8eb] py-2 text-xs font-semibold text-[#191f28]"
+              >
+                ZIP 번들 미리 다운로드 (승인 전)
+              </button>
+            </>
           )}
           {order.fsm_state === "COMPLETED" && (
-            <p className="text-center text-xs text-[#22c55e]">
-              승인 완료 — 보고서 보관함에서 확인하세요.
-            </p>
+            <>
+              <p className="text-center text-xs text-[#22c55e]">
+                승인 완료 — 보고서 보관함에서 확인하세요.
+              </p>
+              <button
+                type="button"
+                onClick={() => void exportCeoOrderZip(order)}
+                className="w-full rounded-xl border border-[#3182f6]/30 bg-[#3182f6]/5 py-2 text-xs font-semibold text-[#3182f6]"
+              >
+                ZIP 아카이브 다운로드
+              </button>
+            </>
           )}
         </div>
       )}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useRoutePosition } from "@/components/agent-desk/use-route-position";
 import type { BuildingRouteBinding } from "@/lib/anistudio/building-binding";
+import type { FsmAgentSnapshot, OfficeFsmSnapshot } from "@/lib/office/office-fsm.server";
 import type { CompanyData, Department, Employee } from "@/lib/office/types";
 import { STATUS_META } from "@/lib/office/types";
 
@@ -23,12 +24,14 @@ function DeptCharacter({
   index,
   tick,
   binding,
+  fsmAgent,
   onSelect,
 }: {
   slot: Slot;
   index: number;
   tick: number;
   binding?: BuildingRouteBinding;
+  fsmAgent?: FsmAgentSnapshot;
   onSelect: (e: Employee) => void;
 }) {
   const meta = STATUS_META[slot.rep.status];
@@ -36,34 +39,37 @@ function DeptCharacter({
   const dur = binding ? binding.durationMs / 1000 : 7 + ((slot.rep.id * 7) % 8);
   const delay = (slot.rep.id * 5) % 6;
   const show = (tick + index) % 2 === 0;
-  const msg =
-    slot.rep.status === "error"
-      ? "🚨 장애 대응 중!"
-      : slot.rep.current_task || CHITCHAT[(slot.rep.id + tick) % CHITCHAT.length];
 
-  const top = binding ? routePos.y : slot.top;
-  const left = binding ? routePos.x : slot.left;
-  const flipX = binding ? routePos.flipX : 1;
+  const useFsm = !!fsmAgent;
+  const msg =
+    fsmAgent?.message ??
+    (slot.rep.status === "error"
+      ? "🚨 장애 대응 중!"
+      : slot.rep.current_task || CHITCHAT[(slot.rep.id + tick) % CHITCHAT.length]);
+
+  const top = useFsm ? fsmAgent.top_pct : binding ? routePos.y : slot.top;
+  const left = useFsm ? fsmAgent.left_pct : binding ? routePos.x : slot.left;
+  const flipX = binding && !useFsm ? routePos.flipX : 1;
   const display = binding?.spriteUrl?.startsWith("data:")
     ? "🎬"
-    : binding?.spriteUrl || slot.rep.emoji || "🤖";
+    : binding?.spriteUrl || fsmAgent?.emoji || slot.rep.emoji || "🤖";
 
   return (
     <div
-      className="absolute"
+      className="absolute transition-all duration-700"
       style={{ top: `${top}%`, left: `${left}%`, transform: "translate(-50%, -100%)" }}
     >
       <div
-        className={binding ? "relative" : "ad-building-pace relative"}
+        className={binding && !useFsm ? "relative" : "ad-building-pace relative"}
         style={
-          binding
+          binding && !useFsm
             ? undefined
             : ({ "--pace-dur": `${dur}s`, "--pace-delay": `${delay}s` } as React.CSSProperties)
         }
       >
         {show && (
           <span className="ad-speech-bubble absolute -top-8 left-1/2 z-10 max-w-[140px] -translate-x-1/2 text-[10px]">
-            {binding ? `🎬 ${binding.projectName}` : msg}
+            {binding && !useFsm ? `🎬 ${binding.projectName}` : msg}
           </span>
         )}
         <span
@@ -82,7 +88,7 @@ function DeptCharacter({
             style={{
               backgroundColor: `${slot.dept.color}22`,
               borderColor: meta.ring,
-              transform: binding ? `scaleX(${flipX}) scale(${binding.scale})` : undefined,
+              transform: binding && !useFsm ? `scaleX(${flipX}) scale(${binding.scale})` : undefined,
             }}
           >
             {display}
@@ -97,14 +103,27 @@ function DeptCharacter({
 type Props = {
   company: CompanyData;
   routeBindings?: Record<string, BuildingRouteBinding>;
+  fsmSnapshot?: OfficeFsmSnapshot | null;
   onSelectEmployee: (e: Employee) => void;
 };
 
-export function BuildingScene({ company, routeBindings = {}, onSelectEmployee }: Props) {
+export function BuildingScene({
+  company,
+  routeBindings = {},
+  fsmSnapshot,
+  onSelectEmployee,
+}: Props) {
+  const fsmByDept = useMemo(() => {
+    const m = new Map<string, FsmAgentSnapshot>();
+    for (const a of fsmSnapshot?.agents ?? []) m.set(a.department_slug, a);
+    return m;
+  }, [fsmSnapshot]);
+
   const slots = useMemo<Slot[]>(() => {
     const repByDept = new Map<string, Employee>();
     for (const e of company.employees) {
-      if (!repByDept.has(e.department_slug)) repByDept.set(e.department_slug, e);
+      const cur = repByDept.get(e.department_slug);
+      if (!cur || e.is_leader) repByDept.set(e.department_slug, e);
     }
     const ordered = [...company.departments].sort((a, b) => a.sort - b.sort);
     const out: Slot[] = [];
@@ -114,15 +133,16 @@ export function BuildingScene({ company, routeBindings = {}, onSelectEmployee }:
       const floor = Math.floor(i / 4);
       const col = i % 4;
       const binding = routeBindings[dept.slug];
+      const fsm = fsmByDept.get(dept.slug);
       out.push({
         dept,
         rep,
-        top: binding?.startPercent.y ?? FLOOR_TOP[floor] ?? 95.5,
-        left: binding?.startPercent.x ?? COL_LEFT[col] ?? 50,
+        top: fsm?.top_pct ?? binding?.startPercent.y ?? FLOOR_TOP[floor] ?? 95.5,
+        left: fsm?.left_pct ?? binding?.startPercent.x ?? COL_LEFT[col] ?? 50,
       });
     });
     return out;
-  }, [company, routeBindings]);
+  }, [company, routeBindings, fsmByDept]);
 
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -143,9 +163,20 @@ export function BuildingScene({ company, routeBindings = {}, onSelectEmployee }:
             style={{ top: `${18 + floor * 20}%`, height: "16%" }}
           />
         ))}
+        {fsmSnapshot?.fsm_state === "WAITING_APPROVAL" && (
+          <div
+            className="absolute left-[30%] right-[30%] rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-400/10"
+            style={{ bottom: "8%", height: "14%" }}
+          >
+            <p className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-amber-200">
+              CEO Meeting Zone
+            </p>
+          </div>
+        )}
         <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/40 to-transparent" />
         <p className="absolute bottom-2 left-3 text-[10px] font-medium text-white/60">
           WallPilot AI Office · Building View
+          {fsmSnapshot ? ` · ${fsmSnapshot.fsm_state}` : ""}
         </p>
       </div>
       <div className="pointer-events-none absolute inset-0">
@@ -155,7 +186,8 @@ export function BuildingScene({ company, routeBindings = {}, onSelectEmployee }:
             slot={s}
             index={i}
             tick={tick}
-            binding={routeBindings[s.dept.slug]}
+            binding={fsmByDept.has(s.dept.slug) ? undefined : routeBindings[s.dept.slug]}
+            fsmAgent={fsmByDept.get(s.dept.slug)}
             onSelect={onSelectEmployee}
           />
         ))}

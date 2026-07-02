@@ -20,6 +20,7 @@ export function getServerConfig() {
   return {
     nodeEnv: process.env.NODE_ENV,
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+    openaiApiKey: process.env.OPENAI_API_KEY ?? "",
     fmpApiKey: process.env.FMP_API_KEY ?? "",
     tossApiBaseUrl:
       process.env.TOSS_API_BASE_URL ?? "https://openapi.tossinvest.com",
