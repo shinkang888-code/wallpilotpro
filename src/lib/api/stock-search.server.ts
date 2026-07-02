@@ -19,11 +19,51 @@ type YahooSearchResponse = {
   }>;
 };
 
-/** KR/US 종목 검색 — Yahoo Finance search API. */
+/** KR/US 종목 검색 — 한글 회사명(OpenDART) + Yahoo/FMP. */
 export async function searchStocks(query: string, limit = 12): Promise<StockSearchResult[]> {
   const q = query.trim();
   if (q.length < 1) return [];
 
+  const { opendartApiKey } = getServerConfig();
+  const hasHangul = /[\uAC00-\uD7A3]/.test(q);
+  const isDigitQuery = /^\d{1,6}$/.test(q);
+
+  const [krRows, usRows] = await Promise.all([
+    hasHangul || isDigitQuery ? searchKrStocks(q, limit) : Promise.resolve([]),
+    fetchInternationalStocks(q, limit),
+  ]);
+
+  const seen = new Set<string>();
+  const merged: StockSearchResult[] = [];
+  const push = (row: StockSearchResult) => {
+    const key = `${row.market}:${row.ticker}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(row);
+  };
+
+  // 한글·종목코드 입력이면 국내 종목을 우선
+  if (hasHangul || isDigitQuery) {
+    for (const row of krRows) {
+      push(row);
+      if (merged.length >= limit) return merged;
+    }
+  }
+
+  for (const row of usRows) {
+    push(row);
+    if (merged.length >= limit) return merged;
+  }
+
+  if (merged.length === 0 && !hasHangul && !isDigitQuery) {
+    for (const row of krRows) push(row);
+  }
+
+  return merged.slice(0, limit);
+}
+
+async function fetchInternationalStocks(query: string, limit: number): Promise<StockSearchResult[]> {
+  const q = query.trim();
   const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=${limit}&newsCount=0`;
   try {
     const res = await fetch(url, { headers: UA, signal: AbortSignal.timeout(12_000) });

@@ -109,6 +109,7 @@ export async function searchKrStocksByCorpName(
 
   const map = await loadCorpMap(apiKey);
   const matches: Array<{ stockCode: string; corpName: string; corpCode: string; score: number }> = [];
+  const digitQ = query.replace(/\D/g, "");
 
   for (const [stockCode, entry] of map.entries()) {
     if (!entry.corpName) continue;
@@ -118,6 +119,9 @@ export async function searchKrStocksByCorpName(
     if (n === q) score = 100;
     else if (n.startsWith(q) || q.startsWith(n)) score = 80;
     else if (n.includes(q) || q.includes(n)) score = 60;
+    if (digitQ.length >= 2 && stockCode.startsWith(digitQ)) {
+      score = Math.max(score, 70);
+    }
     if (score > 0) {
       matches.push({ stockCode, corpName: entry.corpName, corpCode: entry.corpCode, score });
     }
