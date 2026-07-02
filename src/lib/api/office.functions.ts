@@ -31,12 +31,18 @@ export const getAgentDeskEvents = createServerFn({ method: "GET" })
     return loadOfficeEvents(session?.user.id ?? null);
   });
 
+const chatTurnSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+});
+
 export const postAgentDeskChat = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       message: z.string().min(1),
       deptLabel: z.string(),
       role: z.string(),
+      history: z.array(chatTurnSchema).max(20).optional(),
       accessToken: z.string().nullable().optional(),
       ...clientGeminiKeySchema.shape,
     }),
@@ -49,6 +55,7 @@ export const postAgentDeskChat = createServerFn({ method: "POST" })
       message: data.message,
       deptLabel: data.deptLabel,
       role: data.role,
+      history: data.history,
       geminiApiKey: data.geminiApiKey,
     });
     if (session?.user.id) {

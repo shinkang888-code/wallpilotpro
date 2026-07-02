@@ -719,5 +719,18 @@ export const pack = {
   "pilot_prompts_placeholder": "Enter a new question…",
   "pilot_prompts_reset": "Reset to defaults",
   "pilot_prompts_save": "Save",
-  "pilot_register_questions": "Manage prompts"
+  "pilot_register_questions": "Manage prompts",
+  "header_stock_clear": "Clear search",
+  "header_stock_no_results": "No matching stocks",
+  "header_stock_pins_aria": "Pinned stocks",
+  "header_stock_remove_pin": "Remove {name} from pins",
+  "header_stock_search_aria": "Global stock code search",
+  "header_stock_search_placeholder": "Search by name or ticker (KR · US)",
+  "dart_analysis_stop": "Stop analysis",
+  "agent_desk_chat_export": "Export document",
+  "agent_desk_chat_export_hint": "Download the latest AI reply as Word, HWP, PPT, PDF, or TXT.",
+  "agent_desk_chat_hint": "Enter work instructions or questions — the AI team lead replies via Gemini.",
+  "agent_desk_chat_placeholder": "Work instruction or question…",
+  "agent_desk_chat_send": "Send",
+  "agent_desk_chat_typing": "Composing reply…"
 } as const;

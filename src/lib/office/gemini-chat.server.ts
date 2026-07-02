@@ -39,11 +39,60 @@ async function geminiJson<T>(
   }
 }
 
+export type OfficeChatTurn = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+async function geminiJsonWithHistory<T>(
+  system: string,
+  userMessage: string,
+  history: OfficeChatTurn[],
+  schema: Record<string, unknown>,
+  apiKey: string,
+): Promise<T | null> {
+  const contents = [
+    ...history.map((turn) => ({
+      role: turn.role === "user" ? "user" : "model",
+      parts: [{ text: turn.content }],
+    })),
+    { role: "user", parts: [{ text: userMessage }] },
+  ];
+
+  const res = await fetch(`${BASE}/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+        responseSchema: schema,
+      },
+    }),
+  });
+
+  if (!res.ok) return null;
+
+  const json = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
+
 export async function runOfficeTeamChat(input: {
   message: string;
   deptLabel: string;
   role: string;
   geminiApiKey?: string | null;
+  history?: OfficeChatTurn[];
 }): Promise<OfficeChatResult> {
   const key = input.geminiApiKey?.trim() || getServerConfig().geminiApiKey;
   if (!key) {
@@ -60,31 +109,29 @@ export async function runOfficeTeamChat(input: {
 - body: 마크다운 본문 (제목, 목록, 표 활용)
 - links: 실제 존재하는 URL만 0~3개, 없으면 빈 배열`;
 
-  const parsed = await geminiJson<{
+  const schema = {
+    type: "object",
+    properties: {
+      summary: { type: "string" },
+      body: { type: "string" },
+      links: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { label: { type: "string" }, url: { type: "string" } },
+          required: ["label", "url"],
+        },
+      },
+    },
+    required: ["summary", "body"],
+  };
+
+  const history = input.history ?? [];
+  const parsed = await geminiJsonWithHistory<{
     summary?: string;
     body?: string;
     links?: Array<{ label: string; url: string }>;
-  }>(
-    sys,
-    input.message,
-    {
-      type: "object",
-      properties: {
-        summary: { type: "string" },
-        body: { type: "string" },
-        links: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: { label: { type: "string" }, url: { type: "string" } },
-            required: ["label", "url"],
-          },
-        },
-      },
-      required: ["summary", "body"],
-    },
-    key,
-  );
+  }>(sys, input.message, history, schema, key);
 
   if (!parsed?.summary && !parsed?.body) {
     return { summary: "", body: "응답을 생성하지 못했습니다.", links: [] };

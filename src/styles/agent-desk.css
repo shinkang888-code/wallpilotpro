@@ -67,3 +67,35 @@
     box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
   }
 }
+
+.ad-kakao-chat {
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.ad-kakao-bubble-user,
+.ad-kakao-bubble-bot {
+  word-break: break-word;
+  animation: ad-bubble-in 0.25s ease-out;
+}
+
+.ad-kakao-bubble-bot .prose p {
+  margin: 0.35em 0;
+}
+
+.ad-kakao-bubble-bot .prose h1,
+.ad-kakao-bubble-bot .prose h2,
+.ad-kakao-bubble-bot .prose h3 {
+  margin: 0.5em 0 0.25em;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ad-kakao-bubble-bot .prose ul,
+.ad-kakao-bubble-bot .prose ol {
+  margin: 0.35em 0;
+  padding-left: 1.1rem;
+}
+
+.ad-kakao-bubble-bot .prose table {
+  font-size: 0.75rem;
+}

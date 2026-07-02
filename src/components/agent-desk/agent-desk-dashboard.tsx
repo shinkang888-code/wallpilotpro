@@ -12,12 +12,14 @@ import { useAgentDesk } from "@/lib/agent-desk/use-agent-desk";
 import { useI18n } from "@/lib/i18n";
 import type { Department, Employee } from "@/lib/office/types";
 import { useAuth } from "@/lib/use-auth";
+import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
 
 import "@/styles/agent-desk.css";
 
 export function AgentDeskDashboard() {
   const { t } = useI18n();
   const { accessToken } = useAuth();
+  const { key: geminiApiKey } = useGeminiApiKey();
   const { company, events, routeBindings, loading, checking, runSiteCheck, refresh } =
     useAgentDesk(accessToken);
 
@@ -181,6 +183,7 @@ export function AgentDeskDashboard() {
           leader={chatTarget.leader}
           dept={chatTarget.dept}
           accessToken={accessToken}
+          geminiApiKey={geminiApiKey}
           onClose={() => setChatTarget(null)}
         />
       )}
