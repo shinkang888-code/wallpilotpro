@@ -11,7 +11,7 @@ import type { CompanyData, OfficeEvent } from "@/lib/office/types";
 
 const POLL_MS = 15_000;
 
-export function useAgentDesk(accessToken: string | null) {
+export function useAgentDesk(accessToken: string | null, guestId?: string) {
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [events, setEvents] = useState<OfficeEvent[]>([]);
   const [routeBindings, setRouteBindings] = useState<Record<string, BuildingRouteBinding>>({});
@@ -21,8 +21,8 @@ export function useAgentDesk(accessToken: string | null) {
   const refresh = useCallback(async () => {
     try {
       const [c, e, ani] = await Promise.all([
-        getAgentDeskCompany({ data: { accessToken } }),
-        getAgentDeskEvents({ data: { accessToken } }),
+        getAgentDeskCompany({ data: { accessToken, guestId } }),
+        getAgentDeskEvents({ data: { accessToken, guestId } }),
         getAniStudioBindings({ data: { accessToken } }),
       ]);
       setCompany(c);
@@ -35,7 +35,7 @@ export function useAgentDesk(accessToken: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, guestId]);
 
   useEffect(() => {
     void refresh();
@@ -47,13 +47,13 @@ export function useAgentDesk(accessToken: string | null) {
     if (!accessToken) return;
     setChecking(true);
     try {
-      const { sites } = await runAgentDeskSiteCheck({ data: { accessToken } });
+      const { sites } = await runAgentDeskSiteCheck({ data: { accessToken, guestId } });
       setCompany((prev) => (prev ? { ...prev, sites } : prev));
       await refresh();
     } finally {
       setChecking(false);
     }
-  }, [accessToken, refresh]);
+  }, [accessToken, guestId, refresh]);
 
   return { company, events, routeBindings, loading, checking, refresh, runSiteCheck };
 }

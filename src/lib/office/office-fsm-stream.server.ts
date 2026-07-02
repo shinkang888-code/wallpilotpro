@@ -1,5 +1,6 @@
 import { resolveAuthSession } from "@/lib/auth/session.server";
 import { isTrialDemoMode } from "@/lib/membership/trial-demo";
+import { isValidGuestId, loadGuestWorkspace } from "@/lib/office/guest-office.server";
 import { loadFsmSnapshots } from "@/lib/office/office-fsm.server";
 
 const REPLAY_MS = 550;
@@ -13,17 +14,18 @@ function sseEvent(event: string, data: unknown): string {
 export async function handleOfficeFsmStream(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const token = url.searchParams.get("token") ?? "";
+  const guestId = url.searchParams.get("guestId") ?? "";
   const orderId = url.searchParams.get("orderId") ?? undefined;
 
   const session = token ? await resolveAuthSession(token) : null;
-  if (!session?.user.id) {
+  const userId = session?.user.id ?? null;
+
+  if (!userId && !isValidGuestId(guestId)) {
     if (!isTrialDemoMode()) {
       return new Response("unauthorized", { status: 401 });
     }
-    return new Response("auth_required_for_fsm", { status: 401 });
+    return new Response("office_actor_required", { status: 401 });
   }
-
-  const userId = session.user.id;
   const encoder = new TextEncoder();
   let lastId = 0;
   let closed = false;
@@ -35,7 +37,11 @@ export async function handleOfficeFsmStream(request: Request): Promise<Response>
         controller.enqueue(encoder.encode(sseEvent(event, data)));
       };
 
-      const history = await loadFsmSnapshots(userId, { orderId, limit: 80 });
+      const history = userId
+        ? await loadFsmSnapshots(userId, { orderId, limit: 80 })
+        : (await loadGuestWorkspace(guestId)).fsm_snapshots.filter(
+            (s) => !orderId || s.order_id === orderId,
+          );
       for (const snap of history) {
         send("snapshot", snap);
         lastId = Math.max(lastId, snap.id);
@@ -45,11 +51,9 @@ export async function handleOfficeFsmStream(request: Request): Promise<Response>
 
       const poll = async () => {
         while (!closed) {
-          const fresh = await loadFsmSnapshots(userId, {
-            orderId,
-            sinceId: lastId,
-            limit: 20,
-          });
+          const fresh = userId
+            ? await loadFsmSnapshots(userId, { orderId, sinceId: lastId, limit: 20 })
+            : (await loadGuestWorkspace(guestId)).fsm_snapshots.filter((s) => s.id > lastId);
           for (const snap of fresh) {
             send("snapshot", snap);
             lastId = Math.max(lastId, snap.id);

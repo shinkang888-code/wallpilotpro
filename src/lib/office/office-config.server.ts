@@ -1,6 +1,8 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/db/supabase.server";
+import { uploadCeoOrderZipArtifact } from "@/lib/office/artifact-storage.server";
 import { appendFsmSnapshot, buildFsmSnapshot } from "@/lib/office/office-fsm.server";
 import type { CeoOrderFsmState } from "@/lib/office/constitution";
+import { inferConstitutionRole } from "@/lib/office/constitution";
 import { buildSeedCompany } from "@/lib/office/seed-agency";
 import type {
   CeoOrder,
@@ -439,6 +441,7 @@ function mapReportRow(row: Record<string, unknown>): OfficeReport {
     source_type: row.source_type as string,
     ceo_order_id: (row.ceo_order_id as string) ?? null,
     fsm_state: row.fsm_state as string,
+    artifact_path: (row.artifact_path as string) ?? null,
     created_at: row.created_at as string,
   };
 }
@@ -555,6 +558,7 @@ function mapCeoOrderRow(row: Record<string, unknown>): CeoOrder {
     status: row.status as string,
     fsm_state: row.fsm_state as string,
     version: row.version as number,
+    artifact_path: (row.artifact_path as string) ?? null,
     created_at: row.created_at as string,
     completed_at: (row.completed_at as string) ?? null,
   };
@@ -603,6 +607,21 @@ export async function approveCeoOrder(userId: string, orderId: string): Promise<
     status: "completed",
     completed_at: new Date().toISOString(),
   });
+
+  const artifactPath = await uploadCeoOrderZipArtifact(userId, {
+    ...order,
+    fsm_state: "COMPLETED",
+    status: "completed",
+    completed_at: new Date().toISOString(),
+    results: order.results,
+  });
+  if (artifactPath) {
+    await admin
+      .from("office_ceo_orders")
+      .update({ artifact_path: artifactPath })
+      .eq("user_id", userId)
+      .eq("id", orderId);
+  }
 
   const company = await loadMergedCompany(userId);
   await emitCeoOrderFsm(userId, company, orderId, "COMPLETED", (order.version ?? 1) + 3);

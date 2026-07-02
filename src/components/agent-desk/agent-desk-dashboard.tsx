@@ -17,10 +17,10 @@ import {
 } from "@/components/agent-desk/report-archive-drawer";
 import { WorkChatSheet } from "@/components/agent-desk/work-chat-sheet";
 import { useAgentDesk } from "@/lib/agent-desk/use-agent-desk";
+import { useOfficeApiContext } from "@/lib/agent-desk/use-office-api-context";
 import { useOfficeFsm } from "@/lib/agent-desk/use-office-fsm";
 import { useI18n } from "@/lib/i18n";
 import type { Department, Employee } from "@/lib/office/types";
-import { useAuth } from "@/lib/use-auth";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
 
 import "@/styles/agent-desk.css";
@@ -35,11 +35,12 @@ type Panel =
 
 export function AgentDeskDashboard() {
   const { t } = useI18n();
-  const { accessToken } = useAuth();
+  const { accessToken, guestId } = useOfficeApiContext();
   const { key: geminiApiKey } = useGeminiApiKey();
+  const officeCtx = { accessToken, guestId };
   const { company, events, routeBindings, loading, checking, runSiteCheck, refresh } =
-    useAgentDesk(accessToken);
-  const { snapshot: fsmSnapshot, streaming: fsmStreaming } = useOfficeFsm(accessToken);
+    useAgentDesk(accessToken, guestId);
+  const { snapshot: fsmSnapshot, streaming: fsmStreaming } = useOfficeFsm(accessToken, guestId);
 
   const [view, setView] = useState<"grid" | "building">("grid");
   const [panel, setPanel] = useState<Panel>(null);
@@ -168,7 +169,7 @@ export function AgentDeskDashboard() {
       {panel === "dept_manage" && (
         <DeptManageDialog
           departments={company.departments}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setPanel(null)}
           onSaved={() => void refresh()}
         />
@@ -176,7 +177,7 @@ export function AgentDeskDashboard() {
       {panel === "employee_assign" && (
         <EmployeeAssignDialog
           company={company}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setPanel(null)}
           onSaved={() => void refresh()}
         />
@@ -184,7 +185,7 @@ export function AgentDeskDashboard() {
       {panel === "persona" && (
         <PersonaEditorDialog
           company={company}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setPanel(null)}
           onSaved={() => void refresh()}
         />
@@ -192,19 +193,19 @@ export function AgentDeskDashboard() {
       {panel === "ceo_bulk" && (
         <CeoBulkCommandPanel
           company={company}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setPanel(null)}
           onDone={() => void refresh()}
         />
       )}
       {panel === "archive" && (
-        <ReportArchiveDrawer accessToken={accessToken} onClose={() => setPanel(null)} />
+        <ReportArchiveDrawer {...officeCtx} onClose={() => setPanel(null)} />
       )}
 
       {editingDept && (
         <DeptProfileDialog
           dept={editingDept}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setEditingDept(null)}
           onSaved={() => void refresh()}
         />
@@ -214,7 +215,7 @@ export function AgentDeskDashboard() {
         <WorkChatSheet
           leader={chatTarget.leader}
           dept={chatTarget.dept}
-          accessToken={accessToken}
+          {...officeCtx}
           geminiApiKey={geminiApiKey}
           onClose={() => setChatTarget(null)}
         />
@@ -225,7 +226,7 @@ export function AgentDeskDashboard() {
           dept={reportTarget.dept}
           leader={reportTarget.leader}
           items={reportTarget.items}
-          accessToken={accessToken}
+          {...officeCtx}
           onClose={() => setReportTarget(null)}
         />
       )}

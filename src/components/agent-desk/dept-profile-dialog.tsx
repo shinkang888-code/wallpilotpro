@@ -1,25 +1,24 @@
 import { useState } from "react";
 
 import { patchAgentDeskDeptProfile } from "@/lib/api/office.functions";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import type { Department } from "@/lib/office/types";
 
-type Props = {
+type Props = OfficeApiContext & {
   dept: Department;
-  accessToken: string | null;
   onClose: () => void;
   onSaved: (dept: Department) => void;
 };
 
-export function DeptProfileDialog({ dept, accessToken, onClose, onSaved }: Props) {
+export function DeptProfileDialog({ dept, accessToken, guestId, onClose, onSaved }: Props) {
   const [name, setName] = useState(dept.real_member_name ?? "");
   const [saving, setSaving] = useState(false);
 
   async function save() {
-    if (!accessToken) return;
     setSaving(true);
     try {
       const res = await patchAgentDeskDeptProfile({
-        data: { deptSlug: dept.slug, realMemberName: name, accessToken },
+        data: { deptSlug: dept.slug, realMemberName: name, accessToken, guestId },
       });
       if (res.dept) onSaved(res.dept);
       onClose();

@@ -15,14 +15,14 @@ import {
   type ExportFormat,
 } from "@/lib/agent-desk/chat-document-export";
 import type { ChatMessage } from "@/lib/agent-desk/chat-types";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import { postAgentDeskChat } from "@/lib/api/office.functions";
 import { useI18n } from "@/lib/i18n";
 import type { Department, Employee } from "@/lib/office/types";
 
-type Props = {
+type Props = OfficeApiContext & {
   leader: Employee;
   dept: Department;
-  accessToken: string | null;
   geminiApiKey?: string | null;
   onClose: () => void;
 };
@@ -46,7 +46,7 @@ const EXPORT_BUTTONS: Array<{ format: ExportFormat; label: string; ext: string }
   { format: "txt", label: "TXT", ext: ".txt" },
 ];
 
-export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose }: Props) {
+export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey, onClose }: Props) {
   const { t } = useI18n();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -100,6 +100,7 @@ export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose
           },
           history,
           accessToken,
+          guestId,
           geminiApiKey: geminiApiKey ?? undefined,
         },
       });

@@ -1,12 +1,14 @@
 import { CheckCircle2, Download, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import {
   exportChatDocument,
   exportCeoOrderZip,
   type ExportFormat,
 } from "@/lib/agent-desk/chat-document-export";
 import {
+  getAgentDeskArtifactUrl,
   getAgentDeskReports,
   postAgentDeskApproveCeoOrder,
   postAgentDeskCeoBulkOrder,
@@ -19,20 +21,18 @@ const FORMATS: ExportFormat[] = ["docx", "hwp", "pptx", "pdf", "txt"];
 
 export function ReportArchiveDrawer({
   accessToken,
+  guestId,
   onClose,
-}: {
-  accessToken: string | null;
-  onClose: () => void;
-}) {
+}: OfficeApiContext & { onClose: () => void }) {
   const [reports, setReports] = useState<OfficeReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void getAgentDeskReports({ data: { accessToken } }).then((r) => {
+    void getAgentDeskReports({ data: { accessToken, guestId } }).then((r) => {
       setReports(r);
       setLoading(false);
     });
-  }, [accessToken]);
+  }, [accessToken, guestId]);
 
   return (
     <DrawerShell title="보고서 보관함" subtitle="AI 아티팩트 영속화 · 재다운로드" onClose={onClose}>
@@ -56,6 +56,20 @@ export function ReportArchiveDrawer({
                 <p className="mt-1 text-xs text-[#3182f6]">{r.summary}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-1">
+                {(r.artifact_path || r.ceo_order_id) && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { url } = await getAgentDeskArtifactUrl({
+                        data: { reportId: r.id, accessToken, guestId },
+                      });
+                      if (url) window.open(url, "_blank");
+                    }}
+                    className="rounded-lg bg-[#3182f6]/10 px-2 py-0.5 text-[10px] font-semibold text-[#3182f6]"
+                  >
+                    서버 ZIP
+                  </button>
+                )}
                 {FORMATS.map((f) => (
                   <button
                     key={f}
@@ -88,11 +102,11 @@ export function ReportArchiveDrawer({
 export function CeoBulkCommandPanel({
   company,
   accessToken,
+  guestId,
   onClose,
   onDone,
-}: {
+}: OfficeApiContext & {
   company: CompanyData;
-  accessToken: string | null;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -122,6 +136,7 @@ export function CeoBulkCommandPanel({
           target_mode: mode,
           target_dept_slugs: mode === "selected" ? [...selected] : undefined,
           accessToken,
+          guestId,
           geminiApiKey: geminiApiKey ?? undefined,
         },
       });
@@ -137,7 +152,7 @@ export function CeoBulkCommandPanel({
     setLoading(true);
     try {
       const { order: updated } = await postAgentDeskApproveCeoOrder({
-        data: { orderId: order.id, accessToken },
+        data: { orderId: order.id, accessToken, guestId },
       });
       setOrder(updated);
       onDone();

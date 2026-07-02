@@ -2,17 +2,17 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { DialogShell } from "@/components/agent-desk/dept-manage-dialog";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import { postAgentDeskUpsertEmployee } from "@/lib/api/office.functions";
 import type { CompanyData } from "@/lib/office/types";
 
-type Props = {
+type Props = OfficeApiContext & {
   company: CompanyData;
-  accessToken: string | null;
   onClose: () => void;
   onSaved: () => void;
 };
 
-export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: Props) {
+export function PersonaEditorDialog({ company, accessToken, guestId, onClose, onSaved }: Props) {
   const [slug, setSlug] = useState(company.employees[0]?.slug ?? "");
   const [vibe, setVibe] = useState(company.employees[0]?.vibe ?? "");
   const [constitutionPrompt, setConstitutionPrompt] = useState(
@@ -20,6 +20,12 @@ export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: 
   );
   const [constitutionRole, setConstitutionRole] = useState(
     company.employees[0]?.constitution_role ?? "operator",
+  );
+  const [workspaceX, setWorkspaceX] = useState(
+    String(company.employees[0]?.workspace_x_pct ?? ""),
+  );
+  const [workspaceY, setWorkspaceY] = useState(
+    String(company.employees[0]?.workspace_y_pct ?? ""),
   );
   const [loading, setLoading] = useState(false);
 
@@ -31,12 +37,16 @@ export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: 
     setVibe(e?.vibe ?? "");
     setConstitutionPrompt(e?.constitution_prompt ?? "");
     setConstitutionRole(e?.constitution_role ?? "operator");
+    setWorkspaceX(e?.workspace_x_pct != null ? String(e.workspace_x_pct) : "");
+    setWorkspaceY(e?.workspace_y_pct != null ? String(e.workspace_y_pct) : "");
   }
 
   async function save() {
     if (!emp) return;
     setLoading(true);
     try {
+      const x = workspaceX.trim() ? Number(workspaceX) : null;
+      const y = workspaceY.trim() ? Number(workspaceY) : null;
       await postAgentDeskUpsertEmployee({
         data: {
           slug: emp.slug,
@@ -49,7 +59,10 @@ export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: 
           constitution_prompt: constitutionPrompt.trim() || null,
           is_leader: emp.is_leader,
           seed_employee_id: emp.is_custom ? null : emp.id,
+          workspace_x_pct: Number.isFinite(x) ? x : null,
+          workspace_y_pct: Number.isFinite(y) ? y : null,
           accessToken,
+          guestId,
         },
       });
       onSaved();
@@ -61,7 +74,7 @@ export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: 
   return (
     <DialogShell
       title="역할·인격 설계"
-      subtitle="Leaf 헌법 규칙 — 인격어·말투·업무 중심 프롬프트"
+      subtitle="Leaf 헌법 규칙 — 인격어·말투·워크스페이스 좌표"
       onClose={onClose}
       wide
     >
@@ -112,6 +125,39 @@ export function PersonaEditorDialog({ company, accessToken, onClose, onSaved }: 
               className="w-full rounded-xl border border-[#e5e8eb] px-3 py-2 text-sm"
             />
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[#8b95a1]">
+                워크스페이스 X (%)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={workspaceX}
+                onChange={(e) => setWorkspaceX(e.target.value)}
+                placeholder="0–100"
+                className="w-full rounded-xl border border-[#e5e8eb] px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-[#8b95a1]">
+                워크스페이스 Y (%)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={workspaceY}
+                onChange={(e) => setWorkspaceY(e.target.value)}
+                placeholder="0–100"
+                className="w-full rounded-xl border border-[#e5e8eb] px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-[#8b95a1]">
+            빌딩뷰 캐릭터 배치 좌표 (비워두면 부서 기본 위치)
+          </p>
           <button
             type="button"
             disabled={loading}

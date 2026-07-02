@@ -10,18 +10,18 @@ import {
   inferConstitutionRole,
   type ConstitutionRole,
 } from "@/lib/office/constitution";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import type { Department } from "@/lib/office/types";
 
-type Props = {
+type Props = OfficeApiContext & {
   departments: Department[];
-  accessToken: string | null;
   onClose: () => void;
   onSaved: () => void;
 };
 
 const ROLES = Object.keys(CONSTITUTION_ROLE_META) as ConstitutionRole[];
 
-export function DeptManageDialog({ departments, accessToken, onClose, onSaved }: Props) {
+export function DeptManageDialog({ departments, accessToken, guestId, onClose, onSaved }: Props) {
   const [label, setLabel] = useState("");
   const [color, setColor] = useState("#3182f6");
   const [mission, setMission] = useState("");
@@ -49,6 +49,7 @@ export function DeptManageDialog({ departments, accessToken, onClose, onSaved }:
           mission: mission.trim() || null,
           constitution_role: constitutionRole,
           accessToken,
+          guestId,
         },
       });
       setLabel("");
@@ -64,7 +65,7 @@ export function DeptManageDialog({ departments, accessToken, onClose, onSaved }:
     if (!confirm("이 부서를 비활성화하시겠습니까?")) return;
     setLoading(true);
     try {
-      await postAgentDeskDeleteDepartment({ data: { slug, accessToken } });
+      await postAgentDeskDeleteDepartment({ data: { slug, accessToken, guestId } });
       onSaved();
     } finally {
       setLoading(false);

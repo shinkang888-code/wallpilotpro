@@ -67,13 +67,18 @@ Gemini system prompt = 부서 mission + 헌법 역할 템플릿 + vibe + constit
 - [x] 빌딩 뷰 FSM 동기화 (CEO Meeting Zone, Tier-1 런타임 우선)
 - [x] CEO 일괄 지시 ZIP 번들 다운로드
 
-### Phase 5 — 후속
-- S3/R2 오브젝트 스토리지 프로비저닝
-- Redis Pub/Sub 이중 채널 (멀티 인스턴스)
+### Phase 5 — 완료 (2025-07-02)
+- [x] 게스트 워크스페이스 (`office_guest_workspace`) — 비로그인 체험 영속화
+- [x] `office-actor` 통합 레이어 (user/guest CRUD·CEO 일괄·FSM)
+- [x] Stage Artifact Gate (summary/body 필수 검증)
+- [x] Supabase Storage ZIP 아티팩트 + signed URL 다운로드
+- [x] FSM SSE 게스트 `guestId` 지원
+- [x] 직원 신규 등록 UI · 워크스페이스 좌표 편집
 
 ## 6. 성공 기준
-- [ ] 부서 CRUD 동작
-- [ ] 직원 배치·팀장 지정 동작
-- [ ] 인격어 반영 채팅 답변
-- [ ] 보고서 DB 저장·보관함 조회
-- [ ] CEO 일괄 지시 → 부서별 답변 → 승인 → 보관
+- [x] 부서 CRUD 동작
+- [x] 직원 배치·팀장 지정·신규 등록 동작
+- [x] 인격어 반영 채팅 답변
+- [x] 보고서 DB 저장·보관함 조회
+- [x] CEO 일괄 지시 → 부서별 답변 → 승인 → 보관
+- [x] 비로그인 게스트 체험 (localStorage guestId)

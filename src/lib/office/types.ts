@@ -105,6 +105,7 @@ export type OfficeReport = {
   source_type: string;
   ceo_order_id: string | null;
   fsm_state: string;
+  artifact_path?: string | null;
   created_at: string;
 };
 
@@ -116,6 +117,7 @@ export type CeoOrder = {
   status: string;
   fsm_state: string;
   version: number;
+  artifact_path?: string | null;
   created_at: string;
   completed_at: string | null;
   results?: CeoOrderResult[];

@@ -5,15 +5,17 @@ import type { OfficeFsmSnapshot } from "@/lib/office/office-fsm.server";
 
 const POLL_MS = 3000;
 
-export function useOfficeFsm(accessToken: string | null) {
+export function useOfficeFsm(accessToken: string | null, guestId?: string) {
   const [snapshot, setSnapshot] = useState<OfficeFsmSnapshot | null>(null);
   const [streaming, setStreaming] = useState(false);
 
+  const hasActor = !!accessToken || !!guestId;
+
   const refresh = useCallback(async () => {
-    if (!accessToken) return;
-    const snap = await getAgentDeskLatestFsm({ data: { accessToken } });
+    if (!hasActor) return;
+    const snap = await getAgentDeskLatestFsm({ data: { accessToken, guestId } });
     setSnapshot(snap);
-  }, [accessToken]);
+  }, [accessToken, guestId, hasActor]);
 
   useEffect(() => {
     void refresh();
@@ -22,9 +24,12 @@ export function useOfficeFsm(accessToken: string | null) {
   }, [refresh]);
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!hasActor) return;
 
-    const url = `/api/agent-desk/fsm-stream?token=${encodeURIComponent(accessToken)}`;
+    const params = new URLSearchParams();
+    if (accessToken) params.set("token", accessToken);
+    if (guestId) params.set("guestId", guestId);
+    const url = `/api/agent-desk/fsm-stream?${params.toString()}`;
     let es: EventSource | null = null;
 
     try {
@@ -50,7 +55,7 @@ export function useOfficeFsm(accessToken: string | null) {
       es?.close();
       setStreaming(false);
     };
-  }, [accessToken]);
+  }, [accessToken, guestId, hasActor]);
 
   return { snapshot, streaming, refresh };
 }

@@ -1,21 +1,25 @@
-import { Loader2, Star } from "lucide-react";
+import { Loader2, Plus, Star, UserPlus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { DialogShell } from "@/components/agent-desk/dept-manage-dialog";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import { postAgentDeskUpsertEmployee } from "@/lib/api/office.functions";
 import type { CompanyData, Employee } from "@/lib/office/types";
 
-type Props = {
+type Props = OfficeApiContext & {
   company: CompanyData;
-  accessToken: string | null;
   onClose: () => void;
   onSaved: () => void;
 };
 
-export function EmployeeAssignDialog({ company, accessToken, onClose, onSaved }: Props) {
+export function EmployeeAssignDialog({ company, accessToken, guestId, onClose, onSaved }: Props) {
   const [deptSlug, setDeptSlug] = useState(company.departments[0]?.slug ?? "");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newEmoji, setNewEmoji] = useState("🤖");
 
   const deptEmployees = useMemo(
     () => company.employees.filter((e) => e.department_slug === deptSlug),
@@ -40,8 +44,34 @@ export function EmployeeAssignDialog({ company, accessToken, onClose, onSaved }:
           is_leader: true,
           seed_employee_id: emp.is_custom ? null : emp.id,
           accessToken,
+          guestId,
         },
       });
+      onSaved();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function createEmployee() {
+    if (!newName.trim()) return;
+    setLoading(true);
+    try {
+      await postAgentDeskUpsertEmployee({
+        data: {
+          department_slug: deptSlug,
+          name: newName.trim(),
+          description: newDescription.trim() || null,
+          emoji: newEmoji.trim() || "🤖",
+          is_leader: deptEmployees.length === 0,
+          accessToken,
+          guestId,
+        },
+      });
+      setNewName("");
+      setNewDescription("");
+      setNewEmoji("🤖");
+      setShowCreate(false);
       onSaved();
     } finally {
       setLoading(false);
@@ -51,7 +81,7 @@ export function EmployeeAssignDialog({ company, accessToken, onClose, onSaved }:
   return (
     <DialogShell
       title="직원 배치"
-      subtitle="부서별 AI 직원 확인 · 팀장 지정 (격리 워크스페이스)"
+      subtitle="부서별 AI 직원 확인 · 신규 등록 · 팀장 지정"
       onClose={onClose}
       wide
     >
@@ -73,9 +103,50 @@ export function EmployeeAssignDialog({ company, accessToken, onClose, onSaved }:
             ))}
           </select>
 
+          <button
+            type="button"
+            onClick={() => setShowCreate((v) => !v)}
+            className="mt-2 inline-flex items-center gap-1 rounded-lg bg-[#f2f4f6] px-2.5 py-1 text-xs font-semibold text-[#3182f6]"
+          >
+            <UserPlus className="size-3.5" />
+            AI 직원 신규 등록
+          </button>
+
+          {showCreate && (
+            <div className="mt-2 space-y-2 rounded-xl border border-[#3182f6]/30 bg-[#3182f6]/5 p-3">
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="직원 이름"
+                className="w-full rounded-lg border border-[#e5e8eb] px-2.5 py-1.5 text-sm"
+              />
+              <input
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                placeholder="역할 설명 (예: 데이터 분석 담당)"
+                className="w-full rounded-lg border border-[#e5e8eb] px-2.5 py-1.5 text-sm"
+              />
+              <input
+                value={newEmoji}
+                onChange={(e) => setNewEmoji(e.target.value)}
+                placeholder="이모지"
+                className="w-20 rounded-lg border border-[#e5e8eb] px-2.5 py-1.5 text-sm"
+              />
+              <button
+                type="button"
+                disabled={loading || !newName.trim()}
+                onClick={() => void createEmployee()}
+                className="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-[#3182f6] py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+                등록
+              </button>
+            </div>
+          )}
+
           <div className="mt-3 space-y-1.5">
             {deptEmployees.length === 0 ? (
-              <p className="text-xs text-[#8b95a1]">배치된 AI 직원이 없습니다.</p>
+              <p className="text-xs text-[#8b95a1]">배치된 AI 직원이 없습니다. 신규 등록하세요.</p>
             ) : (
               deptEmployees.map((emp) => (
                 <button

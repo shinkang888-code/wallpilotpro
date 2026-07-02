@@ -4,19 +4,19 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { postAgentDeskDeptReport } from "@/lib/api/office.functions";
+import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import type { Department, Employee } from "@/lib/office/types";
 import { STATUS_META } from "@/lib/office/types";
 import { cn } from "@/lib/utils";
 
-type Props = {
+type Props = OfficeApiContext & {
   dept: Department;
   leader: Employee;
   items: string[];
-  accessToken: string | null;
   onClose: () => void;
 };
 
-export function DeptReportDialog({ dept, leader, items, accessToken, onClose }: Props) {
+export function DeptReportDialog({ dept, leader, items, accessToken, guestId, onClose }: Props) {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,7 @@ export function DeptReportDialog({ dept, leader, items, accessToken, onClose }: 
             leaderName: leader.name,
             items,
             accessToken,
+            guestId,
           },
         });
         if (!cancelled) setBody(res.body);
@@ -47,7 +48,7 @@ export function DeptReportDialog({ dept, leader, items, accessToken, onClose }: 
     return () => {
       cancelled = true;
     };
-  }, [dept, leader, items, accessToken]);
+  }, [dept, leader, items, accessToken, guestId]);
 
   return (
     <div
