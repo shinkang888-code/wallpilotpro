@@ -18,10 +18,10 @@ const LEADER_CHITCHAT = [
 ];
 
 export function getTeamLeader(deptSlug: string, employees: Employee[]): Employee | null {
-  const dept = employees
-    .filter((e) => e.department_slug === deptSlug)
-    .sort((a, b) => a.id - b.id);
-  return dept[0] ?? null;
+  const dept = employees.filter((e) => e.department_slug === deptSlug);
+  const leader = dept.find((e) => e.is_leader);
+  if (leader) return leader;
+  return dept.sort((a, b) => a.id - b.id)[0] ?? null;
 }
 
 export function buildDeptReport(

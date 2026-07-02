@@ -86,7 +86,17 @@ export function WorkChatSheet({ leader, dept, accessToken, geminiApiKey, onClose
         data: {
           message: text,
           deptLabel: dept.label,
+          deptSlug: dept.slug,
           role: leader.description ?? leader.name,
+          employeeSlug: leader.slug,
+          employeeName: leader.name,
+          persona: {
+            employeeName: leader.name,
+            deptMission: dept.mission,
+            vibe: leader.vibe,
+            constitutionRole: leader.constitution_role ?? undefined,
+            constitutionPrompt: leader.constitution_prompt,
+          },
           history,
           accessToken,
           geminiApiKey: geminiApiKey ?? undefined,

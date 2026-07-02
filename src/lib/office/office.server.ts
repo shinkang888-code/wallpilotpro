@@ -1,5 +1,6 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/db/supabase.server";
-import { buildSeedCompany, buildSeedEvents } from "@/lib/office/seed-agency";
+import { buildSeedEvents } from "@/lib/office/seed-agency";
+import { loadMergedCompany } from "@/lib/office/office-config.server";
 import type {
   CompanyData,
   Department,
@@ -9,11 +10,6 @@ import type {
   Site,
 } from "@/lib/office/types";
 
-type ProfileRow = {
-  dept_slug: string;
-  real_member_name: string | null;
-};
-
 type EventRow = {
   id: number;
   actor: string | null;
@@ -22,29 +18,7 @@ type EventRow = {
 };
 
 export async function loadOfficeCompany(userId: string | null): Promise<CompanyData> {
-  const base = buildSeedCompany();
-
-  if (!userId || !isSupabaseConfigured()) return base;
-
-  const admin = getSupabaseAdmin();
-  if (!admin) return base;
-
-  const { data: profiles } = await admin
-    .from("office_dept_profiles")
-    .select("dept_slug, real_member_name")
-    .eq("user_id", userId);
-
-  if (profiles?.length) {
-    const map = new Map(
-      (profiles as ProfileRow[]).map((p) => [p.dept_slug, p.real_member_name]),
-    );
-    base.departments = base.departments.map((d) => ({
-      ...d,
-      real_member_name: map.get(d.slug) ?? d.real_member_name,
-    }));
-  }
-
-  return base;
+  return loadMergedCompany(userId);
 }
 
 export async function loadOfficeEvents(userId: string | null): Promise<OfficeEvent[]> {

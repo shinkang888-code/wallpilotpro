@@ -1,4 +1,8 @@
 import { getServerConfig } from "@/lib/config.server";
+import {
+  buildPersonaSystemPrompt,
+  type ConstitutionRole,
+} from "@/lib/office/constitution";
 import { normalizeMarkdown } from "@/lib/office/markdown";
 import type { DeptReportInput, OfficeChatResult } from "@/lib/office/types";
 
@@ -93,6 +97,13 @@ export async function runOfficeTeamChat(input: {
   role: string;
   geminiApiKey?: string | null;
   history?: OfficeChatTurn[];
+  persona?: {
+    employeeName: string;
+    deptMission?: string | null;
+    vibe?: string | null;
+    constitutionRole?: string;
+    constitutionPrompt?: string | null;
+  };
 }): Promise<OfficeChatResult> {
   const key = input.geminiApiKey?.trim() || getServerConfig().geminiApiKey;
   if (!key) {
@@ -103,7 +114,17 @@ export async function runOfficeTeamChat(input: {
     };
   }
 
-  const sys = `너는 WallPilot Pro AI 증권사의 '${input.deptLabel}' 팀장이자 실무 전문가다. 역할: ${input.role}.
+  const sys = input.persona
+    ? buildPersonaSystemPrompt({
+        deptLabel: input.deptLabel,
+        deptMission: input.persona.deptMission,
+        employeeName: input.persona.employeeName,
+        roleDescription: input.role,
+        vibe: input.persona.vibe,
+        constitutionRole: (input.persona.constitutionRole as ConstitutionRole) ?? "operator",
+        constitutionPrompt: input.persona.constitutionPrompt,
+      })
+    : `너는 WallPilot Pro AI 증권사의 '${input.deptLabel}' 팀장이자 실무 전문가다. 역할: ${input.role}.
 대표(사용자)의 업무 지시·질문에 충실하고 구체적인 한국어 본문으로 답한다.
 - summary: 핵심 결론 한 문장
 - body: 마크다운 본문 (제목, 목록, 표 활용)

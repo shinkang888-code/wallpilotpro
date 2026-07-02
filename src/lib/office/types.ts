@@ -8,6 +8,10 @@ export type Department = {
   sort: number;
   real_member_name: string | null;
   has_real_avatar: boolean;
+  mission?: string | null;
+  constitution_role?: string | null;
+  is_custom?: boolean;
+  is_active?: boolean;
 };
 
 export type Employee = {
@@ -21,6 +25,12 @@ export type Employee = {
   vibe: string | null;
   status: EmployeeStatus;
   current_task: string | null;
+  constitution_role?: string | null;
+  constitution_prompt?: string | null;
+  is_leader?: boolean;
+  is_custom?: boolean;
+  workspace_x_pct?: number | null;
+  workspace_y_pct?: number | null;
 };
 
 export type Site = {
@@ -77,4 +87,46 @@ export type DeptReportInput = {
   deptSlug: string;
   leaderName: string;
   items: string[];
+};
+
+export type OfficeReport = {
+  id: number;
+  department_slug: string;
+  department_label: string;
+  employee_slug: string | null;
+  employee_name: string | null;
+  title: string;
+  summary: string | null;
+  body: string;
+  user_prompt: string | null;
+  links: Array<{ label: string; url: string }>;
+  source_type: string;
+  ceo_order_id: string | null;
+  fsm_state: string;
+  created_at: string;
+};
+
+export type CeoOrder = {
+  id: string;
+  message: string;
+  target_mode: string;
+  target_dept_slugs: string[];
+  status: string;
+  fsm_state: string;
+  version: number;
+  created_at: string;
+  completed_at: string | null;
+  results?: CeoOrderResult[];
+};
+
+export type CeoOrderResult = {
+  id: number;
+  department_slug: string;
+  department_label: string;
+  employee_slug: string | null;
+  employee_name: string | null;
+  summary: string | null;
+  body: string | null;
+  status: string;
+  error_message: string | null;
 };
