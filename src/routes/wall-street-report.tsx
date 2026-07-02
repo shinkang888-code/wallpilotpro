@@ -10,6 +10,9 @@ import { useRealtimeTradingData } from "@/lib/use-realtime-trading-data";
 import { useTossApiKey } from "@/lib/use-toss-api-key";
 
 export const Route = createFileRoute("/wall-street-report")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    symbol: typeof search.symbol === "string" ? search.symbol : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "WallPilot — 월가리포트" },
@@ -24,6 +27,7 @@ export const Route = createFileRoute("/wall-street-report")({
 
 function WallStreetReportPage() {
   const { t } = useI18n();
+  const { symbol } = Route.useSearch();
   const { key } = useTossApiKey();
   const auth = useAuth();
   const { key: geminiApiKey } = useGeminiApiKey();
@@ -53,7 +57,7 @@ function WallStreetReportPage() {
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">{t("ws_subtitle")}</p>
         </section>
 
-        <WallStreetReportPanel />
+        <WallStreetReportPanel initialSymbol={symbol} />
       </main>
     </div>
   );

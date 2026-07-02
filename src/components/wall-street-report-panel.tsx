@@ -26,7 +26,7 @@ const QUICK_PICKS: StockSearchResult[] = [
   { ticker: "TSLA", name: "Tesla", market: "US", yahooSymbol: "TSLA", exchange: "NMS" },
 ];
 
-export function WallStreetReportPanel() {
+export function WallStreetReportPanel({ initialSymbol }: { initialSymbol?: string } = {}) {
   const { t } = useI18n();
   const { accessToken, loading: authLoading, enforced, isActive, entitlements, isPending } = useAuth();
   const { key: geminiApiKey } = useGeminiApiKey();
@@ -89,12 +89,19 @@ export function WallStreetReportPanel() {
 
   useEffect(() => {
     const fromPilot = sessionStorage.getItem("wallpilot-ws-ticker");
-    if (!fromPilot) return;
-    sessionStorage.removeItem("wallpilot-ws-ticker");
-    setQuery(fromPilot);
-    void runReport(fromPilot);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- AI Pilot handoff only
-  }, [authLoading, canRunReport]);
+    if (fromPilot) {
+      sessionStorage.removeItem("wallpilot-ws-ticker");
+      setQuery(fromPilot);
+      void runReport(fromPilot);
+      return;
+    }
+    const symbol = initialSymbol?.trim();
+    if (symbol) {
+      setQuery(symbol);
+      void runReport(symbol);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handoff + URL deep link
+  }, [authLoading, canRunReport, initialSymbol]);
 
   const runDeepReport = async (symbol: string) => {
     if (!guardReport()) return;

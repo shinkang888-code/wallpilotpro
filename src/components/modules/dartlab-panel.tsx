@@ -91,7 +91,7 @@ function fmtPct(n: number | null): string {
 
 
 
-export function DartLabPanel() {
+export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
 
   const { t } = useI18n();
 
@@ -127,8 +127,6 @@ export function DartLabPanel() {
 
 
   const canRun = clientHasEntitlement(auth.enforced, auth.entitlements, "dart_lab");
-
-
 
   const runAnalysis = async (codeInput?: string) => {
     const code = (codeInput ?? stockCode).trim();
@@ -193,7 +191,13 @@ export function DartLabPanel() {
 
   };
 
-
+  useEffect(() => {
+    const code = initialCode?.trim();
+    if (!code || !/^\d{6}$/.test(code)) return;
+    setStockCode(code);
+    void runAnalysis(code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- URL deep link once
+  }, [initialCode]);
 
   const tabs: { id: TabId; label: string; icon: typeof Sparkles }[] = [
 

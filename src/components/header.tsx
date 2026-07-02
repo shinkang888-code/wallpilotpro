@@ -3,6 +3,7 @@ import { ExternalLink } from "lucide-react";
 
 import { AuthButton } from "@/components/auth-button";
 import { HeaderAppNav } from "@/components/header-app-nav";
+import { HeaderStockSearch } from "@/components/header-stock-search";
 import { LanguageMenu } from "@/components/language-menu";
 import { useI18n } from "@/lib/i18n";
 import { canAccessMenu } from "@/lib/membership/menu-access";
@@ -23,7 +24,7 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
   return (
     <header className="sticky top-0 z-30 w-full border-b border-hairline bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
       {/* Brand + utilities */}
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-start gap-3 px-4 py-2.5 sm:px-6 lg:flex-nowrap lg:items-center">
         <Link
           to="/"
           className="flex min-w-0 shrink-0 items-center rounded-lg transition-opacity hover:opacity-90"
@@ -37,7 +38,9 @@ export function Header({ walletBalance }: { walletBalance: { krw: number; usd: n
           />
         </Link>
 
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <HeaderStockSearch />
+
+        <div className="flex w-full items-center justify-end gap-1.5 sm:gap-2 lg:ml-0 lg:w-auto">
           <BalanceWidget balance={walletBalance} />
           <TossExternalLink />
           <div className="hidden h-5 w-px bg-hairline sm:block" aria-hidden />
