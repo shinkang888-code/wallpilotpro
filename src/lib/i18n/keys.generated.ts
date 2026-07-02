@@ -130,6 +130,7 @@ export type TranslationKey =
   | "dart_ai_source_vercel"
   | "dart_analysis_done"
   | "dart_analysis_rules_done"
+  | "dart_analysis_stop"
   | "dart_code_label"
   | "dart_code_pending"
   | "dart_cpa_badge"

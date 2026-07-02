@@ -130,13 +130,22 @@ export function DartCpaReport({ result }: { result: DartLabAnalysis }) {
   );
 }
 
-export function DartCpaLoadingState() {
+export function DartCpaLoadingState({ onStop }: { onStop?: () => void }) {
   const { t } = useI18n();
   return (
     <div className="rounded-2xl border border-dashed border-rose-200 bg-rose-50/40 p-6 text-center">
       <Sparkles className="mx-auto h-6 w-6 animate-pulse text-rose-600" />
       <p className="mt-3 text-sm font-semibold text-rose-900">{t("dart_cpa_loading")}</p>
       <p className="mt-1 text-xs text-muted-foreground">{t("dart_cpa_loading_hint")}</p>
+      {onStop ? (
+        <button
+          type="button"
+          onClick={onStop}
+          className="mt-4 inline-flex items-center justify-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-xs font-semibold text-rose-800 hover:bg-rose-50"
+        >
+          {t("dart_analysis_stop")}
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -300,6 +300,7 @@
   "dart_failed": "DART 분석에 실패했습니다. 잠시 후 다시 시도해 주세요.",
   "dart_search_placeholder": "6자리 코드 또는 회사명 (예: 005930, 삼성전자)",
   "dart_run_analysis": "DART 분석 실행",
+  "dart_analysis_stop": "분석 멈춤",
   "dart_analysis_done": "DART 분석이 완료되었습니다",
   "dart_invalid_code": "회사명을 입력하거나 오른쪽 종목코드가 채워질 때까지 기다려 주세요.",
   "dart_kr_only": "DARTLAB은 국내 상장 종목만 지원합니다.",

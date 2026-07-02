@@ -35,6 +35,7 @@ import {
 import { DartCpaConsultation } from "@/components/modules/dart-cpa-consultation";
 
 import { analyzeDartLab, getDartLabStatus } from "@/lib/api/dart.functions";
+import { resolveKrStockCode } from "@/lib/api/stock-search.functions";
 
 import { formatFeatureError } from "@/lib/auth/format-feature-error";
 
@@ -99,8 +100,8 @@ export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
 
   const { key: geminiApiKey } = useGeminiApiKey();
 
-  const [companyName, setCompanyName] = useState("삼성전자");
-  const [stockCode, setStockCode] = useState("005930");
+  const [companyName, setCompanyName] = useState("");
+  const [stockCode, setStockCode] = useState("");
 
   const [tab, setTab] = useState<TabId>("ai");
 
@@ -127,6 +128,16 @@ export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
 
 
   const canRun = clientHasEntitlement(auth.enforced, auth.entitlements, "dart_lab");
+
+  const stopAnalysis = () => {
+    requestSeq.current += 1;
+    setLoading(false);
+    setResult(null);
+    setError(null);
+    setCompanyName("");
+    setStockCode("");
+    setTab("ai");
+  };
 
   const runAnalysis = async (codeInput?: string) => {
     const code = (codeInput ?? stockCode).trim();
@@ -195,8 +206,14 @@ export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
     const code = initialCode?.trim();
     if (!code || !/^\d{6}$/.test(code)) return;
     setStockCode(code);
-    void runAnalysis(code);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- URL deep link once
+    void resolveKrStockCode({ data: { query: code } })
+      .then((item) => {
+        if (item.name) setCompanyName(item.name);
+      })
+      .catch(() => {
+        /* 코드만 채우고 분석은 사용자가 실행 */
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- URL deep link prefill only
   }, [initialCode]);
 
   const tabs: { id: TabId; label: string; icon: typeof Sparkles }[] = [
@@ -305,7 +322,7 @@ export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
 
 
 
-      {loading && !result ? <DartCpaLoadingState /> : null}
+      {loading && !result ? <DartCpaLoadingState onStop={stopAnalysis} /> : null}
 
 
 
@@ -397,7 +414,7 @@ export function DartLabPanel({ initialCode }: { initialCode?: string } = {}) {
 
               <DartCpaConsultation result={result} />
 
-              {loading ? <DartCpaLoadingState /> : null}
+              {loading ? <DartCpaLoadingState onStop={stopAnalysis} /> : null}
 
               {!loading ? <DartCpaReport result={result} /> : null}
 

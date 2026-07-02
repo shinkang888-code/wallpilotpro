@@ -301,6 +301,7 @@ export const pack = {
   "dart_failed": "DART analysis failed. Try again in a moment.",
   "dart_search_placeholder": "6-digit code or company name (e.g. 005930, Samsung)",
   "dart_run_analysis": "Analyze DART",
+  "dart_analysis_stop": "Stop analysis",
   "dart_analysis_done": "DART analysis complete",
   "dart_invalid_code": "Enter a company name or wait for the 6-digit code to appear.",
   "dart_kr_only": "DARTLAB supports KR listed stocks only.",
