@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
-import type { CeoOrderFsmState } from "@/lib/office/constitution";import { inferConstitutionRole } from "@/lib/office/constitution";
+import type { CeoOrderFsmState } from "@/lib/office/constitution";
+import { inferConstitutionRole } from "@/lib/office/constitution";
 import {
   loadGuestWorkspace,
   saveGuestWorkspace,
@@ -90,10 +91,11 @@ export async function appendEventForActor(
   actor: OfficeActor,
   who: string | null,
   message: string,
+  meta?: Partial<OfficeEvent>,
 ): Promise<void> {
   if (actor.kind === "user") {
     const { appendOfficeEvent } = await import("@/lib/office/office.server");
-    await appendOfficeEvent(actor.id, who, message);
+    await appendOfficeEvent(actor.id, who, message, meta as Record<string, unknown>);
     return;
   }
   const payload = await loadGuestPayload(actor);
@@ -102,8 +104,98 @@ export async function appendEventForActor(
     ts: new Date().toISOString(),
     actor: who,
     message,
+    ...meta,
   });
   payload.events = payload.events.slice(0, 50);
+  await persistGuest(actor, payload);
+}
+
+export type TaskEventInput = {
+  task_id: string;
+  actor: string | null;
+  message: string;
+  progress_pct: number;
+  task_status: OfficeEvent["task_status"];
+  department_slug?: string;
+  employee_slug?: string | null;
+  report_summary?: string | null;
+};
+
+export async function startTaskEventForActor(
+  actor: OfficeActor,
+  input: TaskEventInput,
+): Promise<void> {
+  await appendEventForActor(actor, input.actor, input.message, {
+    kind: "task",
+    task_id: input.task_id,
+    progress_pct: input.progress_pct,
+    task_status: input.task_status,
+    department_slug: input.department_slug ?? null,
+    employee_slug: input.employee_slug ?? null,
+    report_summary: null,
+  });
+}
+
+export async function updateTaskEventForActor(
+  actor: OfficeActor,
+  taskId: string,
+  patch: {
+    message: string;
+    progress_pct: number;
+    task_status: OfficeEvent["task_status"];
+    report_summary?: string | null;
+  },
+): Promise<void> {
+  if (actor.kind === "user") {
+    const { loadOfficeEvents, updateOfficeEventMeta } = await import("@/lib/office/office.server");
+    const events = await loadOfficeEvents(actor.id);
+    const row = events.find((e) => e.task_id === taskId);
+    if (!row) {
+      await appendEventForActor(actor, null, patch.message, {
+        kind: "task",
+        task_id: taskId,
+        progress_pct: patch.progress_pct,
+        task_status: patch.task_status,
+        report_summary: patch.report_summary ?? null,
+      });
+      return;
+    }
+    await updateOfficeEventMeta(actor.id, row.id, {
+      message: patch.message,
+      meta: {
+        kind: "task",
+        task_id: taskId,
+        progress_pct: patch.progress_pct,
+        task_status: patch.task_status,
+        report_summary: patch.report_summary ?? null,
+        department_slug: row.department_slug ?? null,
+        employee_slug: row.employee_slug ?? null,
+      },
+    });
+    return;
+  }
+
+  const payload = await loadGuestPayload(actor);
+  const idx = payload.events.findIndex((e) => e.task_id === taskId);
+  if (idx < 0) {
+    await startTaskEventForActor(actor, {
+      task_id: taskId,
+      actor: null,
+      message: patch.message,
+      progress_pct: patch.progress_pct,
+      task_status: patch.task_status,
+      report_summary: patch.report_summary,
+    });
+    return;
+  }
+  payload.events[idx] = {
+    ...payload.events[idx],
+    message: patch.message,
+    progress_pct: patch.progress_pct,
+    task_status: patch.task_status,
+    report_summary: patch.report_summary ?? null,
+    ts: new Date().toISOString(),
+  };
   await persistGuest(actor, payload);
 }
 

@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ActivityFeedPanel } from "@/components/agent-desk/activity-feed-panel";
 import { BuildingScene } from "@/components/agent-desk/building-scene";
@@ -20,7 +20,7 @@ import { useAgentDesk } from "@/lib/agent-desk/use-agent-desk";
 import { useOfficeApiContext } from "@/lib/agent-desk/use-office-api-context";
 import { useOfficeFsm } from "@/lib/agent-desk/use-office-fsm";
 import { useI18n } from "@/lib/i18n";
-import type { Department, Employee } from "@/lib/office/types";
+import type { Department, Employee, OfficeEvent } from "@/lib/office/types";
 import { useGeminiApiKey } from "@/lib/use-gemini-api-key";
 
 import "@/styles/agent-desk.css";
@@ -57,6 +57,17 @@ export function AgentDeskDashboard() {
     leader: Employee;
     items: string[];
   } | null>(null);
+  const [liveTasks, setLiveTasks] = useState<OfficeEvent[]>([]);
+
+  const displayEvents = useMemo(() => {
+    const serverTaskKeys = new Set(
+      events.filter((e) => e.kind === "task").map((e) => `${e.actor}-${e.message.slice(0, 40)}`),
+    );
+    const pending = liveTasks.filter(
+      (t) => !serverTaskKeys.has(`${t.actor}-${t.message.slice(0, 40)}`),
+    );
+    return [...pending, ...events];
+  }, [events, liveTasks]);
 
   useEffect(() => {
     if (!company) return;
@@ -163,7 +174,7 @@ export function AgentDeskDashboard() {
           onOpenReport={(dept, leader, items) => setReportTarget({ dept, leader, items })}
           onOpenChat={(employee, dept) => setChatTarget({ leader: employee, dept })}
         />
-        <ActivityFeedPanel events={events} className="lg:sticky lg:top-24" />
+        <ActivityFeedPanel events={displayEvents} className="lg:sticky lg:top-24" />
       </div>
 
       {panel === "dept_manage" && (
@@ -218,6 +229,11 @@ export function AgentDeskDashboard() {
           {...officeCtx}
           geminiApiKey={geminiApiKey}
           onClose={() => setChatTarget(null)}
+          onTaskStart={(ev) => setLiveTasks((prev) => [ev, ...prev])}
+          onTaskEnd={() => {
+            setLiveTasks([]);
+            void refresh();
+          }}
         />
       )}
 

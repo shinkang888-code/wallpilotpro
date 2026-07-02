@@ -63,6 +63,13 @@ export type OfficeEvent = {
   ts: string;
   actor: string | null;
   message: string;
+  kind?: "system" | "task" | "alert";
+  task_id?: string;
+  progress_pct?: number;
+  task_status?: "assigned" | "running" | "completed" | "failed";
+  report_summary?: string | null;
+  department_slug?: string | null;
+  employee_slug?: string | null;
 };
 
 export const STATUS_META: Record<

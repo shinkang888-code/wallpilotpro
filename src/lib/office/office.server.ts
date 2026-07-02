@@ -15,7 +15,25 @@ type EventRow = {
   actor: string | null;
   message: string;
   created_at: string;
+  meta?: Record<string, unknown> | null;
 };
+
+function mapEventRow(r: EventRow): OfficeEvent {
+  const meta = (r.meta ?? {}) as Record<string, unknown>;
+  return {
+    id: r.id,
+    ts: r.created_at,
+    actor: r.actor,
+    message: r.message,
+    kind: (meta.kind as OfficeEvent["kind"]) ?? undefined,
+    task_id: (meta.task_id as string) ?? undefined,
+    progress_pct: typeof meta.progress_pct === "number" ? meta.progress_pct : undefined,
+    task_status: (meta.task_status as OfficeEvent["task_status"]) ?? undefined,
+    report_summary: (meta.report_summary as string) ?? undefined,
+    department_slug: (meta.department_slug as string) ?? undefined,
+    employee_slug: (meta.employee_slug as string) ?? undefined,
+  };
+}
 
 export async function loadOfficeCompany(userId: string | null): Promise<CompanyData> {
   return loadMergedCompany(userId);
@@ -31,19 +49,14 @@ export async function loadOfficeEvents(userId: string | null): Promise<OfficeEve
 
   const { data: rows } = await admin
     .from("office_event_log")
-    .select("id, actor, message, created_at")
+    .select("id, actor, message, created_at, meta")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (!rows?.length) return seed;
 
-  const dbEvents: OfficeEvent[] = (rows as EventRow[]).map((r) => ({
-    id: r.id,
-    ts: r.created_at,
-    actor: r.actor,
-    message: r.message,
-  }));
+  const dbEvents: OfficeEvent[] = (rows as EventRow[]).map(mapEventRow);
 
   return [...dbEvents, ...seed].slice(0, 60);
 }
@@ -76,17 +89,40 @@ export async function appendOfficeEvent(
   userId: string,
   actor: string | null,
   message: string,
+  meta?: Record<string, unknown>,
+): Promise<number | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data } = await admin
+    .from("office_event_log")
+    .insert({
+      user_id: userId,
+      actor,
+      message,
+      meta: meta ?? {},
+    })
+    .select("id")
+    .single();
+
+  return (data?.id as number) ?? null;
+}
+
+export async function updateOfficeEventMeta(
+  userId: string,
+  eventId: number,
+  patch: { message?: string; meta: Record<string, unknown> },
 ): Promise<void> {
   if (!isSupabaseConfigured()) return;
-
   const admin = getSupabaseAdmin();
   if (!admin) return;
 
-  await admin.from("office_event_log").insert({
-    user_id: userId,
-    actor,
-    message,
-  });
+  const update: Record<string, unknown> = { meta: patch.meta };
+  if (patch.message !== undefined) update.message = patch.message;
+
+  await admin.from("office_event_log").update(update).eq("user_id", userId).eq("id", eventId);
 }
 
 export async function patchEmployeeTask(

@@ -12,7 +12,8 @@ export function assertChatArtifactGate(result: OfficeChatResult): void {
   if (!result.summary?.trim() && !result.body?.trim()) {
     throw new ArtifactGateError("artifact_gate_empty_response");
   }
-  if (!result.body?.trim() || result.body.trim().length < 20) {
+  const combined = `${result.summary ?? ""}\n${result.body ?? ""}`.trim();
+  if (combined.length < 10) {
     throw new ArtifactGateError("artifact_gate_body_too_short");
   }
 }

@@ -18,14 +18,30 @@ import type { ChatMessage } from "@/lib/agent-desk/chat-types";
 import type { OfficeApiContext } from "@/lib/agent-desk/office-api-context";
 import { postAgentDeskChat } from "@/lib/api/office.functions";
 import { useI18n } from "@/lib/i18n";
-import type { Department, Employee } from "@/lib/office/types";
+import type { Department, Employee, OfficeEvent } from "@/lib/office/types";
 
 type Props = OfficeApiContext & {
   leader: Employee;
   dept: Department;
   geminiApiKey?: string | null;
   onClose: () => void;
+  onTaskStart?: (event: OfficeEvent) => void;
+  onTaskEnd?: () => void;
 };
+
+function formatChatError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes("artifact_gate")) {
+    return "AI 응답이 보고서 기준에 미달합니다. 질문을 구체적으로 다시 입력해 주세요.";
+  }
+  if (msg.includes("office_actor_required")) {
+    return "세션을 불러오지 못했습니다. 페이지를 새로고침 후 다시 시도해 주세요.";
+  }
+  if (msg.includes("GEMINI") || msg.includes("API")) {
+    return msg;
+  }
+  return msg || "요청 처리에 실패했습니다.";
+}
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString("ko-KR", {
@@ -46,15 +62,26 @@ const EXPORT_BUTTONS: Array<{ format: ExportFormat; label: string; ext: string }
   { format: "txt", label: "TXT", ext: ".txt" },
 ];
 
-export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey, onClose }: Props) {
+export function WorkChatSheet({
+  leader,
+  dept,
+  accessToken,
+  guestId,
+  geminiApiKey,
+  onClose,
+  onTaskStart,
+  onTaskEnd,
+}: Props) {
   const { t } = useI18n();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [errorHint, setErrorHint] = useState<string | null>(null);
   const [llmInfo, setLlmInfo] = useState<{ vendor?: string; fallback?: boolean } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastUserPromptRef = useRef("");
+  const composingRef = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -75,7 +102,20 @@ export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey
     lastUserPromptRef.current = text;
     setMessages((prev) => [...prev, userMsg]);
     setMessage("");
+    setErrorHint(null);
     setLoading(true);
+
+    onTaskStart?.({
+      id: -Date.now(),
+      ts: new Date().toISOString(),
+      actor: leader.name,
+      message: `업무 지시: ${text.slice(0, 80)}`,
+      kind: "task",
+      progress_pct: 20,
+      task_status: "running",
+      department_slug: dept.slug,
+      employee_slug: leader.slug,
+    });
 
     const history = messages.map((m) => ({
       role: m.role,
@@ -118,16 +158,20 @@ export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey
         vendor: res.llm_vendor ?? undefined,
         fallback: res.llm_fallback,
       });
-    } catch {
+      onTaskEnd?.();
+    } catch (err) {
+      const hint = formatChatError(err);
+      setErrorHint(hint);
       setMessages((prev) => [
         ...prev,
         {
           id: makeId(),
           role: "assistant",
-          text: t("agent_desk_failed"),
+          text: hint,
           createdAt: Date.now(),
         },
       ]);
+      onTaskEnd?.();
     } finally {
       setLoading(false);
     }
@@ -281,13 +325,20 @@ export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onCompositionStart={() => {
+                composingRef.current = true;
+              }}
+              onCompositionEnd={() => {
+                composingRef.current = false;
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !composingRef.current) {
                   e.preventDefault();
                   void send();
                 }
               }}
               rows={1}
+              autoFocus
               placeholder={t("agent_desk_chat_placeholder")}
               className="max-h-28 min-h-[44px] min-w-0 flex-1 resize-none rounded-2xl border border-[#e5e8eb] bg-[#f9fafb] px-4 py-2.5 text-sm outline-none ring-[#3182f6] focus:bg-white focus:ring-2"
             />
@@ -301,7 +352,10 @@ export function WorkChatSheet({ leader, dept, accessToken, guestId, geminiApiKey
               <Send className="size-4" />
             </button>
           </div>
-          {latestAssistant && (
+          {errorHint && (
+            <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-[10px] text-red-700">{errorHint}</p>
+          )}
+          {latestAssistant && !errorHint && (
             <p className="mt-2 flex items-center gap-1 text-[10px] text-[#8b95a1]">
               <Download className="size-3" />
               {t("agent_desk_chat_export_hint")}

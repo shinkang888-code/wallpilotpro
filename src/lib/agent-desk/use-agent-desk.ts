@@ -9,7 +9,7 @@ import { getAniStudioBindings } from "@/lib/api/anistudio.functions";
 import type { BuildingRouteBinding } from "@/lib/anistudio/building-binding";
 import type { CompanyData, OfficeEvent } from "@/lib/office/types";
 
-const POLL_MS = 15_000;
+const POLL_MS = 8_000;
 
 export function useAgentDesk(accessToken: string | null, guestId?: string) {
   const [company, setCompany] = useState<CompanyData | null>(null);

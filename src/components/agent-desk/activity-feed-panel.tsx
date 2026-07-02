@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, Loader2, Search, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { OfficeEvent } from "@/lib/office/types";
@@ -11,6 +11,38 @@ type Props = {
   className?: string;
 };
 
+function TaskProgressBar({ pct, status }: { pct: number; status?: OfficeEvent["task_status"] }) {
+  const color =
+    status === "completed"
+      ? "bg-[#22c55e]"
+      : status === "failed"
+        ? "bg-[#ef4444]"
+        : "bg-[#3182f6]";
+
+  return (
+    <div className="mt-2">
+      <div className="mb-1 flex items-center justify-between text-[10px]">
+        <span className="font-semibold text-[#6b7684]">
+          {status === "completed"
+            ? "완료"
+            : status === "failed"
+              ? "실패"
+              : status === "running"
+                ? "진행 중"
+                : "대기"}
+        </span>
+        <span className="tabular-nums font-bold text-[#191f28]">{Math.round(pct)}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-[#e5e8eb]">
+        <div
+          className={cn("h-full rounded-full transition-all duration-500", color)}
+          style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ActivityFeedPanel({ events, className }: Props) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -21,7 +53,8 @@ export function ActivityFeedPanel({ events, className }: Props) {
     return events.filter(
       (e) =>
         (e.actor ?? "시스템").toLowerCase().includes(q) ||
-        e.message.toLowerCase().includes(q),
+        e.message.toLowerCase().includes(q) ||
+        (e.report_summary ?? "").toLowerCase().includes(q),
     );
   }, [events, search]);
 
@@ -67,11 +100,33 @@ export function ActivityFeedPanel({ events, className }: Props) {
         ) : (
           pageItems.map((ev) => (
             <li
-              key={`${ev.id}-${ev.ts}`}
-              className="rounded-lg border border-[#f2f4f6] bg-[#f9fafb] px-3 py-2"
+              key={`${ev.id}-${ev.ts}-${ev.task_id ?? ""}`}
+              className={cn(
+                "rounded-lg border px-3 py-2",
+                ev.kind === "task" ? "border-[#3182f6]/20 bg-[#3182f6]/5" : "border-[#f2f4f6] bg-[#f9fafb]",
+              )}
             >
-              <p className="font-semibold text-[#3182f6]">{ev.actor ?? "시스템"}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-semibold text-[#3182f6]">{ev.actor ?? "시스템"}</p>
+                {ev.kind === "task" && ev.task_status === "running" && (
+                  <Loader2 className="size-3.5 shrink-0 animate-spin text-[#3182f6]" />
+                )}
+                {ev.kind === "task" && ev.task_status === "completed" && (
+                  <CheckCircle2 className="size-3.5 shrink-0 text-[#22c55e]" />
+                )}
+                {ev.kind === "task" && ev.task_status === "failed" && (
+                  <XCircle className="size-3.5 shrink-0 text-[#ef4444]" />
+                )}
+              </div>
               <p className="mt-0.5 leading-relaxed text-[#4e5968]">{ev.message}</p>
+              {ev.kind === "task" && typeof ev.progress_pct === "number" && (
+                <TaskProgressBar pct={ev.progress_pct} status={ev.task_status} />
+              )}
+              {ev.kind === "task" && ev.task_status === "completed" && ev.report_summary && (
+                <p className="mt-2 rounded-md bg-white/80 px-2 py-1.5 text-[10px] leading-relaxed text-[#3182f6]">
+                  📋 완료 요약: {ev.report_summary}
+                </p>
+              )}
               <p className="mt-1 text-[10px] tabular-nums text-[#8b95a1]">
                 {new Date(ev.ts).toLocaleString("ko-KR")}
               </p>

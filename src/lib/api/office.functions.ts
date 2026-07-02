@@ -1,8 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
+import {
+  officeContextSchema,
+  optionalGeminiKeySchema,
+  optionalGuestIdSchema,
+} from "@/lib/api/office-api-schemas";
 import { guardAgentDeskTrial } from "@/lib/auth/guard-auth.server";
-import { clientGeminiKeySchema } from "@/lib/api/client-gemini-key";
 import { assertChatArtifactGate, assertReportBodyGate } from "@/lib/office/artifact-gate.server";
 import { generateDeptReportBody, runOfficeTeamChat } from "@/lib/office/gemini-chat.server";
 import { resolveOfficeActor } from "@/lib/office/guest-office.server";
@@ -20,16 +25,13 @@ import {
   runCeoBulkOrderForActor,
   saveDeptProfileForActor,
   saveReportForActor,
+  startTaskEventForActor,
+  updateTaskEventForActor,
   upsertDepartmentForActor,
   upsertEmployeeForActor,
 } from "@/lib/office/office-actor.server";
 import { deactivateUserEmployee } from "@/lib/office/office-config.server";
 import { checkOfficeSites, patchEmployeeTask } from "@/lib/office/office.server";
-
-const officeContextSchema = z.object({
-  accessToken: z.string().nullable().optional(),
-  guestId: z.string().uuid().optional(),
-});
 
 const chatTurnSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -105,7 +107,7 @@ export const getAgentDeskFsmHistory = createServerFn({ method: "GET" })
     z.object({
       orderId: z.string().uuid().optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -118,7 +120,7 @@ export const getAgentDeskArtifactUrl = createServerFn({ method: "GET" })
     z.object({
       reportId: z.number(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -140,43 +142,81 @@ export const postAgentDeskChat = createServerFn({ method: "POST" })
       persona: personaSchema.optional(),
       saveReport: z.boolean().optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
-      ...clientGeminiKeySchema.shape,
+      guestId: optionalGuestIdSchema,
+      ...optionalGeminiKeySchema.shape,
     }),
   )
   .handler(async ({ data }) => {
     const { actor } = await resolveActorCtx(data);
-    const result = await runOfficeTeamChat({
-      message: data.message,
-      deptLabel: data.deptLabel,
-      role: data.role,
-      history: data.history,
-      geminiApiKey: data.geminiApiKey,
-      persona: data.persona,
-    });
-    assertChatArtifactGate(result);
-    if (actor && data.saveReport !== false) {
-      await appendEventForActor(
-        actor,
-        data.employeeName ?? data.deptLabel,
-        `업무 지시: ${data.message.slice(0, 80)}`,
-      );
-      await saveReportForActor(actor, {
+    const taskId = randomUUID();
+    const actorName = data.employeeName ?? data.deptLabel;
+    const trackTask = actor && data.saveReport !== false;
+
+    if (trackTask) {
+      await startTaskEventForActor(actor, {
+        task_id: taskId,
+        actor: actorName,
+        message: `업무 지시: ${data.message.slice(0, 80)}`,
+        progress_pct: 25,
+        task_status: "running",
         department_slug: data.deptSlug,
-        department_label: data.deptLabel,
         employee_slug: data.employeeSlug ?? null,
-        employee_name: data.employeeName ?? null,
-        title: `${data.deptLabel} 업무보고`,
-        summary: result.summary,
-        body: result.body,
-        user_prompt: data.message,
-        links: result.links,
-        source_type: "chat",
-        ceo_order_id: null,
-        fsm_state: "COMPLETED",
       });
     }
-    return result;
+
+    try {
+      if (trackTask) {
+        await updateTaskEventForActor(actor, taskId, {
+          message: `분석 중: ${data.message.slice(0, 60)}…`,
+          progress_pct: 55,
+          task_status: "running",
+        });
+      }
+
+      const result = await runOfficeTeamChat({
+        message: data.message,
+        deptLabel: data.deptLabel,
+        role: data.role,
+        history: data.history,
+        geminiApiKey: data.geminiApiKey,
+        persona: data.persona,
+      });
+      assertChatArtifactGate(result);
+
+      if (trackTask) {
+        await updateTaskEventForActor(actor, taskId, {
+          message: `✅ 완료 보고: ${result.summary}`,
+          progress_pct: 100,
+          task_status: "completed",
+          report_summary: result.summary,
+        });
+        await saveReportForActor(actor, {
+          department_slug: data.deptSlug,
+          department_label: data.deptLabel,
+          employee_slug: data.employeeSlug ?? null,
+          employee_name: data.employeeName ?? null,
+          title: `${data.deptLabel} 업무보고`,
+          summary: result.summary,
+          body: result.body,
+          user_prompt: data.message,
+          links: result.links,
+          source_type: "chat",
+          ceo_order_id: null,
+          fsm_state: "COMPLETED",
+        });
+      }
+      return { ...result, task_id: trackTask ? taskId : undefined };
+    } catch (err) {
+      if (trackTask) {
+        const errMsg = err instanceof Error ? err.message : "unknown";
+        await updateTaskEventForActor(actor, taskId, {
+          message: `❌ 업무 실패: ${errMsg}`,
+          progress_pct: 100,
+          task_status: "failed",
+        });
+      }
+      throw err;
+    }
   });
 
 export const postAgentDeskDeptReport = createServerFn({ method: "POST" })
@@ -187,7 +227,7 @@ export const postAgentDeskDeptReport = createServerFn({ method: "POST" })
       leaderName: z.string(),
       items: z.array(z.string()),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -219,7 +259,7 @@ export const patchAgentDeskDeptProfile = createServerFn({ method: "POST" })
       deptSlug: z.string(),
       realMemberName: z.string(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -238,7 +278,7 @@ export const postAgentDeskUpsertDepartment = createServerFn({ method: "POST" })
       mission: z.string().nullable().optional(),
       constitution_role: z.string().optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -253,7 +293,7 @@ export const postAgentDeskDeleteDepartment = createServerFn({ method: "POST" })
     z.object({
       slug: z.string(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -279,7 +319,7 @@ export const postAgentDeskUpsertEmployee = createServerFn({ method: "POST" })
       workspace_x_pct: z.number().nullable().optional(),
       workspace_y_pct: z.number().nullable().optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -294,7 +334,7 @@ export const postAgentDeskDeleteEmployee = createServerFn({ method: "POST" })
     z.object({
       slug: z.string(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -322,8 +362,8 @@ export const postAgentDeskCeoBulkOrder = createServerFn({ method: "POST" })
       target_mode: z.enum(["all", "selected"]),
       target_dept_slugs: z.array(z.string()).optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
-      ...clientGeminiKeySchema.shape,
+      guestId: optionalGuestIdSchema,
+      ...optionalGeminiKeySchema.shape,
     }),
   )
   .handler(async ({ data }) => {
@@ -363,7 +403,7 @@ export const postAgentDeskApproveCeoOrder = createServerFn({ method: "POST" })
     z.object({
       orderId: z.string().uuid(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
@@ -380,7 +420,7 @@ export const patchAgentDeskEmployee = createServerFn({ method: "POST" })
       status: z.enum(["working", "meeting", "review", "idle", "error"]).optional(),
       current_task: z.string().nullable().optional(),
       accessToken: z.string().nullable().optional(),
-      guestId: z.string().uuid().optional(),
+      guestId: optionalGuestIdSchema,
     }),
   )
   .handler(async ({ data }) => {
