@@ -21,14 +21,14 @@ export const getAgentDeskCompany = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
     const session = await guardAgentDeskTrial(data.accessToken);
-    return loadOfficeCompany(session?.userId ?? null);
+    return loadOfficeCompany(session?.user.id ?? null);
   });
 
 export const getAgentDeskEvents = createServerFn({ method: "GET" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
     const session = await guardAgentDeskTrial(data.accessToken);
-    return loadOfficeEvents(session?.userId ?? null);
+    return loadOfficeEvents(session?.user.id ?? null);
   });
 
 export const postAgentDeskChat = createServerFn({ method: "POST" })
@@ -51,8 +51,8 @@ export const postAgentDeskChat = createServerFn({ method: "POST" })
       role: data.role,
       geminiApiKey: data.geminiApiKey,
     });
-    if (session?.userId) {
-      await appendOfficeEvent(session.userId, data.deptLabel, `업무 지시: ${data.message.slice(0, 80)}`);
+    if (session?.user.id) {
+      await appendOfficeEvent(session.user.id, data.deptLabel, `업무 지시: ${data.message.slice(0, 80)}`);
     }
     return result;
   });
@@ -83,8 +83,8 @@ export const patchAgentDeskDeptProfile = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const session = await guardAgentDeskTrial(data.accessToken);
-    if (!session?.userId) throw new Error("auth_required");
-    const dept = await saveDeptProfile(session.userId, data.deptSlug, data.realMemberName);
+    if (!session?.user.id) throw new Error("auth_required");
+    const dept = await saveDeptProfile(session.user.id, data.deptSlug, data.realMemberName);
     return { dept };
   });
 
@@ -99,8 +99,8 @@ export const patchAgentDeskEmployee = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const session = await guardAgentDeskTrial(data.accessToken);
-    if (!session?.userId) throw new Error("auth_required");
-    const employee = await patchEmployeeTask(session.userId, data.employeeId, {
+    if (!session?.user.id) throw new Error("auth_required");
+    const employee = await patchEmployeeTask(session.user.id, data.employeeId, {
       status: data.status,
       current_task: data.current_task ?? undefined,
     });
@@ -111,7 +111,7 @@ export const runAgentDeskSiteCheck = createServerFn({ method: "POST" })
   .inputValidator(tokenSchema)
   .handler(async ({ data }) => {
     const session = await guardAgentDeskTrial(data.accessToken);
-    if (!session?.userId) throw new Error("auth_required");
-    const sites = await checkOfficeSites(session.userId);
+    if (!session?.user.id) throw new Error("auth_required");
+    const sites = await checkOfficeSites(session.user.id);
     return { sites };
   });

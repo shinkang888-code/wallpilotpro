@@ -1,5 +1,6 @@
 import type { AppLocale } from "./constants";
 import type { TranslationKey } from "./keys.generated";
+import { pack as enPackStatic } from "./packs/en";
 
 export type MessagePack = Readonly<Record<TranslationKey, string>>;
 
@@ -18,10 +19,16 @@ const LOADERS: Record<AppLocale, PackLoader> = {
 };
 
 const cache = new Map<AppLocale, MessagePack>();
+cache.set("en", enPackStatic);
+
 const inflight = new Map<AppLocale, Promise<MessagePack>>();
 
 /** Eager-load English for zero-latency first paint. */
 let enReady: Promise<MessagePack> | null = null;
+
+export function getEnglishPackSync(): MessagePack {
+  return enPackStatic;
+}
 
 export function preloadLocale(locale: AppLocale): Promise<MessagePack> {
   return loadPack(locale);

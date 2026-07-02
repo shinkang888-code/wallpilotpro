@@ -19,6 +19,7 @@ import {
 import type { TranslationKey } from "./keys.generated";
 import {
   getCachedPack,
+  getEnglishPackSync,
   loadPack,
   prefetchAdjacentLocales,
   translate,
@@ -45,12 +46,18 @@ function readStoredLocale(): AppLocale {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<AppLocale>(() =>
-    typeof window === "undefined" ? "en" : readStoredLocale(),
-  );
+  // SSR and first client paint must match ("en") to avoid React #418 hydration errors.
+  const [lang, setLangState] = useState<AppLocale>("en");
   const [ready, setReady] = useState(false);
-  const [activePack, setActivePack] = useState<ReturnType<typeof getCachedPack>>(null);
-  const [enPack, setEnPack] = useState<ReturnType<typeof getCachedPack>>(null);
+  const [activePack, setActivePack] = useState<ReturnType<typeof getCachedPack>>(() =>
+    getEnglishPackSync(),
+  );
+  const [enPack, setEnPack] = useState(() => getEnglishPackSync());
+
+  useEffect(() => {
+    const stored = readStoredLocale();
+    if (stored !== "en") setLangState(stored);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

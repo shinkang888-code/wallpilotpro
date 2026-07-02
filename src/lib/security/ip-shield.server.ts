@@ -129,6 +129,7 @@ export function applyIpShieldHeaders(response: Response, request: Request): Resp
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
       "connect-src 'self' https: wss:",
+      "frame-src 'self' https://www.tossinvest.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
